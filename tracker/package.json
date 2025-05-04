@@ -1,0 +1,13 @@
+{
+  "name": "heatpeek-tracker",
+  "version": "1.0.0",
+  "description": "Heatpeek click tracking script",
+  "main": "heatpeek.js",
+  "scripts": {
+    "build": "esbuild heatpeek.js --bundle --minify --outfile=heatpeek.min.js && javascript-obfuscator heatpeek.min.js --output heatpeek.obf.js"
+  },
+  "devDependencies": {
+    "esbuild": "^0.19.0",
+    "javascript-obfuscator": "^4.1.0"
+  }
+}
