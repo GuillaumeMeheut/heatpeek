@@ -31,18 +31,20 @@ export type ClickInfos = {
   screen_width: number;
   screen_height: number;
   timestamp: string;
-  element: string;
-  class?: string;
-  id_attr?: string;
+  selector: string;
   user_agent?: string;
+  visible?: boolean;
+  element_relative_x?: number;
+  element_relative_y?: number;
+  bbox_left?: number;
+  bbox_top?: number;
+  bbox_width?: number;
+  bbox_height?: number;
 };
 
 export const addClick = cache(
   async (supabase: SupabaseClient, clickInfos: ClickInfos) => {
-    const { data, error } = await supabase
-      .from("clicks")
-      .insert([clickInfos])
-      .select();
+    const { data, error } = await supabase.from("clicks").insert([clickInfos]);
 
     if (error) {
       console.error("Error inserting click:", error);
@@ -54,24 +56,37 @@ export const addClick = cache(
 );
 
 type Clicks = {
-  x: number;
-  y: number;
-  screenWidth: number;
-  screenHeight: number;
+  relative_x: number;
+  relative_y: number;
+  screen_width: number;
+  screen_height: number;
+  url: string;
+  selector: string;
+  element_relative_x?: number;
+  element_relative_y?: number;
+  bbox_left?: number;
+  bbox_top?: number;
+  bbox_width?: number;
+  bbox_height?: number;
 };
 
 //Refresh data every 6 hours to limit request ?
 export const getClicks = cache(
   async (
     supabase: SupabaseClient,
-    projectId: string
+    projectId: string,
+    url: string
   ): Promise<Clicks[] | null> => {
     const { data: clicks, error } = await supabase
-      .from("click_infos")
-      .select("x, y, screenWidth, screenHeight")
-      .eq("projectId", projectId);
+      .from("clicks")
+      .select(
+        "relative_x, relative_y, element_relative_x, element_relative_y, screen_width, screen_height, url, bbox_left, bbox_top, bbox_width, bbox_height, selector"
+      )
+      .eq("project_id", projectId)
+      .eq("url", url);
 
     if (error) {
+      console.error("Error fetching clicks:", error);
       return null;
     }
 
