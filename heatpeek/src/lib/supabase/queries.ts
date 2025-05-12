@@ -96,7 +96,8 @@ export const getSnapshot = cache(
   async (
     supabase: SupabaseClient,
     url: string,
-    device: string
+    device: string,
+    userId: string
   ): Promise<SnapshotInfos | null> => {
     const { data, error } = await supabase
       .from("snapshots")
@@ -105,6 +106,7 @@ export const getSnapshot = cache(
       )
       .eq("url", url)
       .eq("device", device)
+      .eq("userId", userId)
       .single();
 
     if (error) {

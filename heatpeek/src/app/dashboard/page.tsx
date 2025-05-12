@@ -42,7 +42,7 @@ export default async function Dashboard({
   const device = searchParams.device as string;
 
   const clicks = await getClicks(supabase, projectId, url, device);
-  const snapshot = await getSnapshot(supabase, url, device);
+  const snapshot = await getSnapshot(supabase, url, device, user.id);
 
   if (!snapshot) {
     return <div>No snapshot found</div>;
