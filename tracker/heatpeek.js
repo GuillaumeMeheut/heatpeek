@@ -8,6 +8,9 @@
     return;
   }
 
+  const device = getViewportDeviceCategory();
+  if (device === "large-desktop") return;
+
   let lastClickTime = 0;
   const THROTTLE_MS = 500;
 
@@ -18,10 +21,10 @@
 
     const el = e.target;
     const rect = el.getBoundingClientRect();
-    const left = rect.left + window.scrollX;
-    const top = rect.top + window.scrollY;
-    const width = rect.width;
-    const height = rect.height;
+    const left = Math.round(rect.left + window.scrollX);
+    const top = Math.round(rect.top + window.scrollY);
+    const width = Math.round(rect.width);
+    const height = Math.round(rect.height);
     const visible = !!(
       el.offsetWidth ||
       el.offsetHeight ||
@@ -32,26 +35,23 @@
     const selector = getUniqueSelector(el);
 
     // Calculate click position relative to the element
-    const elementRelativeX = (e.pageX - left) / width;
-    const elementRelativeY = (e.pageY - top) / height;
+    const erx = (e.pageX - left) / width;
+    const ery = (e.pageY - top) / height;
 
     const payload = {
       projectId,
       url: window.location.href,
-      relativeX: e.pageX / document.documentElement.scrollWidth,
-      relativeY: e.pageY / document.documentElement.scrollHeight,
-      screenWidth: document.documentElement.scrollWidth,
-      screenHeight: document.documentElement.scrollHeight,
       timestamp: new Date().toISOString(),
       userAgent: navigator.userAgent,
+      device,
       visible,
-      selector,
-      element_relative_x: elementRelativeX,
-      element_relative_y: elementRelativeY,
-      bbox_left: left,
-      bbox_top: top,
-      bbox_width: width,
-      bbox_height: height,
+      erx,
+      ery,
+      s: selector,
+      l: left,
+      t: top,
+      w: width,
+      h: height,
     };
 
     const data = JSON.stringify(payload);
@@ -69,6 +69,27 @@
     }
   });
 })();
+
+function getViewportDeviceCategory() {
+  const viewportWidth = window.innerWidth;
+
+  // Device breakpoints in pixels
+  const BREAKPOINTS = {
+    MOBILE: 768,
+    TABLET: 1024,
+    DESKTOP: 1920,
+  };
+
+  if (viewportWidth <= BREAKPOINTS.MOBILE) {
+    return "mobile";
+  } else if (viewportWidth <= BREAKPOINTS.TABLET) {
+    return "tablet";
+  } else if (viewportWidth <= BREAKPOINTS.DESKTOP) {
+    return "desktop";
+  }
+
+  return "large-desktop";
+}
 
 function getUniqueSelector(el) {
   if (el.id) {
@@ -103,5 +124,17 @@ function getUniqueSelector(el) {
     el = el.parentElement;
   }
 
-  return parts.join(" > ");
+  const fullSelector = parts.join(" > ");
+  return generateShortHash(fullSelector);
+}
+
+function generateShortHash(str) {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    const char = str.charCodeAt(i);
+    hash = (hash << 5) - hash + char;
+    hash = hash & hash; // Convert to 32bit integer
+  }
+  // Convert to base36 (alphanumeric) and take first 8 characters
+  return Math.abs(hash).toString(36).substring(0, 8);
 }
