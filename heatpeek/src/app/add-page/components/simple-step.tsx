@@ -10,7 +10,15 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { ArrowLeft, ArrowRight, FileText } from "lucide-react";
+import {
+  ArrowLeft,
+  ArrowRight,
+  FileText,
+  Monitor,
+  Tablet,
+  Smartphone,
+  Loader2,
+} from "lucide-react";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useState } from "react";
 
@@ -19,23 +27,64 @@ type SimpleStepProps = {
 };
 
 export function SimpleStep({ onBack }: SimpleStepProps) {
-  const [popupBlocking, setPopupBlocking] = useState("dont-block");
+  const [popupBlocking, setPopupBlocking] = useState("omit-popups");
   const [cssSelectors, setCssSelectors] = useState("");
   const [websiteUrl, setWebsiteUrl] = useState("");
   const [snapshotName, setSnapshotName] = useState("");
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [selectedDevices, setSelectedDevices] = useState<string[]>(["desktop"]);
+
+  const toggleDevice = (device: string) => {
+    setSelectedDevices((prev) =>
+      prev.includes(device)
+        ? prev.filter((d) => d !== device)
+        : [...prev, device]
+    );
+  };
 
   const isFormValid = () => {
     const hasRequiredFields =
       websiteUrl.trim() !== "" && snapshotName.trim() !== "";
     const hasValidCssSelectors =
       popupBlocking !== "specific-elements" || cssSelectors.trim() !== "";
-    return hasRequiredFields && hasValidCssSelectors;
+    const hasSelectedDevice = selectedDevices.length > 0;
+    return hasRequiredFields && hasValidCssSelectors && hasSelectedDevice;
+  };
+
+  const addNewSnapshot = async () => {
+    setIsLoading(true);
+    try {
+      // First capture the page for each selected device
+      for (const device of selectedDevices) {
+        const captureResponse = await fetch(`/api/capturePage`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            url: websiteUrl,
+            label: snapshotName,
+            device: device,
+          }),
+        });
+
+        if (!captureResponse.ok) {
+          throw new Error(`Failed to capture page for device: ${device}`);
+        }
+      }
+
+      // TODO: Add success notification
+    } catch (error) {
+      console.error("Error capturing page:", error);
+      // TODO: Add proper error handling UI
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
     <div className="min-h-screen bg-background p-6">
       <div className="max-w-4xl mx-auto">
-        {/* Back Button */}
         <div className="mb-8">
           <Button variant="ghost" onClick={onBack}>
             <ArrowLeft className="h-4 w-4 mr-2" />
@@ -43,7 +92,6 @@ export function SimpleStep({ onBack }: SimpleStepProps) {
           </Button>
         </div>
 
-        {/* Simple Page Steps */}
         <Card className="hover:shadow-lg transition-shadow">
           <CardHeader>
             <div className="flex items-center gap-4">
@@ -81,6 +129,43 @@ export function SimpleStep({ onBack }: SimpleStepProps) {
                     onChange={(e) => setSnapshotName(e.target.value)}
                   />
                 </div>
+              </div>
+            </div>
+          </CardContent>
+          <CardContent>
+            <div className="space-y-4">
+              <h4 className="font-medium">Select Devices</h4>
+              <div className="flex gap-4">
+                <Button
+                  variant={
+                    selectedDevices.includes("desktop") ? "default" : "outline"
+                  }
+                  size="icon"
+                  onClick={() => toggleDevice("desktop")}
+                  className="h-12 w-12"
+                >
+                  <Monitor className="h-6 w-6" />
+                </Button>
+                <Button
+                  variant={
+                    selectedDevices.includes("tablet") ? "default" : "outline"
+                  }
+                  size="icon"
+                  onClick={() => toggleDevice("tablet")}
+                  className="h-12 w-12"
+                >
+                  <Tablet className="h-6 w-6" />
+                </Button>
+                <Button
+                  variant={
+                    selectedDevices.includes("mobile") ? "default" : "outline"
+                  }
+                  size="icon"
+                  onClick={() => toggleDevice("mobile")}
+                  className="h-12 w-12"
+                >
+                  <Smartphone className="h-6 w-6" />
+                </Button>
               </div>
             </div>
           </CardContent>
@@ -128,9 +213,17 @@ export function SimpleStep({ onBack }: SimpleStepProps) {
             </div>
           </CardContent>
           <CardFooter>
-            <Button className="w-full" disabled={!isFormValid()}>
+            <Button
+              className="w-full"
+              disabled={!isFormValid() || isLoading}
+              onClick={addNewSnapshot}
+            >
               Continue
-              <ArrowRight className="h-4 w-4 ml-2" />
+              {isLoading ? (
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              ) : (
+                <ArrowRight className="h-4 w-4 ml-2" />
+              )}
             </Button>
           </CardFooter>
         </Card>

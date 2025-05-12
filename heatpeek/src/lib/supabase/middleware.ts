@@ -1,21 +1,13 @@
 import { createServerClient } from "@supabase/ssr";
 import { type NextRequest, NextResponse } from "next/server";
 
-// Define public routes that don't require authentication
-const PUBLIC_ROUTES = [
-  "/",
-  "/signin",
-  "/signup",
-  "/auth/callback",
-  "/auth/confirm",
-  "/why",
-  "/pricing",
-];
+const PUBLIC_ROUTES = ["/signin", "/signup", "/auth/callback", "/auth/confirm"];
 
-// Define protected routes that require authentication
-const PROTECTED_ROUTES = ["/dashboard", "/protected"];
+const PROTECTED_ROUTES = ["/dashboard"];
 
 export const updateSession = async (request: NextRequest) => {
+  // This `try/catch` block is only here for the interactive tutorial.
+  // Feel free to remove once you have Supabase connected.
   try {
     // Create an unmodified response
     let response = NextResponse.next({
@@ -48,6 +40,7 @@ export const updateSession = async (request: NextRequest) => {
     );
 
     // This will refresh session if expired - required for Server Components
+    // https://supabase.com/docs/guides/auth/server-side/nextjs
     const {
       data: { user },
       error,
@@ -55,7 +48,7 @@ export const updateSession = async (request: NextRequest) => {
 
     const pathname = request.nextUrl.pathname;
 
-    // Handle protected routes
+    // Redirect unauthenticated users from protected routes
     if (PROTECTED_ROUTES.some((route) => pathname.startsWith(route))) {
       if (error || !user) {
         const redirectUrl = new URL("/signin", request.url);
@@ -64,26 +57,14 @@ export const updateSession = async (request: NextRequest) => {
       }
     }
 
-    // Handle public routes for authenticated users
-    if (PUBLIC_ROUTES.includes(pathname) && user) {
-      return NextResponse.redirect(new URL("/dashboard", request.url));
+    // Redirect authenticated users away from public routes like /signin
+    if (PUBLIC_ROUTES.some((route) => pathname.startsWith(route)) && user) {
+      return NextResponse.redirect(new URL("/", request.url));
     }
-
-    // Add security headers
-    response.headers.set("X-Frame-Options", "DENY");
-    response.headers.set("X-Content-Type-Options", "nosniff");
-    response.headers.set("Referrer-Policy", "strict-origin-when-cross-origin");
-    response.headers.set(
-      "Permissions-Policy",
-      "camera=(), microphone=(), geolocation=()"
-    );
 
     return response;
   } catch (e) {
-    // Log the error for debugging
     console.error("Middleware error:", e);
-
-    // Return a proper error response
     return new NextResponse(
       JSON.stringify({ error: "Internal Server Error" }),
       {

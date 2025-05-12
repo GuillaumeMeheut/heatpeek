@@ -6,7 +6,7 @@ import { createClient } from "../supabase/server";
 import { getErrorRedirect, getStatusRedirect } from "../utils";
 
 export async function signIn(formData: FormData) {
-  const supabase = createClient();
+  const supabase = await createClient();
 
   // type-casting here for convenience
   // in practice, you should validate your inputs
@@ -28,7 +28,7 @@ export async function signIn(formData: FormData) {
 }
 
 export async function signUp(formData: FormData) {
-  const supabase = createClient();
+  const supabase = await createClient();
 
   // type-casting here for convenience
   // in practice, you should validate your inputs
@@ -57,7 +57,7 @@ export async function signUp(formData: FormData) {
 export async function signOut(formData: FormData) {
   const pathName = String(formData.get("pathName")).trim();
 
-  const supabase = createClient();
+  const supabase = await createClient();
   const { error } = await supabase.auth.signOut();
 
   if (error) {
@@ -69,4 +69,8 @@ export async function signOut(formData: FormData) {
   }
 
   redirect("/signin");
+}
+
+export async function handleSignOut(formData: FormData) {
+  await signOut(formData);
 }

@@ -1,40 +1,79 @@
-import Heatmap from "@/components/Heatmap";
-import { getClicks } from "@/lib/supabase/queries";
+import Heatmap from "./heatmap";
+import {
+  getClicks,
+  getSnapshot,
+  getSnapshotsUrls,
+  getUser,
+} from "@/lib/supabase/queries";
 import { createClient } from "@/lib/supabase/server";
-import pageData from "../../../public/pageData.json";
-import clicks from "../../../public/clicks.json";
+import { OptionsBar } from "./options-bar";
+import { Sidebar } from "./sidebar";
+import { redirect } from "next/navigation";
+import { Card } from "@/components/ui/card";
 
-export default async function Dashboard() {
-  // const supabase = await createClient();
-  // const projectId = "guillaume-meheut.vercel.app";
-  // const url = "http://localhost:3001/";
+export default async function Dashboard({
+  searchParams,
+}: {
+  searchParams: { url?: string; device?: string };
+}) {
+  const supabase = await createClient();
+  const { user } = await getUser(supabase);
+  if (!user) return <div>No user found</div>;
 
-  // const clicks = await getClicks(supabase, projectId, url);
-  // console.log(clicks);
-  // Fetch the page data
-  // const response = await fetch(
-  //   `http://localhost:3000/api/capturePage?url=${encodeURIComponent(url)}`
-  // );
-  // const pageData = await response.json();
+  const snapshotsUrls = await getSnapshotsUrls(supabase, user?.id);
 
-  // Calculate the aspect ratio to maintain the same proportions
-  const aspectRatio =
-    pageData.metadata.dimensions.height / pageData.metadata.dimensions.width;
+  // If we have snapshots and the URL is not in the correct format, redirect to the first snapshot
+  if (snapshotsUrls && snapshotsUrls.length > 0) {
+    const currentUrl = searchParams.url;
+    const currentDevice = searchParams.device;
 
-  // Set a max width and calculate height based on aspect ratio
-  const maxWidth = 1510;
-  const width = Math.min(maxWidth, pageData.metadata.dimensions.width);
-  const height = Math.round(width * aspectRatio);
+    if (!currentUrl || !currentDevice) {
+      const firstSnapshot = snapshotsUrls[0];
+      redirect(
+        `/dashboard?url=${encodeURIComponent(firstSnapshot.url)}&device=${
+          firstSnapshot.device
+        }`
+      );
+    }
+  }
+
+  const projectId = "guillaume-meheut.vercel.app";
+  const url = searchParams.url as string;
+  const device = searchParams.device as string;
+
+  const clicks = await getClicks(supabase, projectId, url, device);
+  const snapshot = await getSnapshot(supabase, url, device);
+
+  if (!snapshot) {
+    return <div>No snapshot found</div>;
+  }
+  // const deserializedData = snapshot
+  //   ? deserializePageData(snapshot.domData)
+  //   : null;
+
+  const visibleElement = JSON.parse(snapshot?.domData);
 
   return (
-    <div className="p-8">
-      <h2 className="text-xl font-semibold mb-4">Click Analytics</h2>
-      <Heatmap
-        clicks={clicks || []}
-        pageData={pageData}
-        width={width}
-        height={height}
-      />
+    <div className="flex">
+      <Sidebar snapshotsUrls={snapshotsUrls || []} />
+      <div className="flex-1 p-4">
+        <Card className="border-primary/20">
+          <div className="container mx-auto p-8 relative">
+            <div className="w-full">
+              <div className="min-w-full">
+                <Heatmap
+                  clicks={clicks || []}
+                  pageData={snapshot}
+                  visibleElement={visibleElement}
+                />
+              </div>
+            </div>
+            <div className="w-full">
+              <OptionsBar />
+            </div>
+          </div>
+        </Card>
+      </div>
     </div>
   );
 }

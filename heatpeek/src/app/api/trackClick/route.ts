@@ -6,8 +6,10 @@ export async function POST(request: NextRequest) {
   try {
     const payload = await request.json();
 
+    console.log("Payload:", payload);
+
     // Validate required fields
-    if (!payload.projectId || !payload.url || !payload.selector) {
+    if (!payload.projectId || !payload.url || !payload.s) {
       return new Response(
         JSON.stringify({ error: "Missing required fields" }),
         { status: 400, headers: { "Content-Type": "application/json" } }
@@ -18,20 +20,17 @@ export async function POST(request: NextRequest) {
     const clickData: ClickInfos = {
       project_id: payload.projectId,
       url: payload.url,
-      relative_x: payload.relativeX,
-      relative_y: payload.relativeY,
-      element_relative_x: payload.element_relative_x,
-      element_relative_y: payload.element_relative_y,
-      screen_width: payload.screenWidth,
-      screen_height: payload.screenHeight,
+      erx: payload.erx,
+      ery: payload.ery,
       timestamp: payload.timestamp,
       user_agent: payload.userAgent,
+      device: payload.device,
       visible: payload.visible,
-      selector: payload.selector,
-      bbox_left: payload.bbox_left,
-      bbox_top: payload.bbox_top,
-      bbox_width: payload.bbox_width,
-      bbox_height: payload.bbox_height,
+      s: payload.s,
+      l: payload.l,
+      t: payload.t,
+      w: payload.w,
+      h: payload.h,
     };
 
     console.log("Inserting click data:", clickData);

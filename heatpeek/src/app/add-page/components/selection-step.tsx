@@ -8,7 +8,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { FileText, Lock } from "lucide-react";
+import { ArrowLeft, FileText, Lock } from "lucide-react";
 
 type SelectionStepProps = {
   onSelectSimple: () => void;
@@ -27,6 +27,7 @@ export function SelectionStep({
         {/* Back Button */}
         <div className="mb-8">
           <Button variant="ghost" onClick={onBack}>
+            <ArrowLeft className="h-4 w-4 mr-2" />
             Back to Dashboard
           </Button>
         </div>

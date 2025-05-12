@@ -9,37 +9,20 @@ export const getUser = cache(async (supabase: SupabaseClient) => {
   return { user, error };
 });
 
-export const getUserProfile = cache(
-  async (supabase: SupabaseClient, userId: string) => {
-    const { data: userProfile, error } = await supabase
-      .from("user_profiles")
-      .select()
-      .eq("id", userId)
-      .single();
-
-    if (error) return null;
-
-    return userProfile;
-  }
-);
-
 export type ClickInfos = {
   project_id: string;
   url: string;
-  relative_x: number;
-  relative_y: number;
-  screen_width: number;
-  screen_height: number;
   timestamp: string;
-  selector: string;
   user_agent?: string;
+  device: string;
   visible?: boolean;
-  element_relative_x?: number;
-  element_relative_y?: number;
-  bbox_left?: number;
-  bbox_top?: number;
-  bbox_width?: number;
-  bbox_height?: number;
+  erx?: number;
+  ery?: number;
+  s?: string;
+  l?: number;
+  t?: number;
+  w?: number;
+  h?: number;
 };
 
 export const addClick = cache(
@@ -55,35 +38,25 @@ export const addClick = cache(
   }
 );
 
-type Clicks = {
-  relative_x: number;
-  relative_y: number;
-  screen_width: number;
-  screen_height: number;
-  url: string;
-  selector: string;
-  element_relative_x?: number;
-  element_relative_y?: number;
-  bbox_left?: number;
-  bbox_top?: number;
-  bbox_width?: number;
-  bbox_height?: number;
-};
+export type Click = Omit<
+  ClickInfos,
+  "project_id" | "url" | "timestamp" | "user_agent" | "device" | "visible"
+>;
 
 //Refresh data every 6 hours to limit request ?
 export const getClicks = cache(
   async (
     supabase: SupabaseClient,
     projectId: string,
-    url: string
-  ): Promise<Clicks[] | null> => {
+    url: string,
+    device: string
+  ): Promise<Click[] | null> => {
     const { data: clicks, error } = await supabase
       .from("clicks")
-      .select(
-        "relative_x, relative_y, element_relative_x, element_relative_y, screen_width, screen_height, url, bbox_left, bbox_top, bbox_width, bbox_height, selector"
-      )
+      .select("erx, ery, s, l, t, w, h")
       .eq("project_id", projectId)
-      .eq("url", url);
+      .eq("url", url)
+      .eq("device", device);
 
     if (error) {
       console.error("Error fetching clicks:", error);
@@ -91,5 +64,108 @@ export const getClicks = cache(
     }
 
     return clicks;
+  }
+);
+
+export type SnapshotInfos = {
+  url: string;
+  label: string;
+  device: string;
+  domData: string;
+  layoutHash: string;
+  screenshotUrl: string;
+  width: number;
+  height: number;
+};
+
+export const addSnapshot = cache(
+  async (supabase: SupabaseClient, snapshotInfos: SnapshotInfos) => {
+    const { data, error } = await supabase
+      .from("snapshots")
+      .insert([snapshotInfos]);
+
+    if (error) {
+      console.error("Error inserting snapshot:", error);
+    }
+
+    return data;
+  }
+);
+
+export const getSnapshot = cache(
+  async (
+    supabase: SupabaseClient,
+    url: string,
+    device: string
+  ): Promise<SnapshotInfos | null> => {
+    const { data, error } = await supabase
+      .from("snapshots")
+      .select(
+        "url, label, device, domData,layoutHash, screenshotUrl, width, height"
+      )
+      .eq("url", url)
+      .eq("device", device)
+      .single();
+
+    if (error) {
+      console.error("Error fetching snapshot:", error);
+    }
+
+    return data;
+  }
+);
+
+export type UploadScreenshotInfos = {
+  userId: string;
+  layoutHash: string;
+  buffer: Uint8Array;
+};
+
+export const uploadScreenshot = cache(
+  async (supabase: SupabaseClient, uploadInfos: UploadScreenshotInfos) => {
+    const fileName = `${uploadInfos.userId}/screenshot-${
+      uploadInfos.layoutHash
+    }-${Date.now()}.jpg`;
+
+    const { error: uploadError } = await supabase.storage
+      .from("screenshots")
+      .upload(fileName, uploadInfos.buffer, {
+        contentType: "image/jpeg",
+        upsert: true,
+      });
+
+    if (uploadError) {
+      console.error("Error uploading screenshot:", uploadError);
+      throw uploadError;
+    }
+
+    const { data: publicUrlData } = supabase.storage
+      .from("screenshots")
+      .getPublicUrl(fileName);
+
+    return publicUrlData?.publicUrl;
+  }
+);
+
+export type SnapshotUrl = Omit<
+  SnapshotInfos,
+  "domData" | "layoutHash" | "screenshotUrl" | "width" | "height"
+>;
+
+export const getSnapshotsUrls = cache(
+  async (
+    supabase: SupabaseClient,
+    userId: string
+  ): Promise<SnapshotUrl[] | null> => {
+    const { data, error } = await supabase
+      .from("snapshots")
+      .select("url, label, device")
+      .eq("userId", userId);
+
+    if (error) {
+      console.error("Error fetching snapshot:", error);
+    }
+
+    return data;
   }
 );

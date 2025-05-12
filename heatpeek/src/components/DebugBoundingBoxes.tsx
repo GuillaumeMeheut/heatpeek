@@ -1,41 +1,27 @@
+import { SnapshotInfos } from "@/lib/supabase/queries";
 import { useEffect, useRef } from "react";
 
 interface VisibleElement {
-  selector: string;
-  boundingBox: {
-    left: number;
-    top: number;
-    width: number;
-    height: number;
+  s: string;
+  b: {
+    l: number;
+    t: number;
+    w: number;
+    h: number;
   };
-  text: string;
-}
-
-interface PageData {
-  screenshotUrl: string;
-  domData: {
-    htmlSnapshot: string;
-    visibleElements: VisibleElement[];
-  };
-  metadata: {
-    url: string;
-    dimensions: {
-      width: number;
-      height: number;
-    };
-    timestamp: string;
-    layoutHash: string;
-  };
+  t: string;
 }
 
 export default function DebugBoundingBoxes({
   pageData,
   width,
   height,
+  visibleElement,
 }: {
-  pageData?: PageData;
+  pageData: SnapshotInfos;
   width: number;
   height: number;
+  visibleElement: VisibleElement[];
 }) {
   const debugCanvasRef = useRef<HTMLCanvasElement>(null);
 
@@ -48,26 +34,16 @@ export default function DebugBoundingBoxes({
         ctx.strokeStyle = "rgba(255, 0, 0, 0.5)";
         ctx.lineWidth = 1;
 
-        const scaleX = width / pageData.metadata.dimensions.width;
-        const scaleY = height / pageData.metadata.dimensions.height;
+        const scaleX = width / pageData.width;
+        const scaleY = height / pageData.height;
 
-        pageData.domData.visibleElements.forEach((element) => {
-          const {
-            left,
-            top,
-            width: boxWidth,
-            height: boxHeight,
-          } = element.boundingBox;
-          ctx.strokeRect(
-            left * scaleX,
-            top * scaleY,
-            boxWidth * scaleX,
-            boxHeight * scaleY
-          );
+        visibleElement.forEach((element) => {
+          const { l, t, w, h } = element.b;
+          ctx.strokeRect(l * scaleX, t * scaleY, w * scaleX, h * scaleY);
         });
       }
     }
-  }, [pageData, width, height]);
+  }, [pageData, width, height, visibleElement]);
 
   return (
     <canvas
