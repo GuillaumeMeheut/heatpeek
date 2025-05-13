@@ -24,7 +24,7 @@ type HeatmapProps = {
 };
 
 const HEATMAP_CONFIG = {
-  CLUSTER_PRECISION: 5,
+  GRID_SIZE: 20,
   RADIUS: {
     MIN: 20,
     MAX: 25,
@@ -72,7 +72,7 @@ export default function Heatmap({
     return () => window.removeEventListener("resize", updateDimensions);
   }, [pageData]);
 
-  // Calculate points with intensity based on clustering (element-based)
+  // Calculate points with intensity based on grid-based aggregation
   const points = useMemo(() => {
     if (clicks.length === 0 || !pageData || !containerDimensions) return [];
 
@@ -80,9 +80,7 @@ export default function Heatmap({
     const scaleX = containerDimensions.width / pageData.width;
     const scaleY = containerDimensions.height / pageData.height;
 
-    // Group clicks by their exact position (rounded to cluster precision)
-    const clusters = new Map<string, { count: number; x: number; y: number }>();
-    const CLUSTER_PRECISION = HEATMAP_CONFIG.CLUSTER_PRECISION; // pixels
+    const grid = new Map<string, { count: number; x: number; y: number }>();
 
     clicks.forEach((click) => {
       let x = 0;
@@ -94,31 +92,34 @@ export default function Heatmap({
 
         if (element && click.erx !== undefined && click.ery !== undefined) {
           // Use the element-relative position to calculate the absolute position
-          // This is more accurate as it uses the position relative to the element at click time
           x = (element.b.l + click.erx * element.b.w) * scaleX;
           y = (element.b.t + click.ery * element.b.h) * scaleY;
         } else if (click.l !== undefined && click.t !== undefined) {
-          // Fallback to using the bounding box position if element-relative position is not available
+          // Fallback to using the bounding box position
           x = click.l * scaleX;
           y = click.t * scaleY;
         }
       }
 
-      // Round to cluster precision
-      x = Math.round(x / CLUSTER_PRECISION) * CLUSTER_PRECISION;
-      y = Math.round(y / CLUSTER_PRECISION) * CLUSTER_PRECISION;
+      // Round to nearest grid cell
+      const gridX =
+        Math.floor(x / HEATMAP_CONFIG.GRID_SIZE) * HEATMAP_CONFIG.GRID_SIZE +
+        HEATMAP_CONFIG.GRID_SIZE / 2;
+      const gridY =
+        Math.floor(y / HEATMAP_CONFIG.GRID_SIZE) * HEATMAP_CONFIG.GRID_SIZE +
+        HEATMAP_CONFIG.GRID_SIZE / 2;
 
-      const key = `${x},${y}`;
-      if (!clusters.has(key)) {
-        clusters.set(key, { count: 1, x, y });
+      const key = `${gridX},${gridY}`;
+      if (!grid.has(key)) {
+        grid.set(key, { count: 1, x: gridX, y: gridY });
       } else {
-        const entry = clusters.get(key)!;
+        const entry = grid.get(key)!;
         entry.count++;
       }
     });
 
-    // Convert clusters to points with intensity
-    return Array.from(clusters.values()).map(({ x, y, count }) => {
+    // Convert grid to points with intensity
+    return Array.from(grid.values()).map(({ x, y, count }) => {
       const intensity = Math.log2(count + 1) * 2;
       return [x, y, intensity] as [number, number, number];
     });
