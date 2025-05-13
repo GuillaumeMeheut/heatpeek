@@ -1,15 +1,14 @@
 "use client";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { ChevronLeft, ChevronRight, Search, Plus } from "lucide-react";
+import { ChevronLeft, ChevronRight, Plus } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 import { UrlList } from "@/components/url-list";
 import { SnapshotUrl } from "@/lib/supabase/queries";
+import { Separator } from "@/components/ui/separator";
 
 export function Sidebar({ snapshotsUrls }: { snapshotsUrls: SnapshotUrl[] }) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
-  const [search, setSearch] = useState("");
 
   return (
     <div
@@ -38,16 +37,10 @@ export function Sidebar({ snapshotsUrls }: { snapshotsUrls: SnapshotUrl[] }) {
               New Page
             </Link>
           </Button>
-          <div className="relative">
-            <Search className="absolute left-2 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              placeholder="Search"
-              className="w-full pl-8"
-              onChange={(e) => setSearch(e.target.value)}
-            />
-          </div>
         </div>
       )}
+
+      <Separator orientation="horizontal" className="w-full my-4" />
 
       <UrlList isVisible={isSidebarOpen} snapshotsUrls={snapshotsUrls} />
     </div>

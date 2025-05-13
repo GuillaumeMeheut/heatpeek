@@ -49,14 +49,16 @@ export const getClicks = cache(
     supabase: SupabaseClient,
     projectId: string,
     url: string,
-    device: string
+    device: string,
+    timestamp: string
   ): Promise<Click[] | null> => {
     const { data: clicks, error } = await supabase
       .from("clicks")
       .select("erx, ery, s, l, t, w, h")
       .eq("project_id", projectId)
       .eq("url", url)
-      .eq("device", device);
+      .eq("device", device)
+      .gte("timestamp", timestamp);
 
     if (error) {
       console.error("Error fetching clicks:", error);
@@ -95,18 +97,14 @@ export const addSnapshot = cache(
 export const getSnapshot = cache(
   async (
     supabase: SupabaseClient,
-    url: string,
-    device: string,
-    userId: string
+    id: string
   ): Promise<SnapshotInfos | null> => {
     const { data, error } = await supabase
       .from("snapshots")
       .select(
         "url, label, device, domData,layoutHash, screenshotUrl, width, height"
       )
-      .eq("url", url)
-      .eq("device", device)
-      .eq("userId", userId)
+      .eq("id", id)
       .single();
 
     if (error) {
@@ -127,12 +125,12 @@ export const uploadScreenshot = cache(
   async (supabase: SupabaseClient, uploadInfos: UploadScreenshotInfos) => {
     const fileName = `${uploadInfos.userId}/screenshot-${
       uploadInfos.layoutHash
-    }-${Date.now()}.jpg`;
+    }-${Date.now()}.webp`;
 
     const { error: uploadError } = await supabase.storage
       .from("screenshots")
       .upload(fileName, uploadInfos.buffer, {
-        contentType: "image/jpeg",
+        contentType: "image/webp",
         upsert: true,
       });
 
@@ -152,7 +150,10 @@ export const uploadScreenshot = cache(
 export type SnapshotUrl = Omit<
   SnapshotInfos,
   "domData" | "layoutHash" | "screenshotUrl" | "width" | "height"
->;
+> & {
+  created_at: string;
+  id: string;
+};
 
 export const getSnapshotsUrls = cache(
   async (
@@ -161,7 +162,7 @@ export const getSnapshotsUrls = cache(
   ): Promise<SnapshotUrl[] | null> => {
     const { data, error } = await supabase
       .from("snapshots")
-      .select("url, label, device")
+      .select("id, url, label, device, created_at")
       .eq("userId", userId);
 
     if (error) {

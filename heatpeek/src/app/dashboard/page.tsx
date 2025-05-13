@@ -14,7 +14,7 @@ import { Card } from "@/components/ui/card";
 export default async function Dashboard({
   searchParams,
 }: {
-  searchParams: { url?: string; device?: string };
+  searchParams: { id?: string; url?: string; device?: string };
 }) {
   const supabase = await createClient();
   const { user } = await getUser(supabase);
@@ -22,27 +22,30 @@ export default async function Dashboard({
 
   const snapshotsUrls = await getSnapshotsUrls(supabase, user?.id);
 
+  if (!snapshotsUrls) {
+    return <div>Start by creating a snapshot</div>;
+  }
   // If we have snapshots and the URL is not in the correct format, redirect to the first snapshot
   if (snapshotsUrls && snapshotsUrls.length > 0) {
-    const currentUrl = searchParams.url;
-    const currentDevice = searchParams.device;
+    const currentId = searchParams.id;
 
-    if (!currentUrl || !currentDevice) {
+    if (!currentId) {
       const firstSnapshot = snapshotsUrls[0];
-      redirect(
-        `/dashboard?url=${encodeURIComponent(firstSnapshot.url)}&device=${
-          firstSnapshot.device
-        }`
-      );
+      redirect(`/dashboard?id=${firstSnapshot.id}`);
     }
   }
 
   const projectId = "guillaume-meheut.vercel.app";
-  const url = searchParams.url as string;
-  const device = searchParams.device as string;
+  const id = searchParams.id as string;
+  const currentSnapshot = snapshotsUrls.find((snapshot) => snapshot.id === id);
+  if (!currentSnapshot) return;
+  const url = currentSnapshot?.url;
+  const device = currentSnapshot?.device;
+  const created_at = currentSnapshot?.created_at;
 
-  const clicks = await getClicks(supabase, projectId, url, device);
-  const snapshot = await getSnapshot(supabase, url, device, user.id);
+  const clicks = await getClicks(supabase, projectId, url, device, created_at);
+  const snapshot = await getSnapshot(supabase, id);
+  console.log(snapshot);
 
   if (!snapshot) {
     return <div>No snapshot found</div>;

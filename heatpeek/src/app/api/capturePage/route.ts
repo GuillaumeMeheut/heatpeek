@@ -1,8 +1,10 @@
 import { NextResponse } from "next/server";
 import puppeteer from "puppeteer";
 import crypto from "crypto";
+import sharp from "sharp";
 import { createClient } from "@/lib/supabase/server";
 import { getUser, addSnapshot, uploadScreenshot } from "@/lib/supabase/queries";
+import { MAX_SIZE_PX } from "./pupetter-large-page";
 
 export async function POST(request: Request) {
   try {
@@ -42,6 +44,8 @@ export async function POST(request: Request) {
 
     await page.waitForSelector("body");
     await new Promise((r) => setTimeout(r, 2000));
+
+    // Scroll to bottom and back to top to ensure all content is loaded
     await page.evaluate(() => {
       window.scrollTo(0, document.body.scrollHeight);
     });
@@ -49,13 +53,7 @@ export async function POST(request: Request) {
     await page.evaluate(() => {
       window.scrollTo(0, 0);
     });
-
-    // Capture screenshot as buffer
-    const screenshotBuffer = await page.screenshot({
-      fullPage: true,
-      encoding: "binary",
-      type: "jpeg",
-    });
+    await new Promise((r) => setTimeout(r, 2000));
 
     // Get the actual page dimensions
     const pageDimensions = await page.evaluate(() => {
@@ -64,6 +62,51 @@ export async function POST(request: Request) {
         height: document.documentElement.scrollHeight,
       };
     });
+
+    // Check if page is too long
+    if (pageDimensions.height > MAX_SIZE_PX) {
+      await browser.close();
+      return NextResponse.json(
+        {
+          error: `Page is too long (${pageDimensions.height}px). Maximum allowed height is ${MAX_SIZE_PX}px.`,
+        },
+        { status: 400 }
+      );
+    }
+
+    // Capture screenshot using the large page handler
+    let screenshotBuffer;
+    try {
+      screenshotBuffer = await page.screenshot({
+        fullPage: true,
+        type: "webp",
+        encoding: "binary",
+      });
+
+      if (!screenshotBuffer || screenshotBuffer.length === 0) {
+        throw new Error("Screenshot buffer is empty");
+      }
+
+      console.log(
+        `Screenshot captured successfully. Size: ${screenshotBuffer.length} bytes`
+      );
+    } catch (error: unknown) {
+      console.error("Error capturing screenshot:", error);
+      const errorMessage =
+        error instanceof Error ? error.message : "Unknown error occurred";
+      throw new Error(`Failed to capture screenshot: ${errorMessage}`);
+    }
+
+    // Convert to WebP format
+    const compressedBuffer = await sharp(screenshotBuffer)
+      .webp({
+        quality: 80,
+        lossless: false,
+        nearLossless: false,
+        smartSubsample: true,
+        effort: 4,
+      })
+      .toBuffer();
 
     // Capture DOM data
     const visibleDomElements = await page.evaluate(() => {
@@ -174,7 +217,7 @@ export async function POST(request: Request) {
       screenshotUrl = await uploadScreenshot(supabase, {
         userId: user.id,
         layoutHash,
-        buffer: screenshotBuffer,
+        buffer: compressedBuffer,
       });
     } catch (error) {
       console.error("Error uploading screenshot:", error);

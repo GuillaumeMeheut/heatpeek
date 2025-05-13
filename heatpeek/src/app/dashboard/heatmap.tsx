@@ -23,7 +23,6 @@ type HeatmapProps = {
   visibleElement: VisibleElement[];
 };
 
-// Constants for heatmap configuration
 const HEATMAP_CONFIG = {
   CLUSTER_PRECISION: 5,
   RADIUS: {

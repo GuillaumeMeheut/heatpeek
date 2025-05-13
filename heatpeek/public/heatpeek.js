@@ -42,7 +42,6 @@
       projectId,
       url: window.location.href,
       timestamp: new Date().toISOString(),
-      userAgent: navigator.userAgent,
       device,
       visible,
       erx,

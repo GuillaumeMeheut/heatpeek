@@ -23,7 +23,6 @@ export async function POST(request: NextRequest) {
       erx: payload.erx,
       ery: payload.ery,
       timestamp: payload.timestamp,
-      user_agent: payload.userAgent,
       device: payload.device,
       visible: payload.visible,
       s: payload.s,
