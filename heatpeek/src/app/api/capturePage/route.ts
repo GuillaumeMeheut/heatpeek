@@ -227,6 +227,13 @@ export async function POST(request: Request) {
       );
     }
 
+    if (!screenshotUrl) {
+      return NextResponse.json(
+        { error: "Failed to upload screenshot" },
+        { status: 500 }
+      );
+    }
+
     // Store data in snapshots table
     try {
       await addSnapshot(supabase, {
