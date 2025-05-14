@@ -1,13 +1,14 @@
-import Heatmap from "./heatmap";
+import Heatmap from "./Heatmap";
 import {
   getClicks,
   getSnapshot,
   getSnapshotsUrls,
+  getTrackingId,
   getUser,
 } from "@/lib/supabase/queries";
 import { createClient } from "@/lib/supabase/server";
-import { OptionsBar } from "./options-bar";
-import { Sidebar } from "./sidebar";
+import { OptionsBar } from "./OptionsBar";
+import { Sidebar } from "./Sidebar";
 import { redirect } from "next/navigation";
 import { Card } from "@/components/ui/card";
 
@@ -18,14 +19,13 @@ export default async function Dashboard({
 }) {
   const supabase = await createClient();
   const { user } = await getUser(supabase);
-  if (!user) return <div>No user found</div>;
+  if (!user) redirect("/signin");
 
   const snapshotsUrls = await getSnapshotsUrls(supabase, user?.id);
 
-  if (!snapshotsUrls) {
-    return <div>Start by creating a snapshot</div>;
+  if (!snapshotsUrls || snapshotsUrls.length === 0) {
+    redirect(`/add-page`);
   }
-  // If we have snapshots and the URL is not in the correct format, redirect to the first snapshot
   if (snapshotsUrls && snapshotsUrls.length > 0) {
     const currentId = searchParams.id;
 
@@ -35,17 +35,17 @@ export default async function Dashboard({
     }
   }
 
-  const projectId = "guillaume-meheut.vercel.app";
   const id = searchParams.id as string;
+  const trackingId = await getTrackingId(supabase, user.id);
+  if (!trackingId) return;
   const currentSnapshot = snapshotsUrls.find((snapshot) => snapshot.id === id);
   if (!currentSnapshot) return;
-  const url = currentSnapshot?.url;
-  const device = currentSnapshot?.device;
-  const created_at = currentSnapshot?.created_at;
+  const url = currentSnapshot.url;
+  const device = currentSnapshot.device;
+  const created_at = currentSnapshot.created_at;
 
-  const clicks = await getClicks(supabase, projectId, url, device, created_at);
+  const clicks = await getClicks(supabase, trackingId, url, device, created_at);
   const snapshot = await getSnapshot(supabase, id);
-  console.log(snapshot);
 
   if (!snapshot) {
     return <div>No snapshot found</div>;

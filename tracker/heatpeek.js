@@ -1,9 +1,9 @@
 //TODO: add a limit when on desktop
 (function () {
-  const projectId = document.currentScript.getAttribute("data-id");
+  const trackingId = document.currentScript.getAttribute("id");
   const endpoint = "http://localhost:3000/api/trackClick";
 
-  if (!projectId) {
+  if (!trackingId) {
     console.error("Heatpeek: Project ID is required");
     return;
   }
@@ -39,7 +39,7 @@
     const ery = (e.pageY - top) / height;
 
     const payload = {
-      projectId,
+      trackingId,
       url: window.location.href,
       timestamp: new Date().toISOString(),
       device,

@@ -8,30 +8,38 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { ArrowLeft, FileText, Lock } from "lucide-react";
+import { FileText, Lock } from "lucide-react";
+import { TrackingScript } from "@/components/TrackingScript";
 
 type SelectionStepProps = {
   onSelectSimple: () => void;
   onSelectAuth: () => void;
-  onBack: () => void;
+  trackingId: string | null;
 };
 
 export function SelectionStep({
   onSelectSimple,
   onSelectAuth,
-  onBack,
+  trackingId,
 }: SelectionStepProps) {
   return (
     <div className="min-h-screen bg-background p-6">
       <div className="max-w-4xl mx-auto">
-        {/* Back Button */}
         <div className="mb-8">
-          <Button variant="ghost" onClick={onBack}>
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to Dashboard
-          </Button>
+          <h2 className="text-2xl font-semibold mb-4">
+            First, Add the Tracking Script
+          </h2>
+          <p className="text-muted-foreground mb-6">
+            Before creating your page, you need to add our tracking script to
+            your website. This script will enable HeatPeek to collect and
+            analyze user interactions on your pages.
+          </p>
+          <TrackingScript id={trackingId} />
         </div>
 
+        <h2 className="text-2xl font-semibold mb-4">
+          Then, Choose Your Page Type
+        </h2>
         {/* Cards Container */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Simple Page Card */}

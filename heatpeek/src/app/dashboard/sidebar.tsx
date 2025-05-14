@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight, Plus } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
-import { UrlList } from "@/components/url-list";
+import { UrlList } from "@/components/UrlList";
 import { SnapshotUrl } from "@/lib/supabase/queries";
 import { Separator } from "@/components/ui/separator";
 

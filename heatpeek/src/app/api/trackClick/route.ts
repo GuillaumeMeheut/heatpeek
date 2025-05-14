@@ -6,10 +6,10 @@ export async function POST(request: NextRequest) {
   try {
     const payload = await request.json();
 
-    console.log("Payload:", payload);
+    console.log("Payload tracking click:", payload);
 
     // Validate required fields
-    if (!payload.projectId || !payload.url || !payload.s) {
+    if (!payload.trackingId || !payload.url || !payload.s) {
       return new Response(
         JSON.stringify({ error: "Missing required fields" }),
         { status: 400, headers: { "Content-Type": "application/json" } }
@@ -18,7 +18,7 @@ export async function POST(request: NextRequest) {
 
     // Format the data to match our ClickInfos type
     const clickData: ClickInfos = {
-      project_id: payload.projectId,
+      trackingId: payload.trackingId,
       url: payload.url,
       erx: payload.erx,
       ery: payload.ery,
