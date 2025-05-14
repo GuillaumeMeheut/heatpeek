@@ -23,8 +23,8 @@ export async function signIn(formData: FormData) {
     );
   }
 
-  revalidatePath("/", "layout");
-  redirect("/");
+  revalidatePath("/dashboard", "layout");
+  redirect("/dashboard");
 }
 
 export async function signUp(formData: FormData) {
