@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
-import puppeteer from "puppeteer";
+import chromium from "@sparticuz/chromium-min";
+import type { Browser as PuppeteerBrowser } from "puppeteer";
+import type { Browser as PuppeteerCoreBrowser, Page } from "puppeteer-core";
 import crypto from "crypto";
 import sharp from "sharp";
 import { createClient } from "@/lib/supabase/server";
@@ -21,10 +23,24 @@ export async function POST(request: Request) {
       );
     }
 
-    const browser = await puppeteer.launch({
-      headless: true,
-    });
-    const page = await browser.newPage();
+    let browser: PuppeteerBrowser | PuppeteerCoreBrowser;
+    if (process.env.NODE_ENV === "production") {
+      const puppeteerCore = await import("puppeteer-core");
+      browser = await puppeteerCore.launch({
+        args: chromium.args,
+        defaultViewport: chromium.defaultViewport,
+        executablePath: await chromium.executablePath(),
+        headless: chromium.headless,
+      });
+    } else {
+      const puppeteer = await import("puppeteer");
+      browser = await puppeteer.launch({
+        headless: true,
+        args: ["--no-sandbox", "--disable-setuid-sandbox"],
+      });
+    }
+
+    const page = (await browser.newPage()) as Page;
 
     // Set viewport based on device type
     const viewportSizes = {
