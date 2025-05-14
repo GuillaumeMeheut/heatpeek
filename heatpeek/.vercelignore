@@ -1,0 +1,12 @@
+# Ignore everything
+*
+
+# But not these files...
+!src/
+!public/
+!package.json
+!package-lock.json
+!next.config.js
+!tsconfig.json
+!postcss.config.js
+!tailwind.config.js 
