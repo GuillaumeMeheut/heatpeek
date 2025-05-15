@@ -1,7 +1,7 @@
 //TODO: add a limit when on desktop
 (function () {
   const trackingId = document.currentScript.getAttribute("id");
-  const endpoint = `${process.env.NEXT_PUBLIC_SITE_URL}api/trackClick`;
+  const endpoint = "https://heatpeek.vercel.app/api/trackClick";
 
   if (!trackingId) {
     console.error("Heatpeek: Project ID is required");
