@@ -1,4 +1,4 @@
-import { addClick, ClickInfos } from "@/lib/supabase/queries";
+import { addClicks, ClickInfos } from "@/lib/supabase/queries";
 import { createClient } from "@/lib/supabase/server";
 import { NextRequest } from "next/server";
 
@@ -9,36 +9,58 @@ export async function POST(request: NextRequest) {
     console.log("Payload tracking click:", payload);
 
     // Validate required fields
-    if (!payload.trackingId || !payload.url || !payload.s) {
+    if (!payload.trackingId || !Array.isArray(payload.events)) {
       return new Response(
-        JSON.stringify({ error: "Missing required fields" }),
+        JSON.stringify({ error: "Missing trackingId or events array" }),
         { status: 400, headers: { "Content-Type": "application/json" } }
       );
     }
 
-    // Format the data to match our ClickInfos type
-    const clickData: ClickInfos = {
-      trackingId: payload.trackingId,
-      url: payload.url,
-      erx: payload.erx,
-      ery: payload.ery,
-      timestamp: payload.timestamp,
-      device: payload.device,
-      visible: payload.visible,
-      s: payload.s,
-      l: payload.l,
-      t: payload.t,
-      w: payload.w,
-      h: payload.h,
-    };
-
-    console.log("Inserting click data:", clickData);
-
     const supabase = await createClient();
-    await addClick(supabase, clickData);
+    let errorCount = 0;
+    const errors = [];
+    const clickDataArray: ClickInfos[] = [];
+
+    for (const event of payload.events) {
+      if (!event.url || !event.s) {
+        errorCount++;
+        errors.push({ event, error: "Missing required fields in event" });
+        continue;
+      }
+      const clickData: ClickInfos = {
+        trackingId: payload.trackingId,
+        url: event.url,
+        erx: event.erx,
+        ery: event.ery,
+        timestamp: event.timestamp,
+        device: event.device,
+        visible: event.visible,
+        s: event.s,
+        l: event.l,
+        t: event.t,
+        w: event.w,
+        h: event.h,
+      };
+      clickDataArray.push(clickData);
+    }
+
+    let successCount = 0;
+    if (clickDataArray.length > 0) {
+      try {
+        await addClicks(supabase, clickDataArray);
+        successCount = clickDataArray.length;
+      } catch (err) {
+        errorCount += clickDataArray.length;
+        errors.push({ error: err instanceof Error ? err.message : err });
+      }
+    }
 
     return new Response(
-      JSON.stringify({ success: true, message: "Click tracked successfully" }),
+      JSON.stringify({
+        success: true,
+        message: `Processed ${successCount} clicks, ${errorCount} errors`,
+        errors,
+      }),
       {
         status: 200,
         headers: { "Content-Type": "application/json" },

@@ -5,10 +5,10 @@ Dashboard
 -Handle and show error in auth (email confirmation too)
 -on capture page check if the script is present
 -ability to generate a new script id and make the other script obsolete
--change langing dashboard img
+-change landing dashboard img
 
 Tracker
--Send request every X seconds
+-Send request every X seconds and detect page change
 
 Before Production
 -Compress public img
@@ -18,3 +18,5 @@ Before Production
 Ideas
 
 -possible to set a usage limit for X page
+
+Chrome is moving towards a new experience that allows users to choose to browse without third-party cookies.

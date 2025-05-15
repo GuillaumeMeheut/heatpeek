@@ -25,13 +25,12 @@ export type ClickInfos = {
   h?: number;
 };
 
-export const addClick = cache(
+export const addClicks = cache(
   async (
     supabase: SupabaseClient,
-    clickInfos: ClickInfos
-  ): Promise<ClickInfos | null> => {
-    const { data, error } = await supabase.from("clicks").insert([clickInfos]);
-    console.log("data", data);
+    clickInfos: ClickInfos[]
+  ): Promise<ClickInfos[] | null> => {
+    const { data, error } = await supabase.from("clicks").insert(clickInfos);
     if (error) {
       console.error("Error inserting click:", error);
       return null;

@@ -14,6 +14,39 @@
   let lastClickTime = 0;
   const THROTTLE_MS = 500;
 
+  const clickBuffer = [];
+  const MAX_BUFFER_SIZE = 10;
+  const MAX_INTERVAL_MS = 5000;
+
+  function flushBuffer() {
+    if (clickBuffer.length === 0) return;
+    const data = JSON.stringify({
+      trackingId,
+      events: clickBuffer.splice(0, clickBuffer.length),
+    });
+    if (navigator.sendBeacon) {
+      navigator.sendBeacon(endpoint, data);
+    } else {
+      fetch(endpoint, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: data,
+      }).catch((error) => {
+        console.error("Heatpeek: Error sending click data:", error);
+      });
+    }
+  }
+
+  // Set up interval to flush buffer
+  setInterval(flushBuffer, MAX_INTERVAL_MS);
+
+  window.addEventListener("beforeunload", flushBuffer);
+  document.addEventListener("visibilitychange", function () {
+    if (document.visibilityState === "hidden") {
+      flushBuffer();
+    }
+  });
+
   document.addEventListener("click", (e) => {
     const now = Date.now();
     if (now - lastClickTime < THROTTLE_MS) return;
@@ -39,7 +72,6 @@
     const ery = (e.pageY - top) / height;
 
     const payload = {
-      trackingId,
       url: window.location.href,
       timestamp: new Date().toISOString(),
       device,
@@ -53,18 +85,9 @@
       h: height,
     };
 
-    const data = JSON.stringify(payload);
-
-    if (navigator.sendBeacon) {
-      navigator.sendBeacon(endpoint, data);
-    } else {
-      fetch(endpoint, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: data,
-      }).catch((error) => {
-        console.error("Heatpeek: Error sending click data:", error);
-      });
+    clickBuffer.push(payload);
+    if (clickBuffer.length >= MAX_BUFFER_SIZE) {
+      flushBuffer();
     }
   });
 })();
