@@ -4,7 +4,8 @@ import crypto from "crypto";
 import sharp from "sharp";
 import { createClient } from "@/lib/supabase/server";
 import { getUser, addSnapshot, uploadScreenshot } from "@/lib/supabase/queries";
-import { MAX_SIZE_PX } from "./pupetter-large-page";
+
+const MAX_SIZE_PX = 16384;
 
 export async function POST(request: Request) {
   try {
