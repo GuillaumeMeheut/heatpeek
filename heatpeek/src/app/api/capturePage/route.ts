@@ -1,7 +1,5 @@
 import { NextResponse } from "next/server";
-import chromium from "@sparticuz/chromium-min";
-import type { Browser as PuppeteerBrowser } from "puppeteer";
-import type { Browser as PuppeteerCoreBrowser, Page } from "puppeteer-core";
+import playwright from "playwright";
 import crypto from "crypto";
 import sharp from "sharp";
 import { createClient } from "@/lib/supabase/server";
@@ -22,25 +20,23 @@ export async function POST(request: Request) {
         { status: 500 }
       );
     }
-
-    let browser: PuppeteerBrowser | PuppeteerCoreBrowser;
-    if (process.env.NODE_ENV === "production") {
-      const puppeteerCore = await import("puppeteer-core");
-      browser = await puppeteerCore.launch({
-        args: chromium.args,
-        defaultViewport: chromium.defaultViewport,
-        executablePath: await chromium.executablePath(),
-        headless: chromium.headless,
-      });
-    } else {
-      const puppeteer = await import("puppeteer");
-      browser = await puppeteer.launch({
-        headless: true,
-        args: ["--no-sandbox", "--disable-setuid-sandbox"],
-      });
+    if (!process.env.BROWSERCAT_API_KEY) {
+      console.error("BROWSERCAT_API_KEY environment variable is not set.");
+      return NextResponse.json(
+        { error: "BrowserCat API key not configured" },
+        { status: 500 }
+      );
     }
 
-    const page = (await browser.newPage()) as Page;
+    const bcatUrl = "wss://api.browsercat.com/connect";
+    const browser = await playwright.chromium.connect(bcatUrl, {
+      headers: { "Api-Key": process.env.BROWSERCAT_API_KEY },
+    });
+
+    const context = await browser.newContext({
+      // Viewport settings can be set here or per page
+    });
+    const page = await context.newPage();
 
     // Set viewport based on device type
     const viewportSizes = {
@@ -49,27 +45,27 @@ export async function POST(request: Request) {
       mobile: { width: 375, height: 812 },
     };
 
-    await page.setViewport(
+    const selectedViewport =
       viewportSizes[device as keyof typeof viewportSizes] ||
-        viewportSizes.desktop
-    );
+      viewportSizes.desktop;
+    await page.setViewportSize(selectedViewport);
 
     await page.goto(url, {
-      waitUntil: "networkidle2",
+      waitUntil: "networkidle",
     });
 
-    await page.waitForSelector("body");
-    await new Promise((r) => setTimeout(r, 2000));
+    await page.waitForSelector("body"); // Or use locator.waitFor()
+    await page.waitForTimeout(2000); // Playwright's equivalent for new Promise(r => setTimeout(r, ms))
 
     // Scroll to bottom and back to top to ensure all content is loaded
     await page.evaluate(() => {
       window.scrollTo(0, document.body.scrollHeight);
     });
-    await new Promise((r) => setTimeout(r, 2000));
+    await page.waitForTimeout(2000);
     await page.evaluate(() => {
       window.scrollTo(0, 0);
     });
-    await new Promise((r) => setTimeout(r, 2000));
+    await page.waitForTimeout(2000);
 
     // Get the actual page dimensions
     const pageDimensions = await page.evaluate(() => {
@@ -90,13 +86,13 @@ export async function POST(request: Request) {
       );
     }
 
-    // Capture screenshot using the large page handler
+    // Capture screenshot
     let screenshotBuffer;
     try {
+      // Playwright screenshot returns a Buffer directly. Take PNG and convert with Sharp.
       screenshotBuffer = await page.screenshot({
         fullPage: true,
-        type: "webp",
-        encoding: "binary",
+        type: "png",
       });
 
       if (!screenshotBuffer || screenshotBuffer.length === 0) {
@@ -113,7 +109,7 @@ export async function POST(request: Request) {
       throw new Error(`Failed to capture screenshot: ${errorMessage}`);
     }
 
-    // Convert to WebP format
+    // Convert to WebP format (sharp processing remains the same)
     const compressedBuffer = await sharp(screenshotBuffer)
       .webp({
         quality: 80,
@@ -273,9 +269,8 @@ export async function POST(request: Request) {
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error("Error capturing page:", error);
-    return NextResponse.json(
-      { error: "Failed to capture page" },
-      { status: 500 }
-    );
+    const errorMessage =
+      error instanceof Error ? error.message : "Failed to capture page";
+    return NextResponse.json({ error: errorMessage }, { status: 500 });
   }
 }
