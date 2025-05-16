@@ -8,13 +8,10 @@ import { Click, SnapshotInfos } from "@/lib/supabase/queries";
 
 type VisibleElement = {
   s: string;
-  b: {
-    l: number;
-    t: number;
-    w: number;
-    h: number;
-  };
-  t: string;
+  l: number;
+  t: number;
+  w: number;
+  h: number;
 };
 
 type HeatmapProps = {
@@ -92,8 +89,8 @@ export default function Heatmap({
 
         if (element && click.erx !== undefined && click.ery !== undefined) {
           // Use the element-relative position to calculate the absolute position
-          x = (element.b.l + click.erx * element.b.w) * scaleX;
-          y = (element.b.t + click.ery * element.b.h) * scaleY;
+          x = (element.l + click.erx * element.w) * scaleX;
+          y = (element.t + click.ery * element.h) * scaleY;
         } else if (click.l !== undefined && click.t !== undefined) {
           // Fallback to using the bounding box position
           x = click.l * scaleX;

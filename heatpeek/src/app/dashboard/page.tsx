@@ -22,7 +22,6 @@ export default async function Dashboard({
   if (!user) redirect("/signin");
 
   const snapshotsUrls = await getSnapshotsUrls(supabase, user?.id);
-
   if (!snapshotsUrls || snapshotsUrls.length === 0) {
     redirect(`/add-page`);
   }

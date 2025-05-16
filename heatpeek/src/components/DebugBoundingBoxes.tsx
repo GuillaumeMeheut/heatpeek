@@ -3,13 +3,10 @@ import { useEffect, useRef } from "react";
 
 interface VisibleElement {
   s: string;
-  b: {
-    l: number;
-    t: number;
-    w: number;
-    h: number;
-  };
-  t: string;
+  l: number;
+  t: number;
+  w: number;
+  h: number;
 }
 
 export default function DebugBoundingBoxes({
@@ -38,7 +35,7 @@ export default function DebugBoundingBoxes({
         const scaleY = height / pageData.height;
 
         visibleElement.forEach((element) => {
-          const { l, t, w, h } = element.b;
+          const { l, t, w, h } = element;
           ctx.strokeRect(l * scaleX, t * scaleY, w * scaleX, h * scaleY);
         });
       }

@@ -1,4 +1,3 @@
-//TODO: add a limit when on desktop
 (function () {
   const trackingId = document.currentScript.getAttribute("id");
   const endpoint = "http://localhost:3000/api/trackClick";

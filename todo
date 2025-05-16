@@ -6,6 +6,7 @@ Dashboard
 -on capture page check if the script is present
 -ability to generate a new script id and make the other script obsolete
 -change landing dashboard img
+-add internationalization
 
 Tracker
 -Send request every X seconds and detect page change
