@@ -65,8 +65,8 @@ export async function POST(request: Request) {
         waitUntil: "domcontentloaded",
       });
 
-      await page.waitForSelector("body"); // Or use locator.waitFor()
-      await page.waitForTimeout(2000); // Playwright's equivalent for new Promise(r => setTimeout(r, ms))
+      await page.waitForSelector("body");
+      await page.waitForTimeout(2000);
 
       // Scroll to bottom and back to top to ensure all content is loaded
       await page.evaluate(() => {
@@ -100,7 +100,6 @@ export async function POST(request: Request) {
       // Capture screenshot
       let screenshotBuffer;
       try {
-        // Playwright screenshot returns a Buffer directly. Take PNG and convert with Sharp.
         screenshotBuffer = await page.screenshot({
           fullPage: true,
           type: "png",
@@ -213,8 +212,14 @@ export async function POST(request: Request) {
       });
 
       await browser.close();
+      browser = null;
 
       // Generate a layout hash based on the visible elements
+      //Sort in case element change but layout remain the same, it reduce false negatives
+      visibleDomElements.sort(
+        (a, b) => a.t - b.t || a.l - b.l || a.w - b.w || a.h - b.h
+      );
+
       const layoutHash = crypto
         .createHash("md5")
         .update(JSON.stringify(visibleDomElements))
@@ -274,10 +279,11 @@ export async function POST(request: Request) {
       console.error("Error capturing page:", error);
       const errorMessage =
         error instanceof Error ? error.message : "Failed to capture page";
+      return NextResponse.json({ error: errorMessage }, { status: 500 });
+    } finally {
       if (browser) {
         await browser.close();
       }
-      return NextResponse.json({ error: errorMessage }, { status: 500 });
     }
   } catch (error) {
     console.error("Error capturing page:", error);
