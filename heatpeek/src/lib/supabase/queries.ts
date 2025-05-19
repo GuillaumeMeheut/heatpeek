@@ -122,6 +122,46 @@ export const getSnapshot = cache(
   }
 );
 
+export const getSnapshotDomData = cache(
+  async (supabase: SupabaseClient, id: string): Promise<string | null> => {
+    const { data, error } = await supabase
+      .from("snapshots")
+      .select("domData")
+      .eq("id", id)
+      .single();
+
+    if (error) {
+      console.error("Error fetching snapshot:", error);
+      return null;
+    }
+
+    return data.domData;
+  }
+);
+
+export const getSnapshotIdAndDomData = cache(
+  async (
+    supabase: SupabaseClient,
+    trackingId: string,
+    url: string,
+    device: string
+  ): Promise<{ id: string; domData: string }[] | null> => {
+    const { data, error } = await supabase
+      .from("snapshots")
+      .select("id, domData")
+      .eq("trackingId", trackingId)
+      .eq("url", url)
+      .eq("device", device);
+
+    if (error) {
+      console.error("Error fetching snapshot id:", error);
+      return null;
+    }
+
+    return data;
+  }
+);
+
 export type UploadScreenshotInfos = {
   userId: string;
   layoutHash: string;
@@ -214,5 +254,66 @@ export const getTrackingId = cache(
     }
 
     return data.id;
+  }
+);
+
+export type AggregatedClick = {
+  snapshotId: string;
+  gridX: number;
+  gridY: number;
+  count: number;
+  lastUpdatedAt: string;
+};
+
+// export const addAggregatedClicks = cache(
+//   async (
+//     supabase: SupabaseClient,
+//     aggregatedClicks: AggregatedClick[]
+//   ): Promise<AggregatedClick[] | null> => {
+//     const { data, error } = await supabase
+//       .from("aggregated_clicks")
+//       .upsert(aggregatedClicks, {
+//         onConflict: "snapshotId,gridX,gridY",
+//         ignoreDuplicates: false,
+//       });
+
+//     if (error) {
+//       console.error("Error inserting aggregated clicks:", error);
+//       return null;
+//     }
+
+//     return data;
+//   }
+// );
+
+export const addAggregatedClicks = async (
+  supabase: SupabaseClient,
+  aggregatedClicks: AggregatedClick[]
+) => {
+  const { error } = await supabase.rpc("upsert_aggregated_clicks", {
+    clicks: aggregatedClicks,
+  });
+
+  if (error) {
+    console.error("Error in upsert_aggregated_clicks RPC:", error);
+  }
+};
+
+export const getAggregatedClicks = cache(
+  async (
+    supabase: SupabaseClient,
+    snapshotId: string
+  ): Promise<AggregatedClick[] | null> => {
+    const { data, error } = await supabase
+      .from("aggregated_clicks")
+      .select("*")
+      .eq("snapshotId", snapshotId);
+
+    if (error) {
+      console.error("Error fetching aggregated clicks:", error);
+      return null;
+    }
+
+    return data;
   }
 );

@@ -1,10 +1,10 @@
 import Heatmap from "./Heatmap";
 import {
-  getClicks,
   getSnapshot,
   getSnapshotsUrls,
   getTrackingId,
   getUser,
+  getAggregatedClicks,
 } from "@/lib/supabase/queries";
 import { createClient } from "@/lib/supabase/server";
 import { OptionsBar } from "./OptionsBar";
@@ -39,19 +39,13 @@ export default async function Dashboard({
   if (!trackingId) return;
   const currentSnapshot = snapshotsUrls.find((snapshot) => snapshot.id === id);
   if (!currentSnapshot) return;
-  const url = currentSnapshot.url;
-  const device = currentSnapshot.device;
-  const created_at = currentSnapshot.created_at;
 
-  const clicks = await getClicks(supabase, trackingId, url, device, created_at);
   const snapshot = await getSnapshot(supabase, id);
+  const aggregatedClicks = await getAggregatedClicks(supabase, id);
 
   if (!snapshot) {
     return <div>No snapshot found</div>;
   }
-  // const deserializedData = snapshot
-  //   ? deserializePageData(snapshot.domData)
-  //   : null;
 
   const visibleElement = JSON.parse(snapshot?.domData);
 
@@ -64,7 +58,7 @@ export default async function Dashboard({
             <div className="w-full">
               <div className="min-w-full">
                 <Heatmap
-                  clicks={clicks || []}
+                  aggregatedClicks={aggregatedClicks || []}
                   pageData={snapshot}
                   visibleElement={visibleElement}
                 />

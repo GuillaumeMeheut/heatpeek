@@ -4,7 +4,7 @@ import { useEffect, useRef, useMemo, useState } from "react";
 import Image from "next/image";
 import simpleheat from "simpleheat";
 import DebugBoundingBoxes from "../../components/DebugBoundingBoxes";
-import { Click, SnapshotInfos } from "@/lib/supabase/queries";
+import { SnapshotInfos, AggregatedClick } from "@/lib/supabase/queries";
 
 type VisibleElement = {
   s: string;
@@ -15,7 +15,7 @@ type VisibleElement = {
 };
 
 type HeatmapProps = {
-  clicks: Click[];
+  aggregatedClicks: AggregatedClick[];
   pageData: SnapshotInfos;
   visibleElement: VisibleElement[];
 };
@@ -31,7 +31,7 @@ const HEATMAP_CONFIG = {
 } as const;
 
 export default function Heatmap({
-  clicks,
+  aggregatedClicks,
   pageData,
   visibleElement,
 }: HeatmapProps) {
@@ -69,58 +69,22 @@ export default function Heatmap({
     return () => window.removeEventListener("resize", updateDimensions);
   }, [pageData]);
 
-  // Calculate points with intensity based on grid-based aggregation
+  // Calculate points with intensity based on aggregated clicks
   const points = useMemo(() => {
-    if (clicks.length === 0 || !pageData || !containerDimensions) return [];
+    if (aggregatedClicks.length === 0 || !pageData || !containerDimensions)
+      return [];
 
     // Calculate scaling factors
     const scaleX = containerDimensions.width / pageData.width;
     const scaleY = containerDimensions.height / pageData.height;
 
-    const grid = new Map<string, { count: number; x: number; y: number }>();
-
-    clicks.forEach((click) => {
-      let x = 0;
-      let y = 0;
-
-      // Try to find the element that was clicked using the selector
-      if (click.s) {
-        const element = visibleElement.find((el) => el.s === click.s);
-
-        if (element && click.erx !== undefined && click.ery !== undefined) {
-          // Use the element-relative position to calculate the absolute position
-          x = (element.l + click.erx * element.w) * scaleX;
-          y = (element.t + click.ery * element.h) * scaleY;
-        } else if (click.l !== undefined && click.t !== undefined) {
-          // Fallback to using the bounding box position
-          x = click.l * scaleX;
-          y = click.t * scaleY;
-        }
-      }
-
-      // Round to nearest grid cell
-      const gridX =
-        Math.floor(x / HEATMAP_CONFIG.GRID_SIZE) * HEATMAP_CONFIG.GRID_SIZE +
-        HEATMAP_CONFIG.GRID_SIZE / 2;
-      const gridY =
-        Math.floor(y / HEATMAP_CONFIG.GRID_SIZE) * HEATMAP_CONFIG.GRID_SIZE +
-        HEATMAP_CONFIG.GRID_SIZE / 2;
-
-      const key = `${gridX},${gridY}`;
-      if (!grid.has(key)) {
-        grid.set(key, { count: 1, x: gridX, y: gridY });
-      } else {
-        const entry = grid.get(key)!;
-        entry.count++;
-      }
-    });
-
-    // Convert grid to points with intensity
-    return Array.from(grid.values()).map(({ x, y, count }) => {
-      const intensity = Math.log2(count + 1) * 2;
+    return aggregatedClicks.map((click) => {
+      const x = click.gridX * scaleX;
+      const y = click.gridY * scaleY;
+      const intensity = Math.log2(click.count + 1) * 2;
       return [x, y, intensity] as [number, number, number];
     });
-  }, [clicks, containerDimensions, pageData, visibleElement]);
+  }, [aggregatedClicks, containerDimensions, pageData]);
 
   useEffect(() => {
     if (canvasRef.current && points.length > 0 && containerDimensions) {

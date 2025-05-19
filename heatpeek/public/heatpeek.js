@@ -1,6 +1,7 @@
 (function () {
   const trackingId = document.currentScript.getAttribute("id");
   const endpoint = "https://heatpeek.vercel.app/api/trackClick";
+  // const endpoint = "http://localhost:3000/api/trackClick";
 
   if (!trackingId) {
     console.error("Heatpeek: Project ID is required");
@@ -21,6 +22,8 @@
     if (clickBuffer.length === 0) return;
     const data = JSON.stringify({
       trackingId,
+      url: window.location.href,
+      device,
       events: clickBuffer.splice(0, clickBuffer.length),
     });
     if (navigator.sendBeacon) {
@@ -71,9 +74,7 @@
     const ery = (e.pageY - top) / height;
 
     const payload = {
-      url: window.location.href,
       timestamp: new Date().toISOString(),
-      device,
       visible,
       erx,
       ery,
