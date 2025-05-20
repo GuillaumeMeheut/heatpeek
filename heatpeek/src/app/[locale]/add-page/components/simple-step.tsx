@@ -21,12 +21,14 @@ import {
 } from "lucide-react";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useState } from "react";
+import { useI18n } from "@locales/client";
 
 type SimpleStepProps = {
   onBack: () => void;
 };
 
 export function SimpleStep({ onBack }: SimpleStepProps) {
+  const t = useI18n();
   const [popupBlocking, setPopupBlocking] = useState("omit-popups");
   const [cssSelectors, setCssSelectors] = useState("");
   const [websiteUrl, setWebsiteUrl] = useState("");
@@ -88,7 +90,7 @@ export function SimpleStep({ onBack }: SimpleStepProps) {
         <div className="mb-8">
           <Button variant="ghost" onClick={onBack}>
             <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to Selection
+            {t("addPage.simple.back")}
           </Button>
         </div>
 
@@ -98,19 +100,20 @@ export function SimpleStep({ onBack }: SimpleStepProps) {
               <div className="p-2 bg-primary/10 rounded-full">
                 <FileText className="h-6 w-6 text-primary" />
               </div>
-              <CardTitle>Step 1: Add Your Page URL</CardTitle>
+              <CardTitle>{t("addPage.simple.title")}</CardTitle>
             </div>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
               <p className="text-muted-foreground">
-                Enter the URL of the page you want to track. Make sure the page
-                is publicly accessible.
+                {t("addPage.simple.instructions")}
               </p>
-              <h4 className="font-medium pt-4">Your Page</h4>
+              <h4 className="font-medium pt-4">
+                {t("addPage.simple.yourPage")}
+              </h4>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label>Website URL</Label>
+                  <Label>{t("addPage.simple.websiteUrl")}</Label>
                   <Input
                     type="text"
                     placeholder="https://example.com/page"
@@ -120,7 +123,7 @@ export function SimpleStep({ onBack }: SimpleStepProps) {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label>Snapshot name</Label>
+                  <Label>{t("addPage.simple.snapshotName")}</Label>
                   <Input
                     type="text"
                     placeholder="Landing Page"
@@ -134,7 +137,9 @@ export function SimpleStep({ onBack }: SimpleStepProps) {
           </CardContent>
           <CardContent>
             <div className="space-y-4">
-              <h4 className="font-medium">Select Devices</h4>
+              <h4 className="font-medium">
+                {t("addPage.simple.selectDevices")}
+              </h4>
               <div className="flex gap-4">
                 <Button
                   variant={
@@ -171,7 +176,9 @@ export function SimpleStep({ onBack }: SimpleStepProps) {
           </CardContent>
           <CardContent>
             <div className="space-y-4">
-              <h4 className="font-medium">Blocking Pop-Ups</h4>
+              <h4 className="font-medium">
+                {t("addPage.simple.blockingPopups")}
+              </h4>
 
               <RadioGroup
                 value={popupBlocking}
@@ -180,11 +187,15 @@ export function SimpleStep({ onBack }: SimpleStepProps) {
               >
                 <div className="flex items-center space-x-2">
                   <RadioGroupItem value="omit-popups" id="omit-popups" />
-                  <Label htmlFor="omit-popups">Omit pop-ups</Label>
+                  <Label htmlFor="omit-popups">
+                    {t("addPage.simple.popupOptions.omit")}
+                  </Label>
                 </div>
                 <div className="flex items-center space-x-2">
                   <RadioGroupItem value="dont-block" id="dont-block" />
-                  <Label htmlFor="dont-block">Don&apos;t block anything</Label>
+                  <Label htmlFor="dont-block">
+                    {t("addPage.simple.popupOptions.dontBlock")}
+                  </Label>
                 </div>
                 <div className="flex items-center space-x-2">
                   <RadioGroupItem
@@ -192,21 +203,23 @@ export function SimpleStep({ onBack }: SimpleStepProps) {
                     id="specific-elements"
                   />
                   <Label htmlFor="specific-elements">
-                    Omit specific elements
+                    {t("addPage.simple.popupOptions.specific")}
                   </Label>
                 </div>
               </RadioGroup>
               {popupBlocking === "specific-elements" && (
                 <div className="mt-4 space-y-2">
-                  <Label htmlFor="css-selectors">CSS Selectors</Label>
+                  <Label htmlFor="css-selectors">
+                    {t("addPage.simple.cssSelectors.label")}
+                  </Label>
                   <Input
                     id="css-selectors"
-                    placeholder=".cookie-banner, #newsletter-popup"
+                    placeholder={t("addPage.simple.cssSelectors.placeholder")}
                     value={cssSelectors}
                     onChange={(e) => setCssSelectors(e.target.value)}
                   />
                   <p className="text-sm text-muted-foreground">
-                    Enter CSS selectors separated by commas
+                    {t("addPage.simple.cssSelectors.help")}
                   </p>
                 </div>
               )}
@@ -218,7 +231,7 @@ export function SimpleStep({ onBack }: SimpleStepProps) {
               disabled={!isFormValid() || isLoading}
               onClick={addNewSnapshot}
             >
-              Continue
+              {t("addPage.simple.continue")}
               {isLoading ? (
                 <Loader2 className="h-4 w-4 mr-2 animate-spin" />
               ) : (

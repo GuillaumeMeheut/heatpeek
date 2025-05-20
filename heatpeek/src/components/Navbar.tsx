@@ -5,10 +5,13 @@ import { LogIn, LayoutDashboard, UserPlus } from "lucide-react";
 import { getUser } from "@/lib/supabase/queries";
 import { createClient } from "@/lib/supabase/server";
 import { SignOutButton } from "@/components/Auth/sign-auth-button";
+import { getI18n } from "../../locales/server";
+import { LanguageSwitcher } from "./LanguageSwitcher";
 
 export async function Navbar() {
   const supabase = await createClient();
   const { user } = await getUser(supabase);
+  const t = await getI18n();
 
   return (
     <nav className="w-full border-b">
@@ -28,13 +31,13 @@ export async function Navbar() {
             href="/why"
             className="text-sm text-muted-foreground hover:text-foreground"
           >
-            Why Heatpeek ?
+            {t("nav.why")}
           </Link>
           <Link
             href="/pricing"
             className="text-sm text-muted-foreground hover:text-foreground"
           >
-            Pricing
+            {t("nav.pricing")}
           </Link>
         </div>
         <div className="flex items-center gap-4">
@@ -43,7 +46,7 @@ export async function Navbar() {
               <Button size="sm" asChild>
                 <Link href="/dashboard" className="flex items-center gap-2">
                   <LayoutDashboard className="h-4 w-4" />
-                  Dashboard
+                  {t("nav.dashboard")}
                 </Link>
               </Button>
               <SignOutButton />
@@ -53,17 +56,18 @@ export async function Navbar() {
               <Button variant="ghost" size="sm" asChild>
                 <Link href="/signin" className="flex items-center gap-2">
                   <LogIn className="h-4 w-4" />
-                  Sign In
+                  {t("nav.signIn")}
                 </Link>
               </Button>
               <Button size="sm" asChild>
                 <Link href="/signup" className="flex items-center gap-2">
                   <UserPlus className="h-4 w-4" />
-                  Sign Up
+                  {t("nav.signUp")}
                 </Link>
               </Button>
             </>
           )}
+          <LanguageSwitcher />
         </div>
       </div>
     </nav>

@@ -1,8 +1,11 @@
 import { Button } from "@/components/ui/button";
 import { LogOut } from "lucide-react";
 import { handleSignOut } from "@/lib/auth-helpers/server";
+import { getI18n } from "@locales/server";
 
-export function SignOutButton() {
+export async function SignOutButton() {
+  const t = await getI18n();
+
   return (
     <form action={handleSignOut}>
       <input
@@ -17,7 +20,7 @@ export function SignOutButton() {
         className="flex items-center gap-2"
       >
         <LogOut className="h-4 w-4" />
-        Sign Out
+        {t("auth.signOut")}
       </Button>
     </form>
   );

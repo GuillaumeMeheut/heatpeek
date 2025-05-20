@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/card";
 import { FileText, Lock } from "lucide-react";
 import { TrackingScript } from "@/components/TrackingScript";
+import { useI18n } from "@locales/client";
 
 type SelectionStepProps = {
   onSelectSimple: () => void;
@@ -22,23 +23,23 @@ export function SelectionStep({
   onSelectAuth,
   trackingId,
 }: SelectionStepProps) {
+  const t = useI18n();
+
   return (
     <div className="min-h-screen bg-background p-6">
       <div className="max-w-4xl mx-auto">
         <div className="mb-8">
           <h2 className="text-2xl font-semibold mb-4">
-            First, Add the Tracking Script
+            {t("addPage.selection.title")}
           </h2>
           <p className="text-muted-foreground mb-6">
-            Before creating your page, you need to add our tracking script to
-            your website. This script will enable HeatPeek to collect and
-            analyze user interactions on your pages.
+            {t("addPage.selection.description")}
           </p>
           <TrackingScript id={trackingId} />
         </div>
 
         <h2 className="text-2xl font-semibold mb-4">
-          Then, Choose Your Page Type
+          {t("addPage.selection.chooseType")}
         </h2>
         {/* Cards Container */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -49,15 +50,17 @@ export function SelectionStep({
                 <div className="p-2 bg-primary/10 rounded-full">
                   <FileText className="h-6 w-6 text-primary" />
                 </div>
-                <CardTitle>Add a Simple Page</CardTitle>
+                <CardTitle>{t("addPage.selection.simple.title")}</CardTitle>
               </div>
             </CardHeader>
             <CardContent className="flex-1">
-              <p className="text-muted-foreground">Create a new single page.</p>
+              <p className="text-muted-foreground">
+                {t("addPage.selection.simple.description")}
+              </p>
             </CardContent>
             <CardFooter>
               <Button className="w-full" onClick={onSelectSimple}>
-                Create Simple Page
+                {t("addPage.selection.simple.title")}
               </Button>
             </CardFooter>
           </Card>
@@ -69,17 +72,17 @@ export function SelectionStep({
                 <div className="p-2 bg-primary/10 rounded-full">
                   <Lock className="h-6 w-6 text-primary" />
                 </div>
-                <CardTitle>Add a Page Behind Auth</CardTitle>
+                <CardTitle>{t("addPage.selection.auth.title")}</CardTitle>
               </div>
             </CardHeader>
             <CardContent className="flex-1">
               <p className="text-muted-foreground">
-                Create a new page that requires user authentication to access.
+                {t("addPage.selection.auth.description")}
               </p>
             </CardContent>
             <CardFooter>
               <Button className="w-full" onClick={onSelectAuth}>
-                Create Auth Page
+                {t("addPage.selection.auth.title")}
               </Button>
             </CardFooter>
           </Card>

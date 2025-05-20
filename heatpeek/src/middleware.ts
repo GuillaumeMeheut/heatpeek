@@ -1,8 +1,23 @@
 import { updateSession } from "@/lib/supabase/middleware";
 import { type NextRequest } from "next/server";
+import { createI18nMiddleware } from "next-international/middleware";
+
+const I18nMiddleware = createI18nMiddleware({
+  locales: ["en", "fr"],
+  defaultLocale: "en",
+  urlMappingStrategy: "rewrite",
+});
 
 export async function middleware(request: NextRequest) {
-  return await updateSession(request);
+  // First handle the session update
+  const sessionResponse = await updateSession(request);
+
+  // If session update returns a redirect or error response, return it immediately
+  if (sessionResponse.status !== 200) {
+    return sessionResponse;
+  }
+
+  return I18nMiddleware(request);
 }
 
 export const config = {

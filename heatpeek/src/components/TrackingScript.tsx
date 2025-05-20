@@ -3,6 +3,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Check, Copy } from "lucide-react";
 import { useState } from "react";
+import { useI18n } from "../../locales/client";
 
 interface TrackingScriptProps {
   id: string | null;
@@ -10,6 +11,7 @@ interface TrackingScriptProps {
 
 export function TrackingScript({ id }: TrackingScriptProps) {
   const [copied, setCopied] = useState(false);
+  const t = useI18n();
 
   const script = `<script
   defer
@@ -27,7 +29,7 @@ export function TrackingScript({ id }: TrackingScriptProps) {
     <Card className="p-6">
       <div className="space-y-4">
         <div className="flex items-center justify-between">
-          <h3 className="text-lg font-semibold">Tracking Script</h3>
+          <h3 className="text-lg font-semibold">{t("tracking.title")}</h3>
           <Button
             variant="outline"
             size="sm"
@@ -37,12 +39,12 @@ export function TrackingScript({ id }: TrackingScriptProps) {
             {copied ? (
               <>
                 <Check className="h-4 w-4" />
-                Copied!
+                {t("tracking.copied")}
               </>
             ) : (
               <>
                 <Copy className="h-4 w-4" />
-                Copy
+                {t("tracking.copy")}
               </>
             )}
           </Button>
@@ -53,9 +55,7 @@ export function TrackingScript({ id }: TrackingScriptProps) {
           </pre>
         </div>
         <p className="text-sm text-muted-foreground">
-          Add this script to your website&apos;s HTML, either at the top of the
-          &lt;head&gt; section after &lt;meta&gt; tags. Add it to every page you
-          wish to track, then verify your installation.
+          {t("tracking.instructions")}
         </p>
       </div>
     </Card>

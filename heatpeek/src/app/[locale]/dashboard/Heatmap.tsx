@@ -3,7 +3,7 @@
 import { useEffect, useRef, useMemo, useState } from "react";
 import Image from "next/image";
 import simpleheat from "simpleheat";
-import DebugBoundingBoxes from "../../components/DebugBoundingBoxes";
+import DebugBoundingBoxes from "../../../components/DebugBoundingBoxes";
 import { SnapshotInfos, AggregatedClick } from "@/lib/supabase/queries";
 
 type VisibleElement = {

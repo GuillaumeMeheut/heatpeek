@@ -1,6 +1,6 @@
 (function () {
   const trackingId = document.currentScript.getAttribute("id");
-  const endpoint = "https://heatpeek.vercel.app/api/trackClick";
+  const endpoint = "https://heatpeek.com/api/trackClick";
   // const endpoint = "http://localhost:3000/api/trackClick";
 
   if (!trackingId) {

@@ -17,6 +17,7 @@ import {
   LucideIcon,
 } from "lucide-react";
 import { Slider } from "@/components/ui/slider";
+import { useI18n } from "@locales/client";
 
 interface TooltipButtonProps {
   icon: LucideIcon;
@@ -43,23 +44,28 @@ function TooltipButton({ icon: Icon, tooltip }: TooltipButtonProps) {
 }
 
 export function OptionsBar() {
+  const t = useI18n();
+
   return (
     <TooltipProvider>
       <div className="fixed left-1/2 -translate-x-1/2 bottom-4 flex items-center gap-4 px-4 py-3 bg-primary/95 backdrop-blur-sm rounded-full shadow-lg z-30">
         <div className="flex gap-2">
           <TooltipButton
             icon={MousePointerClick}
-            tooltip="Analyze user click patterns"
+            tooltip={t("optionsBar.clickPatterns")}
           />
-          <TooltipButton icon={Mouse} tooltip="Track user scroll" />
+          <TooltipButton icon={Mouse} tooltip={t("optionsBar.scroll")} />
         </div>
 
         <Separator orientation="vertical" className="h-6" />
 
         <div className="flex gap-2">
-          <TooltipButton icon={Smartphone} tooltip="Mobile view" />
-          <TooltipButton icon={Tablet} tooltip="Tablet view" />
-          <TooltipButton icon={Monitor} tooltip="Desktop view" />
+          <TooltipButton
+            icon={Smartphone}
+            tooltip={t("optionsBar.mobileView")}
+          />
+          <TooltipButton icon={Tablet} tooltip={t("optionsBar.tabletView")} />
+          <TooltipButton icon={Monitor} tooltip={t("optionsBar.desktopView")} />
         </div>
 
         <Separator orientation="vertical" className="h-6" />
@@ -70,7 +76,7 @@ export function OptionsBar() {
               <Eye className="h-4 w-4 text-primary-foreground" />
             </TooltipTrigger>
             <TooltipContent>
-              <p>Adjust overlay opacity</p>
+              <p>{t("optionsBar.opacity")}</p>
             </TooltipContent>
           </Tooltip>
           <Slider defaultValue={[50]} max={100} step={1} className="w-full" />

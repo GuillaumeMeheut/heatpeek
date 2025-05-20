@@ -6,9 +6,11 @@ import { useState } from "react";
 import { UrlList } from "@/components/UrlList";
 import { SnapshotUrl } from "@/lib/supabase/queries";
 import { Separator } from "@/components/ui/separator";
+import { useI18n } from "@locales/client";
 
 export function Sidebar({ snapshotsUrls }: { snapshotsUrls: SnapshotUrl[] }) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const t = useI18n();
 
   return (
     <div
@@ -34,7 +36,7 @@ export function Sidebar({ snapshotsUrls }: { snapshotsUrls: SnapshotUrl[] }) {
           <Button asChild>
             <Link href="/add-page" className="flex items-center gap-2 w-full">
               <Plus className="h-4 w-4" />
-              New Page
+              {t("sidebar.newPage")}
             </Link>
           </Button>
         </div>
