@@ -1,8 +1,10 @@
 "use client";
 
-import { useTransition } from "react";
+import { useTransition, useMemo } from "react";
 import { Button } from "../ui/button";
-
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 import {
   Card,
   CardHeader,
@@ -26,10 +28,74 @@ export default function CardSign({ isSignIn, onSubmit }: CardSignProps) {
   const [isPending, startTransition] = useTransition();
   const t = useI18n();
 
-  const handleSubmit = async (e: FormData) => {
+  const signInSchema = useMemo(
+    () =>
+      z.object({
+        email: z.string().email(t("auth.card.validation.invalidEmail")),
+        password: z.string().min(6, t("auth.card.validation.passwordTooShort")),
+      }),
+    [t]
+  );
+
+  const signUpSchema = useMemo(
+    () =>
+      signInSchema
+        .extend({
+          confirmPassword: z
+            .string()
+            .min(6, t("auth.card.validation.passwordTooShort")),
+        })
+        .refine((data) => data.password === data.confirmPassword, {
+          message: t("auth.card.validation.passwordsDontMatch"),
+          path: ["confirmPassword"],
+        }),
+    [signInSchema, t]
+  );
+
+  type SignInFormData = z.infer<typeof signInSchema>;
+  type SignUpFormData = z.infer<typeof signUpSchema>;
+
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<SignInFormData | SignUpFormData>({
+    resolver: zodResolver(isSignIn ? signInSchema : signUpSchema),
+  });
+
+  const onFormSubmit = async (data: SignInFormData | SignUpFormData) => {
+    const formData = new FormData();
+    formData.append("email", data.email);
+    formData.append("password", data.password);
+
     startTransition(async () => {
-      await onSubmit(e);
+      await onSubmit(formData);
     });
+  };
+
+  const renderConfirmPasswordField = () => {
+    if (isSignIn) return null;
+
+    const signUpErrors = errors as { confirmPassword?: { message?: string } };
+
+    return (
+      <div className="grid w-full items-center gap-1.5 mb-3">
+        <Label htmlFor="confirmPassword">
+          {t("auth.card.confirmPassword")}
+        </Label>
+        <Input
+          id="confirmPassword"
+          type="password"
+          placeholder={t("auth.card.confirmPasswordPlaceholder")}
+          {...register("confirmPassword" as keyof SignUpFormData)}
+        />
+        {signUpErrors.confirmPassword && (
+          <p className="text-sm text-red-500">
+            {signUpErrors.confirmPassword.message}
+          </p>
+        )}
+      </div>
+    );
   };
 
   return (
@@ -40,28 +106,34 @@ export default function CardSign({ isSignIn, onSubmit }: CardSignProps) {
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <form>
+        <form onSubmit={handleSubmit(onFormSubmit)}>
           <div className="grid w-full items-center gap-1.5 mb-3">
             <Label htmlFor="email">{t("auth.card.email")}</Label>
             <Input
               id="email"
-              name="email"
               type="email"
               placeholder={t("auth.card.emailPlaceholder")}
+              {...register("email")}
             />
+            {errors.email && (
+              <p className="text-sm text-red-500">{errors.email.message}</p>
+            )}
           </div>
           <div className="grid w-full items-center gap-1.5 mb-3">
             <Label htmlFor="password">{t("auth.card.password")}</Label>
             <Input
               id="password"
-              name="password"
               type="password"
-              required
               placeholder={t("auth.card.passwordPlaceholder")}
+              {...register("password")}
             />
+            {errors.password && (
+              <p className="text-sm text-red-500">{errors.password.message}</p>
+            )}
           </div>
+          {renderConfirmPasswordField()}
           <Button
-            formAction={handleSubmit}
+            type="submit"
             className="mt-3 min-w-full"
             disabled={isPending}
           >
@@ -75,14 +147,14 @@ export default function CardSign({ isSignIn, onSubmit }: CardSignProps) {
         <p className="text-sm mt-2">
           {isSignIn ? (
             <>
-              {t("auth.card.noAccount")}{" "}
+              {t("auth.card.noAccount")}
               <Link href={"/signup"} className="underline font-medium">
                 {t("auth.card.signUpLink")}
               </Link>
             </>
           ) : (
             <>
-              {t("auth.card.haveAccount")}{" "}
+              {t("auth.card.haveAccount")}
               <Link href={"/signin"} className="underline font-medium">
                 {t("auth.card.signInLink")}
               </Link>

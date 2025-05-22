@@ -17,72 +17,168 @@ import {
   Eye,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { getI18n } from "@locales/server";
 
-const plans = [
-  {
-    name: "Free",
-    price: "$0",
-    description: "Perfect for passion projects & simple websites",
-    features: [
-      { name: "Click Heatmap", value: "Basic", icon: MousePointerClick },
-      { name: "Rage Clicks", value: false, icon: AlertCircle },
-      { name: "Scroll Tracking", value: false, icon: Scroll },
-      { name: "Retention", value: "7 days", icon: Calendar },
-      { name: "Tracked Page", value: "1", icon: Folder },
-      { name: "Pageviews", value: "500/month", icon: Eye },
-    ],
-  },
-  {
-    name: "Independent",
-    price: "$9/mo",
-    description: "For production applications with the power to scale",
-    isPopular: true,
-    features: [
-      { name: "Click Heatmap", value: true, icon: MousePointerClick },
-      { name: "Rage Clicks", value: "Basic", icon: AlertCircle },
-      { name: "Scroll Tracking", value: true, icon: Scroll },
-      { name: "Retention", value: "30 days", icon: Calendar },
-      { name: "Tracked Page", value: "10", icon: Folder },
-      { name: "Pageviews", value: "5k/month", icon: Eye },
-    ],
-  },
-  {
-    name: "Pro",
-    price: "$29/mo",
-    description: "For growing businesses with advanced needs",
-    features: [
-      { name: "Click Heatmap", value: true, icon: MousePointerClick },
-      { name: "Rage Clicks", value: "Advanced", icon: AlertCircle },
-      { name: "Scroll Tracking", value: "✅ + Segments", icon: Scroll },
-      { name: "Retention", value: "90 days", icon: Calendar },
-      { name: "Tracked Page", value: "10", icon: Folder },
-      { name: "Pageviews", value: "100k/mo", icon: Eye },
-    ],
-  },
-  {
-    name: "Scale",
-    price: "$79+",
-    description:
-      "For large-scale applications running Internet scale workloads",
-    features: [
-      { name: "Click Heatmap", value: true, icon: MousePointerClick },
-      { name: "Rage Clicks", value: "Advanced", icon: AlertCircle },
-      { name: "Scroll Tracking", value: "✅ Full control", icon: Scroll },
-      { name: "Retention", value: "180+ days", icon: Calendar },
-      { name: "Tracked Page", value: "Unlimited", icon: Folder },
-      { name: "Pageviews", value: "1M+/mo", icon: Eye },
-    ],
-  },
-];
+export default async function Pricing() {
+  const t = await getI18n();
 
-export default function Pricing() {
+  const plans = [
+    {
+      name: t("pricing.plans.free.name"),
+      price: t("pricing.plans.free.price"),
+      description: t("pricing.plans.free.description"),
+      features: [
+        {
+          name: t("pricing.plans.free.features.clickHeatmap"),
+          value: t("pricing.features.basic"),
+          icon: MousePointerClick,
+        },
+        {
+          name: t("pricing.plans.free.features.rageClicks"),
+          value: false,
+          icon: AlertCircle,
+        },
+        {
+          name: t("pricing.plans.free.features.scrollTracking"),
+          value: false,
+          icon: Scroll,
+        },
+        {
+          name: t("pricing.plans.free.features.retention"),
+          value: "7 days",
+          icon: Calendar,
+        },
+        {
+          name: t("pricing.plans.free.features.trackedPage"),
+          value: "1",
+          icon: Folder,
+        },
+        {
+          name: t("pricing.plans.free.features.pageviews"),
+          value: "500/month",
+          icon: Eye,
+        },
+      ],
+    },
+    {
+      name: t("pricing.plans.independent.name"),
+      price: t("pricing.plans.independent.price"),
+      description: t("pricing.plans.independent.description"),
+      isPopular: true,
+      features: [
+        {
+          name: t("pricing.plans.free.features.clickHeatmap"),
+          value: true,
+          icon: MousePointerClick,
+        },
+        {
+          name: t("pricing.plans.free.features.rageClicks"),
+          value: t("pricing.features.basic"),
+          icon: AlertCircle,
+        },
+        {
+          name: t("pricing.plans.free.features.scrollTracking"),
+          value: true,
+          icon: Scroll,
+        },
+        {
+          name: t("pricing.plans.free.features.retention"),
+          value: "30 days",
+          icon: Calendar,
+        },
+        {
+          name: t("pricing.plans.free.features.trackedPage"),
+          value: "10",
+          icon: Folder,
+        },
+        {
+          name: t("pricing.plans.free.features.pageviews"),
+          value: "5k/month",
+          icon: Eye,
+        },
+      ],
+    },
+    {
+      name: t("pricing.plans.pro.name"),
+      price: t("pricing.plans.pro.price"),
+      description: t("pricing.plans.pro.description"),
+      features: [
+        {
+          name: t("pricing.plans.free.features.clickHeatmap"),
+          value: true,
+          icon: MousePointerClick,
+        },
+        {
+          name: t("pricing.plans.free.features.rageClicks"),
+          value: t("pricing.features.advanced"),
+          icon: AlertCircle,
+        },
+        {
+          name: t("pricing.plans.free.features.scrollTracking"),
+          value: "✅ + Segments",
+          icon: Scroll,
+        },
+        {
+          name: t("pricing.plans.free.features.retention"),
+          value: "90 days",
+          icon: Calendar,
+        },
+        {
+          name: t("pricing.plans.free.features.trackedPage"),
+          value: "10",
+          icon: Folder,
+        },
+        {
+          name: t("pricing.plans.free.features.pageviews"),
+          value: "100k/mo",
+          icon: Eye,
+        },
+      ],
+    },
+    {
+      name: t("pricing.plans.scale.name"),
+      price: t("pricing.plans.scale.price"),
+      description: t("pricing.plans.scale.description"),
+      features: [
+        {
+          name: t("pricing.plans.free.features.clickHeatmap"),
+          value: true,
+          icon: MousePointerClick,
+        },
+        {
+          name: t("pricing.plans.free.features.rageClicks"),
+          value: t("pricing.features.advanced"),
+          icon: AlertCircle,
+        },
+        {
+          name: t("pricing.plans.free.features.scrollTracking"),
+          value: "✅ Full control",
+          icon: Scroll,
+        },
+        {
+          name: t("pricing.plans.free.features.retention"),
+          value: "180+ days",
+          icon: Calendar,
+        },
+        {
+          name: t("pricing.plans.free.features.trackedPage"),
+          value: t("pricing.features.unlimited"),
+          icon: Folder,
+        },
+        {
+          name: t("pricing.plans.free.features.pageviews"),
+          value: "1M+/mo",
+          icon: Eye,
+        },
+      ],
+    },
+  ];
+
   return (
     <div className="container mx-auto py-12">
       <div className="text-center mb-12">
-        <h1 className="text-4xl font-bold mb-4">Simple, transparent pricing</h1>
-        <p className="text-muted-foreground">
-          Choose the plan that&apos;s right for you
-        </p>
+        <h1 className="text-4xl font-bold mb-4">{t("pricing.title")}</h1>
+        <p className="text-muted-foreground">{t("pricing.subtitle")}</p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -97,7 +193,7 @@ export default function Pricing() {
             {plan.isPopular && (
               <div className="absolute -top-4 left-1/2 -translate-x-1/2">
                 <div className="bg-primary text-primary-foreground px-4 py-1 rounded-full text-sm font-medium shadow-sm">
-                  Most Popular
+                  {t("pricing.plans.independent.popular")}
                 </div>
               </div>
             )}
@@ -107,7 +203,9 @@ export default function Pricing() {
                 <CardDescription className="text-3xl font-bold text-primary">
                   {plan.price.split("/")[0]}
                 </CardDescription>
-                <span className="text-sm text-muted-foreground">/month</span>
+                <span className="text-sm text-muted-foreground">
+                  {t("pricing.features.perMonth")}
+                </span>
               </div>
               <p className="text-sm text-muted-foreground mt-2">
                 {plan.description}
@@ -145,7 +243,9 @@ export default function Pricing() {
                 variant={plan.isPopular ? "default" : "outline"}
                 size="lg"
               >
-                {plan.name === "Scale" ? "Contact Us" : "Get Started"}
+                {plan.name === t("pricing.plans.scale.name")
+                  ? t("pricing.features.contactUs")
+                  : t("pricing.features.getStarted")}
               </Button>
             </CardFooter>
           </Card>

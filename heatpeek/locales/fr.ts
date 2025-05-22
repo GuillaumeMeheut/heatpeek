@@ -19,6 +19,13 @@ export default {
       haveAccount: "Vous avez déjà un compte ?",
       signUpLink: "S'inscrire",
       signInLink: "Se connecter",
+      confirmPassword: "Confirmer le mot de passe",
+      confirmPasswordPlaceholder: "Confirmez votre mot de passe",
+      validation: {
+        invalidEmail: "Adresse email invalide",
+        passwordTooShort: "Le mot de passe doit contenir au moins 6 caractères",
+        passwordsDontMatch: "Les mots de passe ne correspondent pas",
+      },
     },
   },
   sidebar: {
@@ -132,6 +139,68 @@ export default {
         help: "Entrez les sélecteurs CSS séparés par des virgules",
       },
       continue: "Continuer",
+      validation: {
+        invalidUrl: "Veuillez entrer une URL valide",
+        snapshotNameRequired: "Le nom de la capture est requis",
+        selectDevice: "Veuillez sélectionner au moins un appareil",
+        cssSelectorsRequired:
+          "Les sélecteurs CSS sont requis lors de la sélection d'éléments spécifiques",
+      },
+      success: {
+        title: "Succès !",
+        description: "Votre page a été capturée avec succès.",
+      },
+      error: {
+        title: "Erreur",
+        description: "Échec de la capture de la page. Veuillez réessayer.",
+      },
+    },
+  },
+  pricing: {
+    title: "Tarification simple et transparente",
+    subtitle: "Choisissez le forfait qui vous convient",
+    plans: {
+      free: {
+        name: "Gratuit",
+        price: "0€",
+        description:
+          "Parfait pour les projets passion et les sites web simples",
+        features: {
+          clickHeatmap: "Heatmap de clics",
+          rageClicks: "Clics de rage",
+          scrollTracking: "Suivi du défilement",
+          retention: "Rétention",
+          trackedPage: "Page suivie",
+          pageviews: "Pages vues",
+        },
+      },
+      independent: {
+        name: "Indépendant",
+        price: "9€/mois",
+        description:
+          "Pour les applications en production avec la puissance d'évoluer",
+        popular: "Le plus populaire",
+      },
+      pro: {
+        name: "Pro",
+        price: "29€/mois",
+        description:
+          "Pour les entreprises en croissance avec des besoins avancés",
+      },
+      scale: {
+        name: "Scale",
+        price: "79€+",
+        description:
+          "Pour les applications à grande échelle exécutant des charges de travail Internet",
+      },
+    },
+    features: {
+      basic: "Basique",
+      advanced: "Avancé",
+      unlimited: "Illimité",
+      perMonth: "/mois",
+      getStarted: "Commencer",
+      contactUs: "Contactez-nous",
     },
   },
 } as const;

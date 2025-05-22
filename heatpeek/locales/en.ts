@@ -19,6 +19,13 @@ export default {
       haveAccount: "Already have an account?",
       signUpLink: "Sign up",
       signInLink: "Sign in",
+      confirmPassword: "Confirm Password",
+      confirmPasswordPlaceholder: "Confirm your password",
+      validation: {
+        invalidEmail: "Invalid email address",
+        passwordTooShort: "Password must be at least 6 characters",
+        passwordsDontMatch: "Passwords don't match",
+      },
     },
   },
   sidebar: {
@@ -129,6 +136,65 @@ export default {
         help: "Enter CSS selectors separated by commas",
       },
       continue: "Continue",
+      validation: {
+        invalidUrl: "Please enter a valid URL",
+        snapshotNameRequired: "Snapshot name is required",
+        selectDevice: "Please select at least one device",
+        cssSelectorsRequired:
+          "CSS selectors are required when selecting specific elements",
+      },
+      success: {
+        title: "Success!",
+        description: "Your page has been successfully captured.",
+      },
+      error: {
+        title: "Error",
+        description: "Failed to capture the page. Please try again.",
+      },
+    },
+  },
+  pricing: {
+    title: "Simple, transparent pricing",
+    subtitle: "Choose the plan that's right for you",
+    plans: {
+      free: {
+        name: "Free",
+        price: "$0",
+        description: "Perfect for passion projects & simple websites",
+        features: {
+          clickHeatmap: "Click Heatmap",
+          rageClicks: "Rage Clicks",
+          scrollTracking: "Scroll Tracking",
+          retention: "Retention",
+          trackedPage: "Tracked Page",
+          pageviews: "Pageviews",
+        },
+      },
+      independent: {
+        name: "Independent",
+        price: "$9/mo",
+        description: "For production applications with the power to scale",
+        popular: "Most Popular",
+      },
+      pro: {
+        name: "Pro",
+        price: "$29/mo",
+        description: "For growing businesses with advanced needs",
+      },
+      scale: {
+        name: "Scale",
+        price: "$79+",
+        description:
+          "For large-scale applications running Internet scale workloads",
+      },
+    },
+    features: {
+      basic: "Basic",
+      advanced: "Advanced",
+      unlimited: "Unlimited",
+      perMonth: "/month",
+      getStarted: "Get Started",
+      contactUs: "Contact Us",
     },
   },
 } as const;

@@ -20,8 +20,12 @@ import {
   Loader2,
 } from "lucide-react";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useI18n } from "@locales/client";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { useToast } from "@/hooks/use-toast";
 
 type SimpleStepProps = {
   onBack: () => void;
@@ -29,43 +33,85 @@ type SimpleStepProps = {
 
 export function SimpleStep({ onBack }: SimpleStepProps) {
   const t = useI18n();
-  const [popupBlocking, setPopupBlocking] = useState("omit-popups");
-  const [cssSelectors, setCssSelectors] = useState("");
-  const [websiteUrl, setWebsiteUrl] = useState("");
-  const [snapshotName, setSnapshotName] = useState("");
   const [isLoading, setIsLoading] = useState<boolean>(false);
-  const [selectedDevices, setSelectedDevices] = useState<string[]>(["desktop"]);
+  const { toast } = useToast();
+
+  const formSchema = useMemo(
+    () =>
+      z
+        .object({
+          websiteUrl: z.string().url(t("addPage.simple.validation.invalidUrl")),
+          snapshotName: z
+            .string()
+            .min(1, t("addPage.simple.validation.snapshotNameRequired")),
+          popupBlocking: z.enum([
+            "omit-popups",
+            "dont-block",
+            "specific-elements",
+          ]),
+          cssSelectors: z.string().optional(),
+          selectedDevices: z
+            .array(z.string())
+            .min(1, t("addPage.simple.validation.selectDevice")),
+        })
+        .refine(
+          (data) => {
+            if (data.popupBlocking === "specific-elements") {
+              return data.cssSelectors?.trim() !== "";
+            }
+            return true;
+          },
+          {
+            message: t("addPage.simple.validation.cssSelectorsRequired"),
+            path: ["cssSelectors"],
+          }
+        ),
+    [t]
+  );
+
+  type FormData = z.infer<typeof formSchema>;
+
+  const {
+    register,
+    handleSubmit,
+    watch,
+    setValue,
+    formState: { errors },
+  } = useForm<FormData>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      popupBlocking: "omit-popups",
+      selectedDevices: ["desktop"],
+      cssSelectors: "",
+    },
+  });
+
+  const popupBlocking = watch("popupBlocking");
+  const selectedDevices = watch("selectedDevices");
 
   const toggleDevice = (device: string) => {
-    setSelectedDevices((prev) =>
-      prev.includes(device)
-        ? prev.filter((d) => d !== device)
-        : [...prev, device]
+    setValue(
+      "selectedDevices",
+      selectedDevices.includes(device)
+        ? selectedDevices.filter((d) => d !== device)
+        : [...selectedDevices, device],
+      { shouldValidate: true }
     );
   };
 
-  const isFormValid = () => {
-    const hasRequiredFields =
-      websiteUrl.trim() !== "" && snapshotName.trim() !== "";
-    const hasValidCssSelectors =
-      popupBlocking !== "specific-elements" || cssSelectors.trim() !== "";
-    const hasSelectedDevice = selectedDevices.length > 0;
-    return hasRequiredFields && hasValidCssSelectors && hasSelectedDevice;
-  };
-
-  const addNewSnapshot = async () => {
+  const onSubmit = async (data: FormData) => {
     setIsLoading(true);
     try {
       // First capture the page for each selected device
-      for (const device of selectedDevices) {
+      for (const device of data.selectedDevices) {
         const captureResponse = await fetch(`/api/capturePage`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            url: websiteUrl,
-            label: snapshotName,
+            url: data.websiteUrl,
+            label: data.snapshotName,
             device: device,
           }),
         });
@@ -75,10 +121,18 @@ export function SimpleStep({ onBack }: SimpleStepProps) {
         }
       }
 
-      // TODO: Add success notification
+      toast({
+        title: t("addPage.simple.success.title"),
+        description: t("addPage.simple.success.description"),
+        variant: "default",
+      });
     } catch (error) {
       console.error("Error capturing page:", error);
-      // TODO: Add proper error handling UI
+      toast({
+        title: t("addPage.simple.error.title"),
+        description: t("addPage.simple.error.description"),
+        variant: "destructive",
+      });
     } finally {
       setIsLoading(false);
     }
@@ -94,152 +148,180 @@ export function SimpleStep({ onBack }: SimpleStepProps) {
           </Button>
         </div>
 
-        <Card className="hover:shadow-lg transition-shadow">
-          <CardHeader>
-            <div className="flex items-center gap-4">
-              <div className="p-2 bg-primary/10 rounded-full">
-                <FileText className="h-6 w-6 text-primary" />
+        <form onSubmit={handleSubmit(onSubmit)}>
+          <Card className="hover:shadow-lg transition-shadow">
+            <CardHeader>
+              <div className="flex items-center gap-4">
+                <div className="p-2 bg-primary/10 rounded-full">
+                  <FileText className="h-6 w-6 text-primary" />
+                </div>
+                <CardTitle>{t("addPage.simple.title")}</CardTitle>
               </div>
-              <CardTitle>{t("addPage.simple.title")}</CardTitle>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              <p className="text-muted-foreground">
-                {t("addPage.simple.instructions")}
-              </p>
-              <h4 className="font-medium pt-4">
-                {t("addPage.simple.yourPage")}
-              </h4>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label>{t("addPage.simple.websiteUrl")}</Label>
-                  <Input
-                    type="text"
-                    placeholder="https://example.com/page"
-                    className="w-full p-2 rounded-md border bg-background"
-                    value={websiteUrl}
-                    onChange={(e) => setWebsiteUrl(e.target.value)}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>{t("addPage.simple.snapshotName")}</Label>
-                  <Input
-                    type="text"
-                    placeholder="Landing Page"
-                    className="w-full p-2 rounded-md border bg-background"
-                    value={snapshotName}
-                    onChange={(e) => setSnapshotName(e.target.value)}
-                  />
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <p className="text-muted-foreground">
+                  {t("addPage.simple.instructions")}
+                </p>
+                <h4 className="font-medium pt-4">
+                  {t("addPage.simple.yourPage")}
+                </h4>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>{t("addPage.simple.websiteUrl")}</Label>
+                    <Input
+                      type="text"
+                      placeholder="https://example.com/page"
+                      className="w-full p-2 rounded-md border bg-background"
+                      {...register("websiteUrl")}
+                    />
+                    {errors.websiteUrl && (
+                      <p className="text-sm text-red-500">
+                        {errors.websiteUrl.message}
+                      </p>
+                    )}
+                  </div>
+                  <div className="space-y-2">
+                    <Label>{t("addPage.simple.snapshotName")}</Label>
+                    <Input
+                      type="text"
+                      placeholder="Landing Page"
+                      className="w-full p-2 rounded-md border bg-background"
+                      {...register("snapshotName")}
+                    />
+                    {errors.snapshotName && (
+                      <p className="text-sm text-red-500">
+                        {errors.snapshotName.message}
+                      </p>
+                    )}
+                  </div>
                 </div>
               </div>
-            </div>
-          </CardContent>
-          <CardContent>
-            <div className="space-y-4">
-              <h4 className="font-medium">
-                {t("addPage.simple.selectDevices")}
-              </h4>
-              <div className="flex gap-4">
-                <Button
-                  variant={
-                    selectedDevices.includes("desktop") ? "default" : "outline"
-                  }
-                  size="icon"
-                  onClick={() => toggleDevice("desktop")}
-                  className="h-12 w-12"
-                >
-                  <Monitor className="h-6 w-6" />
-                </Button>
-                <Button
-                  variant={
-                    selectedDevices.includes("tablet") ? "default" : "outline"
-                  }
-                  size="icon"
-                  onClick={() => toggleDevice("tablet")}
-                  className="h-12 w-12"
-                >
-                  <Tablet className="h-6 w-6" />
-                </Button>
-                <Button
-                  variant={
-                    selectedDevices.includes("mobile") ? "default" : "outline"
-                  }
-                  size="icon"
-                  onClick={() => toggleDevice("mobile")}
-                  className="h-12 w-12"
-                >
-                  <Smartphone className="h-6 w-6" />
-                </Button>
-              </div>
-            </div>
-          </CardContent>
-          <CardContent>
-            <div className="space-y-4">
-              <h4 className="font-medium">
-                {t("addPage.simple.blockingPopups")}
-              </h4>
-
-              <RadioGroup
-                value={popupBlocking}
-                onValueChange={setPopupBlocking}
-                className="space-y-3"
-              >
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="omit-popups" id="omit-popups" />
-                  <Label htmlFor="omit-popups">
-                    {t("addPage.simple.popupOptions.omit")}
-                  </Label>
+            </CardContent>
+            <CardContent>
+              <div className="space-y-4">
+                <h4 className="font-medium">
+                  {t("addPage.simple.selectDevices")}
+                </h4>
+                <div className="flex gap-4">
+                  <Button
+                    type="button"
+                    variant={
+                      selectedDevices.includes("desktop")
+                        ? "default"
+                        : "outline"
+                    }
+                    size="icon"
+                    onClick={() => toggleDevice("desktop")}
+                    className="h-12 w-12"
+                  >
+                    <Monitor className="h-6 w-6" />
+                  </Button>
+                  <Button
+                    type="button"
+                    variant={
+                      selectedDevices.includes("tablet") ? "default" : "outline"
+                    }
+                    size="icon"
+                    onClick={() => toggleDevice("tablet")}
+                    className="h-12 w-12"
+                  >
+                    <Tablet className="h-6 w-6" />
+                  </Button>
+                  <Button
+                    type="button"
+                    variant={
+                      selectedDevices.includes("mobile") ? "default" : "outline"
+                    }
+                    size="icon"
+                    onClick={() => toggleDevice("mobile")}
+                    className="h-12 w-12"
+                  >
+                    <Smartphone className="h-6 w-6" />
+                  </Button>
                 </div>
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="dont-block" id="dont-block" />
-                  <Label htmlFor="dont-block">
-                    {t("addPage.simple.popupOptions.dontBlock")}
-                  </Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem
-                    value="specific-elements"
-                    id="specific-elements"
-                  />
-                  <Label htmlFor="specific-elements">
-                    {t("addPage.simple.popupOptions.specific")}
-                  </Label>
-                </div>
-              </RadioGroup>
-              {popupBlocking === "specific-elements" && (
-                <div className="mt-4 space-y-2">
-                  <Label htmlFor="css-selectors">
-                    {t("addPage.simple.cssSelectors.label")}
-                  </Label>
-                  <Input
-                    id="css-selectors"
-                    placeholder={t("addPage.simple.cssSelectors.placeholder")}
-                    value={cssSelectors}
-                    onChange={(e) => setCssSelectors(e.target.value)}
-                  />
-                  <p className="text-sm text-muted-foreground">
-                    {t("addPage.simple.cssSelectors.help")}
+                {errors.selectedDevices && (
+                  <p className="text-sm text-red-500">
+                    {errors.selectedDevices.message}
                   </p>
-                </div>
-              )}
-            </div>
-          </CardContent>
-          <CardFooter>
-            <Button
-              className="w-full"
-              disabled={!isFormValid() || isLoading}
-              onClick={addNewSnapshot}
-            >
-              {t("addPage.simple.continue")}
-              {isLoading ? (
-                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-              ) : (
-                <ArrowRight className="h-4 w-4 ml-2" />
-              )}
-            </Button>
-          </CardFooter>
-        </Card>
+                )}
+              </div>
+            </CardContent>
+            <CardContent>
+              <div className="space-y-4">
+                <h4 className="font-medium">
+                  {t("addPage.simple.blockingPopups")}
+                </h4>
+
+                <RadioGroup
+                  value={popupBlocking}
+                  onValueChange={(value) =>
+                    setValue(
+                      "popupBlocking",
+                      value as FormData["popupBlocking"],
+                      {
+                        shouldValidate: true,
+                      }
+                    )
+                  }
+                  className="space-y-3"
+                >
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="omit-popups" id="omit-popups" />
+                    <Label htmlFor="omit-popups">
+                      {t("addPage.simple.popupOptions.omit")}
+                    </Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="dont-block" id="dont-block" />
+                    <Label htmlFor="dont-block">
+                      {t("addPage.simple.popupOptions.dontBlock")}
+                    </Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem
+                      value="specific-elements"
+                      id="specific-elements"
+                    />
+                    <Label htmlFor="specific-elements">
+                      {t("addPage.simple.popupOptions.specific")}
+                    </Label>
+                  </div>
+                </RadioGroup>
+                {popupBlocking === "specific-elements" && (
+                  <div className="mt-4 space-y-2">
+                    <Label htmlFor="css-selectors">
+                      {t("addPage.simple.cssSelectors.label")}
+                    </Label>
+                    <Input
+                      id="css-selectors"
+                      placeholder={t("addPage.simple.cssSelectors.placeholder")}
+                      {...register("cssSelectors")}
+                    />
+                    <p className="text-sm text-muted-foreground">
+                      {t("addPage.simple.cssSelectors.help")}
+                    </p>
+                    {errors.cssSelectors && (
+                      <p className="text-sm text-red-500">
+                        {errors.cssSelectors.message}
+                      </p>
+                    )}
+                  </div>
+                )}
+              </div>
+            </CardContent>
+            <CardFooter>
+              <Button type="submit" className="w-full" disabled={isLoading}>
+                {t("addPage.simple.continue")}
+                {isLoading ? (
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                ) : (
+                  <ArrowRight className="h-4 w-4 ml-2" />
+                )}
+              </Button>
+            </CardFooter>
+          </Card>
+        </form>
       </div>
     </div>
   );

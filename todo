@@ -1,23 +1,54 @@
-Dashboard
--Aggregate Data
--Snapshot not found
--Handle and show error in add snapshot
--Handle and show error in auth (email confirmation too)
--on capture page check if the script is present
--ability to generate a new script id and make the other script obsolete
--change landing dashboard img
--add internationalization
+# Project Tasks Overview
 
-Tracker
--Send request every X seconds and detect page change
+## 🖥️ Dashboard
 
-Before Production
--Compress public img
--redraw the logo to svg and make it better and set as favicon
--Custom SMTP server
+- [ ] Handle "Snapshot Not Found"
+- [ ] Fix auth error when signin with existing account (say success)
+- [ ] Handle and display errors:
+  - [ ] Add Snapshot
+  - [ ] Auth (including email confirmation)
+- [ ] Forgot Password flow
+- [ ] On Capture page: check if the script is present
+- [ ] On Capture page: use better succes/error showing
+- [ ] Review strategy to add clicks for super high traffic
 
-Ideas
+---
 
--possible to set a usage limit for X page
+## 📈 Tracker
 
-Chrome is moving towards a new experience that allows users to choose to browse without third-party cookies.
+- [ ] Send request every X seconds and detect page change
+- [ ] Fetch config (enabled, sampling rate(based on trafic), quota status, pages to track)
+- [ ] Cache config in memory to retain between page loads (if quota exceeded cache time = time reset)
+
+---
+
+## 🌐 Global
+
+- [ ] Create crons:
+  - [ ] Aggregate data every X hours
+  - [ ] Determine website size (traffic insights)
+- [ ] Include traffic data in config
+
+---
+
+## 🚀 Before Production
+
+- [ ] Compress public images
+- [ ] Change landing dashboard image
+- [ ] Redraw logo as SVG:
+  - [ ] Improve design
+  - [ ] Set as favicon
+- [ ] Set up custom SMTP server
+
+---
+
+## 💡 Ideas
+
+- [ ] Allow usage limit for X snapshot
+- [ ] Ability to generate a new script ID (invalidate old ones)
+
+---
+
+## 📣 Marketing Note
+
+> Chrome is transitioning to a new model that allows users to browse without third-party cookies. Adjust strategies accordingly.

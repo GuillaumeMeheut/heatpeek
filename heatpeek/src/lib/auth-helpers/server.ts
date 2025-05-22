@@ -32,12 +32,12 @@ export async function signUp(formData: FormData) {
 
   // type-casting here for convenience
   // in practice, you should validate your inputs
-  const data = {
+  const userData = {
     email: formData.get("email") as string,
     password: formData.get("password") as string,
   };
 
-  const { error } = await supabase.auth.signUp(data);
+  const { data, error } = await supabase.auth.signUp(userData);
 
   if (error) {
     return redirect(
@@ -45,13 +45,27 @@ export async function signUp(formData: FormData) {
     );
   }
 
-  redirect(
-    getStatusRedirect(
-      `/signup`,
-      "Success!",
-      "An email has been sent to your address, click on the link to comfirm your account."
-    )
-  );
+  if (data && data.user) {
+    // Check if the user got created
+    if (data.user.identities && data.user.identities?.length > 0) {
+      redirect(
+        getStatusRedirect(
+          `/signup`,
+          "Success!",
+          "An email has been sent to your address, click on the link to comfirm your account."
+        )
+      );
+    } else {
+      // failed, the email address is taken
+      redirect(
+        getStatusRedirect(
+          `/signup`,
+          "Email already taken",
+          "Please try a different email address."
+        )
+      );
+    }
+  }
 }
 
 export async function signOut(formData: FormData) {
