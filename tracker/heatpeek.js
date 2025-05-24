@@ -21,6 +21,8 @@
     if (clickBuffer.length === 0) return;
     const data = JSON.stringify({
       trackingId,
+      url: window.location.href,
+      device,
       events: clickBuffer.splice(0, clickBuffer.length),
     });
     if (navigator.sendBeacon) {
@@ -71,9 +73,7 @@
     const ery = (e.pageY - top) / height;
 
     const payload = {
-      url: window.location.href,
       timestamp: new Date().toISOString(),
-      device,
       visible,
       erx,
       ery,
