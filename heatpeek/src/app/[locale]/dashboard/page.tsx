@@ -47,7 +47,7 @@ export default async function Dashboard({
     return <div>No snapshot found</div>;
   }
 
-  const visibleElement = JSON.parse(snapshot?.domData);
+  const visibleElement = JSON.parse(snapshot?.dom_data);
 
   return (
     <div className="flex">

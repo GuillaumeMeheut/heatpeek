@@ -43,11 +43,13 @@ function aggregateClicksIntoGrid(
         // Use the element-relative position to calculate the absolute position
         x = element.l + click.erx * element.w;
         y = element.t + click.ery * element.h;
-      } else if (click.l !== undefined && click.t !== undefined) {
-        // Fallback to using the bounding box position
-        x = click.l;
-        y = click.t;
+      } else {
+        // Skip this click if no element match is found
+        return;
       }
+    } else {
+      // Skip clicks without a selector
+      return;
     }
 
     // Round to nearest grid cell
@@ -79,11 +81,11 @@ function aggregateClicksIntoGrid(
   // Convert grid to aggregated clicks
   return Array.from(grid.entries()).map(([, { x, y, count }]) => {
     return {
-      snapshotId,
-      gridX: x,
-      gridY: y,
+      snapshot_id: snapshotId,
+      grid_x: x,
+      grid_y: y,
       count,
-      lastUpdatedAt: new Date().toISOString(),
+      last_updated_at: new Date().toISOString(),
     };
   });
 }
@@ -91,8 +93,6 @@ function aggregateClicksIntoGrid(
 export async function POST(request: NextRequest) {
   try {
     const payload = await request.json();
-
-    console.log("Payload tracking click:", payload);
 
     // Validate required fields
     if (
@@ -112,14 +112,46 @@ export async function POST(request: NextRequest) {
     const errors = [];
     const clickDataArray: ClickInfos[] = [];
 
+    const snapshot = await getSnapshotIdAndDomData(
+      supabase,
+      payload.trackingId,
+      payload.url,
+      payload.device
+    );
+
+    if (!snapshot) {
+      return new Response(
+        JSON.stringify({ error: "No matching snapshot found" }),
+        { status: 400, headers: { "Content-Type": "application/json" } }
+      );
+    }
+
+    const domElements = JSON.parse(snapshot.dom_data) as Array<{
+      s: string;
+      l: number;
+      t: number;
+      w: number;
+      h: number;
+    }>;
+
     for (const event of payload.events) {
       if (!event.s) {
         errorCount++;
         errors.push({ event, error: "Missing required fields in event" });
         continue;
       }
+
+      // Check if the selector exists in the snapshot
+      const hasValidSelector = domElements.some((el) => el.s === event.s);
+
+      if (!hasValidSelector) {
+        errorCount++;
+        errors.push({ event, error: "No matching element found for selector" });
+        continue;
+      }
+
       const clickData: ClickInfos = {
-        trackingId: payload.trackingId,
+        tracking_id: payload.trackingId,
         url: payload.url,
         erx: event.erx,
         ery: event.ery,
@@ -142,22 +174,12 @@ export async function POST(request: NextRequest) {
         await addClicks(supabase, clickDataArray);
 
         // Aggregate and store grid clicks
-        const snapshots = await getSnapshotIdAndDomData(
-          supabase,
-          payload.trackingId,
-          payload.url,
-          payload.device
+        const aggregatedClicks = aggregateClicksIntoGrid(
+          clickDataArray,
+          snapshot.id,
+          snapshot.dom_data
         );
-        if (snapshots && snapshots.length > 0) {
-          for (const { id: snapshotId, domData } of snapshots) {
-            const aggregatedClicks = aggregateClicksIntoGrid(
-              clickDataArray,
-              snapshotId,
-              domData
-            );
-            await addAggregatedClicks(supabase, aggregatedClicks);
-          }
-        }
+        await addAggregatedClicks(supabase, aggregatedClicks);
 
         successCount = clickDataArray.length;
       } catch (err) {

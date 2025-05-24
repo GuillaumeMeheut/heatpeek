@@ -3,39 +3,42 @@ import playwright from "playwright";
 import crypto from "crypto";
 import sharp from "sharp";
 import { createClient } from "@/lib/supabase/server";
-import { getUser, addSnapshot, uploadScreenshot } from "@/lib/supabase/queries";
+import {
+  getUser,
+  addSnapshot,
+  uploadScreenshot,
+  getTrackingId,
+} from "@/lib/supabase/queries";
 import { captureDom } from "./captureDom";
+import { SupabaseClient } from "@supabase/supabase-js";
 
 const MAX_SIZE_PX = 16384;
+const isDevelopment = process.env.NODE_ENV === "development";
 
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { url, device, label } = body;
+    const { url, device, label, trackingId } = body;
 
-    if (!url) {
-      return NextResponse.json({ error: "No URL provided" }, { status: 500 });
+    // Validate required fields
+    const validationErrors = validateRequiredFields({ url, device });
+    if (validationErrors) {
+      return NextResponse.json(validationErrors, { status: 500 });
     }
-    if (!device) {
-      return NextResponse.json(
-        { error: "No device provided" },
-        { status: 500 }
-      );
-    }
-    if (!process.env.BROWSERCAT_API_KEY) {
-      console.error("BROWSERCAT_API_KEY environment variable is not set.");
-      return NextResponse.json(
-        { error: "BrowserCat API key not configured" },
-        { status: 500 }
-      );
+    const supabase = await createClient();
+
+    // Get user and validate tracking ID
+    const { user, trackingIdError } = await validateUserAndTrackingId(
+      supabase,
+      trackingId
+    );
+    if (trackingIdError) {
+      return NextResponse.json(trackingIdError, { status: 403 });
     }
 
-    const bcatUrl = "wss://api.browsercat.com/connect";
     let browser;
     try {
-      browser = await playwright.chromium.connect(bcatUrl, {
-        headers: { "Api-Key": process.env.BROWSERCAT_API_KEY },
-      });
+      browser = await initializeBrowser();
     } catch (error) {
       console.error("Error connecting to browser:", error);
       return NextResponse.json(
@@ -149,12 +152,6 @@ export async function POST(request: Request) {
         .digest("hex");
 
       // Upload screenshot to Supabase Storage
-      const supabase = await createClient();
-      const { user } = await getUser(supabase);
-      if (!user) {
-        return NextResponse.json({ error: "User not found" }, { status: 500 });
-      }
-
       let screenshotUrl;
       try {
         screenshotUrl = await uploadScreenshot(supabase, {
@@ -178,15 +175,25 @@ export async function POST(request: Request) {
       }
       // Store data in snapshots table
       try {
-        await addSnapshot(supabase, {
+        const id = await addSnapshot(supabase, {
           url: url,
           label,
           device,
-          domData: JSON.stringify(visibleDomElements),
-          layoutHash: layoutHash,
-          screenshotUrl,
+          dom_data: JSON.stringify(visibleDomElements),
+          layout_hash: layoutHash,
+          screenshot_url: screenshotUrl,
           width: pageDimensions.width,
           height: pageDimensions.height,
+          tracking_id: trackingId,
+        });
+
+        if (!id) {
+          throw new Error("Failed to retrieve snapshot id");
+        }
+
+        return NextResponse.json({
+          success: true,
+          redirect: `/dashboard?id=${id}`,
         });
       } catch (error) {
         console.error("Error storing snapshot:", error);
@@ -195,8 +202,6 @@ export async function POST(request: Request) {
           { status: 500 }
         );
       }
-
-      return NextResponse.json({ success: true });
     } catch (error) {
       console.error("Error capturing page:", error);
       const errorMessage =
@@ -213,4 +218,60 @@ export async function POST(request: Request) {
       error instanceof Error ? error.message : "Failed to capture page";
     return NextResponse.json({ error: errorMessage }, { status: 500 });
   }
+}
+
+// Helper functions
+function validateRequiredFields({
+  url,
+  device,
+}: {
+  url?: string;
+  device?: string;
+}) {
+  if (!url) {
+    return { error: "No URL provided" };
+  }
+  if (!device) {
+    return { error: "No device provided" };
+  }
+  return null;
+}
+
+async function validateUserAndTrackingId(
+  supabase: SupabaseClient,
+  clientTrackingId: string
+) {
+  const { user } = await getUser(supabase);
+
+  if (!user) {
+    return {
+      user: null,
+      trackingIdError: { error: "User not found" },
+    };
+  }
+
+  const serverTrackingId = await getTrackingId(supabase, user.id);
+  if (clientTrackingId !== serverTrackingId) {
+    return {
+      user: null,
+      trackingIdError: { error: "Invalid tracking ID" },
+    };
+  }
+
+  return { user, trackingIdError: null };
+}
+
+async function initializeBrowser() {
+  if (isDevelopment) {
+    return await playwright.chromium.launch();
+  }
+
+  if (!process.env.BROWSERCAT_API_KEY) {
+    throw new Error("BrowserCat API key not configured");
+  }
+
+  const bcatUrl = "wss://api.browsercat.com/connect";
+  return await playwright.chromium.connect(bcatUrl, {
+    headers: { "Api-Key": process.env.BROWSERCAT_API_KEY },
+  });
 }

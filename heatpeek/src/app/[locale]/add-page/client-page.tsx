@@ -24,7 +24,7 @@ export function ClientAddPage({ trackingId }: { trackingId: string | null }) {
     case "auth":
       return <AuthStep onBack={handleBack} />;
     case "simple":
-      return <SimpleStep onBack={handleBack} />;
+      return <SimpleStep onBack={handleBack} trackingId={trackingId} />;
     default:
       return null;
   }

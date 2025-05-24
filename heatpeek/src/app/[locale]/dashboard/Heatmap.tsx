@@ -16,7 +16,7 @@ type VisibleElement = {
 
 type HeatmapProps = {
   aggregatedClicks: AggregatedClick[];
-  pageData: SnapshotInfos;
+  pageData: Omit<SnapshotInfos, "layout_hash" | "tracking_id">;
   visibleElement: VisibleElement[];
 };
 
@@ -79,8 +79,8 @@ export default function Heatmap({
     const scaleY = containerDimensions.height / pageData.height;
 
     return aggregatedClicks.map((click) => {
-      const x = click.gridX * scaleX;
-      const y = click.gridY * scaleY;
+      const x = click.grid_x * scaleX;
+      const y = click.grid_y * scaleY;
       const intensity = Math.log2(click.count + 1) * 2;
       return [x, y, intensity] as [number, number, number];
     });
@@ -132,9 +132,9 @@ export default function Heatmap({
             height: containerDimensions.height,
           }}
         >
-          {pageData?.screenshotUrl && (
+          {pageData?.screenshot_url && (
             <Image
-              src={pageData.screenshotUrl}
+              src={pageData.screenshot_url}
               alt={`Screenshot of ${pageData.url}`}
               className="absolute inset-0"
               style={{

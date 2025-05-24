@@ -121,7 +121,7 @@ export default {
       instructions:
         "Enter the URL of the page you want to track. Make sure the page is publicly accessible.",
       yourPage: "Your Page",
-      websiteUrl: "Website URL",
+      pageUrl: "Page URL",
       snapshotName: "Snapshot name",
       selectDevices: "Select Devices",
       blockingPopups: "Blocking Pop-Ups",

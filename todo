@@ -6,19 +6,17 @@
 - [ ] Fix auth error when signin with existing account (say success)
 - [ ] Handle and display errors:
   - [ ] Add Snapshot
-  - [ ] Auth (including email confirmation)
+- [ ] Review the auth system
 - [ ] Forgot Password flow
 - [ ] On Capture page: check if the script is present
 - [ ] On Capture page: use better succes/error showing
-- [ ] Review strategy to add clicks for super high traffic
 
 ---
 
 ## 📈 Tracker
 
-- [ ] Send request every X seconds and detect page change
 - [ ] Fetch config (enabled, sampling rate(based on trafic), quota status, pages to track)
-- [ ] Cache config in memory to retain between page loads (if quota exceeded cache time = time reset)
+- [ ] Cache config in memory to retain between page loads
 
 ---
 
@@ -38,7 +36,6 @@
 - [ ] Redraw logo as SVG:
   - [ ] Improve design
   - [ ] Set as favicon
-- [ ] Set up custom SMTP server
 
 ---
 

@@ -15,7 +15,7 @@ export default function DebugBoundingBoxes({
   height,
   visibleElement,
 }: {
-  pageData: SnapshotInfos;
+  pageData: Omit<SnapshotInfos, "layout_hash" | "tracking_id">;
   width: number;
   height: number;
   visibleElement: VisibleElement[];

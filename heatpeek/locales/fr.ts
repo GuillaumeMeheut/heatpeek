@@ -124,7 +124,7 @@ export default {
       instructions:
         "Entrez l'URL de la page que vous souhaitez suivre. Assurez-vous que la page est accessible publiquement.",
       yourPage: "Votre page",
-      websiteUrl: "URL du site web",
+      pageUrl: "URL de la page",
       snapshotName: "Nom de la capture",
       selectDevices: "Sélectionner les appareils",
       blockingPopups: "Bloquer les pop-ups",

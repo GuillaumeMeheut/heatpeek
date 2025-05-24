@@ -10,7 +10,7 @@ export const getUser = cache(async (supabase: SupabaseClient) => {
 });
 
 export type ClickInfos = {
-  trackingId: string;
+  tracking_id: string;
   url: string;
   timestamp: string;
   user_agent?: string;
@@ -32,7 +32,7 @@ export const addClicks = cache(
   ): Promise<ClickInfos[] | null> => {
     const { data, error } = await supabase.from("clicks").insert(clickInfos);
     if (error) {
-      console.error("Error inserting click:", error);
+      console.log("Error inserting click:", error);
       return null;
     }
 
@@ -42,7 +42,7 @@ export const addClicks = cache(
 
 export type Click = Omit<
   ClickInfos,
-  "trackingId" | "url" | "timestamp" | "user_agent" | "device" | "visible"
+  "tracking_id" | "url" | "timestamp" | "user_agent" | "device" | "visible"
 >;
 
 //Refresh data every 6 hours to limit request ?
@@ -57,13 +57,13 @@ export const getClicks = cache(
     const { data: clicks, error } = await supabase
       .from("clicks")
       .select("erx, ery, s, l, t, w, h")
-      .eq("trackingId", trackingId)
+      .eq("tracking_id", trackingId)
       .eq("url", url)
       .eq("device", device)
       .gte("timestamp", timestamp);
 
     if (error) {
-      console.error("Error fetching clicks:", error);
+      console.log("Error fetching clicks:", error);
       return null;
     }
 
@@ -75,28 +75,32 @@ export type SnapshotInfos = {
   url: string;
   label: string;
   device: string;
-  domData: string;
-  layoutHash: string;
-  screenshotUrl: string;
+  dom_data: string;
+  layout_hash: string;
+  screenshot_url: string;
   width: number;
   height: number;
+  tracking_id: string;
 };
 
 export const addSnapshot = cache(
   async (
     supabase: SupabaseClient,
     snapshotInfos: SnapshotInfos
-  ): Promise<SnapshotInfos | null> => {
+  ): Promise<string | null> => {
     const { data, error } = await supabase
       .from("snapshots")
-      .insert([snapshotInfos]);
+      .insert(snapshotInfos)
+      .select("id")
+      .single();
 
     if (error) {
-      console.error("Error inserting snapshot:", error);
+      console.log("Error inserting snapshot:", error);
       return null;
     }
+    console.log("Snapshot inserted:", data);
 
-    return data;
+    return data.id;
   }
 );
 
@@ -104,17 +108,15 @@ export const getSnapshot = cache(
   async (
     supabase: SupabaseClient,
     id: string
-  ): Promise<SnapshotInfos | null> => {
+  ): Promise<Omit<SnapshotInfos, "layout_hash" | "tracking_id"> | null> => {
     const { data, error } = await supabase
       .from("snapshots")
-      .select(
-        "url, label, device, domData,layoutHash, screenshotUrl, width, height"
-      )
+      .select("url, label, device, dom_data, screenshot_url, width, height")
       .eq("id", id)
       .single();
 
     if (error) {
-      console.error("Error fetching snapshot:", error);
+      console.log("Error fetching snapshot:", error);
       return null;
     }
 
@@ -126,16 +128,16 @@ export const getSnapshotDomData = cache(
   async (supabase: SupabaseClient, id: string): Promise<string | null> => {
     const { data, error } = await supabase
       .from("snapshots")
-      .select("domData")
+      .select("dom_data")
       .eq("id", id)
       .single();
 
     if (error) {
-      console.error("Error fetching snapshot:", error);
+      console.log("Error fetching snapshot:", error);
       return null;
     }
 
-    return data.domData;
+    return data.dom_data;
   }
 );
 
@@ -145,16 +147,17 @@ export const getSnapshotIdAndDomData = cache(
     trackingId: string,
     url: string,
     device: string
-  ): Promise<{ id: string; domData: string }[] | null> => {
+  ): Promise<{ id: string; dom_data: string } | null> => {
     const { data, error } = await supabase
       .from("snapshots")
-      .select("id, domData")
-      .eq("trackingId", trackingId)
+      .select("id, dom_data")
+      .eq("tracking_id", trackingId)
       .eq("url", url)
-      .eq("device", device);
+      .eq("device", device)
+      .single();
 
     if (error) {
-      console.error("Error fetching snapshot id:", error);
+      console.log("Error fetching snapshot id:", error);
       return null;
     }
 
@@ -185,7 +188,7 @@ export const uploadScreenshot = cache(
       });
 
     if (uploadError) {
-      console.error("Error uploading screenshot:", uploadError);
+      console.log("Error uploading screenshot:", uploadError);
       return null;
     }
 
@@ -199,7 +202,12 @@ export const uploadScreenshot = cache(
 
 export type SnapshotUrl = Omit<
   SnapshotInfos,
-  "domData" | "layoutHash" | "screenshotUrl" | "width" | "height"
+  | "dom_data"
+  | "layout_hash"
+  | "screenshot_url"
+  | "width"
+  | "height"
+  | "tracking_id"
 > & {
   created_at: string;
   id: string;
@@ -213,10 +221,10 @@ export const getSnapshotsUrls = cache(
     const { data, error } = await supabase
       .from("snapshots")
       .select("id, url, label, device, created_at")
-      .eq("userId", userId);
+      .eq("user_id", userId);
 
     if (error) {
-      console.error("Error fetching snapshot:", error);
+      console.log("Error fetching snapshot:", error);
       return null;
     }
 
@@ -224,32 +232,16 @@ export const getSnapshotsUrls = cache(
   }
 );
 
-export const addTrackingId = cache(
-  async (supabase: SupabaseClient, userId: string): Promise<string | null> => {
-    const { data, error } = await supabase
-      .from("tracking_ids")
-      .insert([{ userId: userId }])
-      .select("id")
-      .single();
-
-    if (error) {
-      console.error("Error inserting tracking ID:", error);
-      return null;
-    }
-
-    return data.id;
-  }
-);
 export const getTrackingId = cache(
   async (supabase: SupabaseClient, userId: string): Promise<string | null> => {
     const { data, error } = await supabase
       .from("tracking_ids")
       .select("id")
-      .eq("userId", userId)
+      .eq("user_id", userId)
       .single();
 
     if (error) {
-      console.error("Error getting tracking ID:", error);
+      console.log("Error getting tracking ID:", error);
       return null;
     }
 
@@ -258,33 +250,12 @@ export const getTrackingId = cache(
 );
 
 export type AggregatedClick = {
-  snapshotId: string;
-  gridX: number;
-  gridY: number;
+  snapshot_id: string;
+  grid_x: number;
+  grid_y: number;
   count: number;
-  lastUpdatedAt: string;
+  last_updated_at: string;
 };
-
-// export const addAggregatedClicks = cache(
-//   async (
-//     supabase: SupabaseClient,
-//     aggregatedClicks: AggregatedClick[]
-//   ): Promise<AggregatedClick[] | null> => {
-//     const { data, error } = await supabase
-//       .from("aggregated_clicks")
-//       .upsert(aggregatedClicks, {
-//         onConflict: "snapshotId,gridX,gridY",
-//         ignoreDuplicates: false,
-//       });
-
-//     if (error) {
-//       console.error("Error inserting aggregated clicks:", error);
-//       return null;
-//     }
-
-//     return data;
-//   }
-// );
 
 export const addAggregatedClicks = async (
   supabase: SupabaseClient,
@@ -295,7 +266,7 @@ export const addAggregatedClicks = async (
   });
 
   if (error) {
-    console.error("Error in upsert_aggregated_clicks RPC:", error);
+    console.log("Error in upsert_aggregated_clicks RPC:", error);
   }
 };
 
@@ -307,10 +278,10 @@ export const getAggregatedClicks = cache(
     const { data, error } = await supabase
       .from("aggregated_clicks")
       .select("*")
-      .eq("snapshotId", snapshotId);
+      .eq("snapshot_id", snapshotId);
 
     if (error) {
-      console.error("Error fetching aggregated clicks:", error);
+      console.log("Error fetching aggregated clicks:", error);
       return null;
     }
 

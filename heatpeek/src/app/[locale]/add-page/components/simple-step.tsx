@@ -26,21 +26,24 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useToast } from "@/hooks/use-toast";
+import { useRouter } from "next/navigation";
 
 type SimpleStepProps = {
   onBack: () => void;
+  trackingId: string | null;
 };
 
-export function SimpleStep({ onBack }: SimpleStepProps) {
+export function SimpleStep({ onBack, trackingId }: SimpleStepProps) {
   const t = useI18n();
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const { toast } = useToast();
+  const router = useRouter();
 
   const formSchema = useMemo(
     () =>
       z
         .object({
-          websiteUrl: z.string().url(t("addPage.simple.validation.invalidUrl")),
+          pageUrl: z.string().url(t("addPage.simple.validation.invalidUrl")),
           snapshotName: z
             .string()
             .min(1, t("addPage.simple.validation.snapshotNameRequired")),
@@ -110,11 +113,20 @@ export function SimpleStep({ onBack }: SimpleStepProps) {
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            url: data.websiteUrl,
+            url: data.pageUrl,
             label: data.snapshotName,
             device: device,
+            trackingId,
           }),
         });
+
+        const responseData = await captureResponse.json();
+        console.log(responseData);
+
+        if (responseData.redirect) {
+          router.push(responseData.redirect);
+          return;
+        }
 
         if (!captureResponse.ok) {
           throw new Error(`Failed to capture page for device: ${device}`);
@@ -168,16 +180,16 @@ export function SimpleStep({ onBack }: SimpleStepProps) {
                 </h4>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label>{t("addPage.simple.websiteUrl")}</Label>
+                    <Label>{t("addPage.simple.pageUrl")}</Label>
                     <Input
                       type="text"
                       placeholder="https://example.com/page"
                       className="w-full p-2 rounded-md border bg-background"
-                      {...register("websiteUrl")}
+                      {...register("pageUrl")}
                     />
-                    {errors.websiteUrl && (
+                    {errors.pageUrl && (
                       <p className="text-sm text-red-500">
-                        {errors.websiteUrl.message}
+                        {errors.pageUrl.message}
                       </p>
                     )}
                   </div>
