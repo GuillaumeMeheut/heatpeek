@@ -16,7 +16,7 @@ export function TrackingScript({ id }: TrackingScriptProps) {
   const script = `<script
   defer
   id="${id}"
-  src="${process.env.NEXT_PUBLIC_SITE_URL}heatpeek.js"
+  src="${process.env.NEXT_PUBLIC_TRACKING_URL}h.min.js"
 ></script>`;
 
   const copyToClipboard = async () => {

@@ -4,7 +4,7 @@
   "description": "Heatpeek click tracking script",
   "main": "heatpeek.js",
   "scripts": {
-    "build": "uglifyjs heatpeek.js -c -m -o heatpeek.min.js && javascript-obfuscator heatpeek.min.js --output heatpeek.obf.js"
+    "build": "uglifyjs heatpeek.js -c -m -o e/h.min.js && javascript-obfuscator e/h.min.js --output e/h.obf.js"
   },
   "devDependencies": {
     "javascript-obfuscator": "^4.1.0"
