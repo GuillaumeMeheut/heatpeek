@@ -13,6 +13,10 @@ export function TrackingScript({ id }: TrackingScriptProps) {
   const [copied, setCopied] = useState(false);
   const t = useI18n();
 
+  if (!id) {
+    return null;
+  }
+
   const script = `<script
   defer
   id="${id}"
