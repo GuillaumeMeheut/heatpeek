@@ -79,7 +79,13 @@ export function OptionsBar() {
               <p>{t("optionsBar.opacity")}</p>
             </TooltipContent>
           </Tooltip>
-          <Slider defaultValue={[50]} max={100} step={1} className="w-full" />
+          <Slider
+            color="blue"
+            defaultValue={[50]}
+            max={100}
+            step={1}
+            className="w-full"
+          />
         </div>
       </div>
     </TooltipProvider>

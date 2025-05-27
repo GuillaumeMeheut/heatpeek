@@ -1,7 +1,6 @@
 (function () {
   const trackingId = document.currentScript.getAttribute("id");
-  const endpoint = "https://heatpeek.com/api/e";
-  // const endpoint = "http://localhost:3000/api/e";
+  const endpoint = "http://localhost:3000/api/e";
 
   if (!trackingId) {
     console.error("Heatpeek: Project ID is required");

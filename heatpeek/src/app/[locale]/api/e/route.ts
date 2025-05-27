@@ -4,6 +4,7 @@ import {
   addAggregatedClicks,
   AggregatedClick,
   getSnapshotIdAndDomData,
+  addClickedElements,
 } from "@/lib/supabase/queries";
 import { createClient } from "@/lib/supabase/server";
 import { NextRequest } from "next/server";
@@ -17,77 +18,52 @@ function aggregateClicksIntoGrid(
   snapshotId: string,
   domData: string
 ): AggregatedClick[] {
+  const GRID_SIZE = HEATMAP_CONFIG.GRID_SIZE;
+  const HALF_GRID = GRID_SIZE / 2;
   const grid = new Map<string, { count: number; x: number; y: number }>();
 
-  // Parse the DOM data
-  const domElements = JSON.parse(domData) as Array<{
-    s: string;
-    l: number;
-    t: number;
-    w: number;
-    h: number;
-  }>;
+  // Parse and index DOM data
+  const domElements = new Map(
+    (
+      JSON.parse(domData) as Array<{
+        s: string;
+        l: number;
+        t: number;
+        w: number;
+        h: number;
+      }>
+    ).map((el) => [el.s, el])
+  );
 
-  // First, group clicks by their exact position
-  const positionGroups = new Map<string, ClickInfos[]>();
+  for (const click of clickDataArray) {
+    if (!click.s || click.erx === undefined || click.ery === undefined)
+      continue;
 
-  clickDataArray.forEach((click) => {
-    let x = 0;
-    let y = 0;
+    const element = domElements.get(click.s);
+    if (!element) continue;
 
-    // Try to find the element that was clicked using the selector
-    if (click.s) {
-      const element = domElements.find((el) => el.s === click.s);
+    const x = element.l + click.erx * element.w;
+    const y = element.t + click.ery * element.h;
 
-      if (element && click.erx !== undefined && click.ery !== undefined) {
-        // Use the element-relative position to calculate the absolute position
-        x = element.l + click.erx * element.w;
-        y = element.t + click.ery * element.h;
-      } else {
-        // Skip this click if no element match is found
-        return;
-      }
-    } else {
-      // Skip clicks without a selector
-      return;
-    }
-
-    // Round to nearest grid cell
-    const gridX =
-      Math.floor(x / HEATMAP_CONFIG.GRID_SIZE) * HEATMAP_CONFIG.GRID_SIZE +
-      HEATMAP_CONFIG.GRID_SIZE / 2;
-    const gridY =
-      Math.floor(y / HEATMAP_CONFIG.GRID_SIZE) * HEATMAP_CONFIG.GRID_SIZE +
-      HEATMAP_CONFIG.GRID_SIZE / 2;
-
+    const gridX = Math.floor(x / GRID_SIZE) * GRID_SIZE + HALF_GRID;
+    const gridY = Math.floor(y / GRID_SIZE) * GRID_SIZE + HALF_GRID;
     const key = `${gridX},${gridY}`;
-    if (!positionGroups.has(key)) {
-      positionGroups.set(key, [click]);
+
+    const entry = grid.get(key);
+    if (entry) {
+      entry.count += 1;
     } else {
-      positionGroups.get(key)!.push(click);
+      grid.set(key, { count: 1, x: gridX, y: gridY });
     }
-  });
+  }
 
-  // Then aggregate the grouped clicks into the grid
-  positionGroups.forEach((clicks, key) => {
-    const [gridX, gridY] = key.split(",").map(Number);
-    grid.set(key, {
-      count: clicks.length, // Use the actual number of clicks in this position
-      x: gridX,
-      y: gridY,
-    });
-  });
-
-  // Convert grid to aggregated clicks
-  return Array.from(grid.entries()).map(([, { x, y, count }]) => {
-    return {
-      snapshot_id: snapshotId,
-      grid_x: x,
-      grid_y: y,
-      count,
-      last_updated_at: new Date().toISOString(),
-    };
-  });
+  return Array.from(grid.values()).map(({ x, y, count }) => ({
+    snapshot_id: snapshotId,
+    grid_x: x,
+    grid_y: y,
+    count,
+    last_updated_at: new Date().toISOString(),
+  }));
 }
 
 export async function POST(request: NextRequest) {
@@ -173,13 +149,35 @@ export async function POST(request: NextRequest) {
         // Store individual clicks
         await addClicks(supabase, clickDataArray);
 
+        const selectorCounts = new Map<string, number>();
+
+        for (const click of clickDataArray) {
+          const key = click.s;
+          selectorCounts.set(key, (selectorCounts.get(key) ?? 0) + 1);
+        }
+
         // Aggregate and store grid clicks
         const aggregatedClicks = aggregateClicksIntoGrid(
           clickDataArray,
           snapshot.id,
           snapshot.dom_data
         );
+
         await addAggregatedClicks(supabase, aggregatedClicks);
+
+        const clickedElements = domElements
+          .filter((el) => selectorCounts.has(el.s))
+          .map((el) => ({
+            snapshot_id: snapshot.id,
+            s: el.s,
+            l: el.l,
+            t: el.t,
+            w: el.w,
+            h: el.h,
+            clicks_count: selectorCounts.get(el.s) ?? 0,
+          }));
+
+        await addClickedElements(supabase, clickedElements);
 
         successCount = clickDataArray.length;
       } catch (err) {

@@ -1,7 +1,7 @@
 import Heatmap from "./Heatmap";
 import {
   getSnapshot,
-  getSnapshotsUrls,
+  getSnapshotsInfos,
   getTrackingId,
   getUser,
   getAggregatedClicks,
@@ -11,6 +11,8 @@ import { OptionsBar } from "./OptionsBar";
 import { Sidebar } from "./Sidebar";
 import { redirect } from "next/navigation";
 import { Card } from "@/components/ui/card";
+import { Suspense } from "react";
+import { Loader2 } from "lucide-react";
 
 export default async function Dashboard({
   searchParams,
@@ -21,15 +23,15 @@ export default async function Dashboard({
   const { user } = await getUser(supabase);
   if (!user) redirect("/signin");
 
-  const snapshotsUrls = await getSnapshotsUrls(supabase, user?.id);
-  if (!snapshotsUrls || snapshotsUrls.length === 0) {
+  const snapshotsInfos = await getSnapshotsInfos(supabase, user.id);
+  if (!snapshotsInfos || snapshotsInfos.length === 0) {
     redirect(`/add-page`);
   }
-  if (snapshotsUrls && snapshotsUrls.length > 0) {
+  if (snapshotsInfos && snapshotsInfos.length > 0) {
     const currentId = searchParams.id;
 
     if (!currentId) {
-      const firstSnapshot = snapshotsUrls[0];
+      const firstSnapshot = snapshotsInfos[0];
       redirect(`/dashboard?id=${firstSnapshot.id}`);
     }
   }
@@ -37,7 +39,7 @@ export default async function Dashboard({
   const id = searchParams.id as string;
   const trackingId = await getTrackingId(supabase, user.id);
   if (!trackingId) return;
-  const currentSnapshot = snapshotsUrls.find((snapshot) => snapshot.id === id);
+  const currentSnapshot = snapshotsInfos.find((snapshot) => snapshot.id === id);
   if (!currentSnapshot) return;
 
   const snapshot = await getSnapshot(supabase, id);
@@ -47,29 +49,32 @@ export default async function Dashboard({
     return <div>No snapshot found</div>;
   }
 
-  const visibleElement = JSON.parse(snapshot?.dom_data);
-
   return (
-    <div className="flex">
-      <Sidebar snapshotsUrls={snapshotsUrls || []} />
-      <div className="flex-1 p-4">
-        <Card className="border-primary/20">
-          <div className="container mx-auto p-8 relative">
-            <div className="w-full">
-              <div className="min-w-full">
-                <Heatmap
-                  aggregatedClicks={aggregatedClicks || []}
-                  pageData={snapshot}
-                  visibleElement={visibleElement}
-                />
+    <Suspense
+      fallback={
+        <div className="flex justify-center items-center h-screen">
+          <Loader2 className="h-10 w-10 animate-spin" />
+        </div>
+      }
+    >
+      <div className="flex">
+        <Sidebar snapshotsInfos={snapshotsInfos || []} />
+        <div className="flex-1 p-4">
+          <Card className="border-primary/20">
+            <div className="container mx-auto p-4 relative">
+              <div className="w-full">
+                <div className="relative min-w-full">
+                  <OptionsBar />
+                  <Heatmap
+                    aggregatedClicks={aggregatedClicks || []}
+                    pageData={snapshot}
+                  />
+                </div>
               </div>
             </div>
-            <div className="w-full">
-              <OptionsBar />
-            </div>
-          </div>
-        </Card>
+          </Card>
+        </div>
       </div>
-    </div>
+    </Suspense>
   );
 }

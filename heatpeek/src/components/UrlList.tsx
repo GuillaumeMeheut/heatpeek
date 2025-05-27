@@ -10,20 +10,20 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { SnapshotUrl } from "@/lib/supabase/queries";
+import { SnapshotInfos } from "@/lib/supabase/queries";
 import { Laptop, Smartphone } from "lucide-react";
 import Link from "next/link";
 import { useMemo } from "react";
 
 type UrlListProps = {
   isVisible: boolean;
-  snapshotsUrls: SnapshotUrl[];
+  snapshotsInfos: SnapshotInfos[];
 };
 
-export function UrlList({ isVisible, snapshotsUrls }: UrlListProps) {
+export function UrlList({ isVisible, snapshotsInfos }: UrlListProps) {
   const URL_LIST = useMemo(() => {
     // Group URLs by their base URL
-    const groupedUrls = snapshotsUrls.reduce(
+    const groupedUrls = snapshotsInfos.reduce(
       (acc, snapshot) => {
         const url = new URL(snapshot.url);
         const baseUrl = `${url.protocol}//${url.host}`;
@@ -84,7 +84,7 @@ export function UrlList({ isVisible, snapshotsUrls }: UrlListProps) {
     );
 
     return Object.values(groupedUrls);
-  }, [snapshotsUrls]);
+  }, [snapshotsInfos]);
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);

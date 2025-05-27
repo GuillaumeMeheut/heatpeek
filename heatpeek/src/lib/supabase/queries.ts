@@ -13,16 +13,15 @@ export type ClickInfos = {
   tracking_id: string;
   url: string;
   timestamp: string;
-  user_agent?: string;
   device: string;
-  visible?: boolean;
-  erx?: number;
-  ery?: number;
-  s?: string;
-  l?: number;
-  t?: number;
-  w?: number;
-  h?: number;
+  visible: boolean;
+  erx: number;
+  ery: number;
+  s: string;
+  l: number;
+  t: number;
+  w: number;
+  h: number;
 };
 
 export const addClicks = cache(
@@ -45,7 +44,6 @@ export type Click = Omit<
   "tracking_id" | "url" | "timestamp" | "user_agent" | "device" | "visible"
 >;
 
-//Refresh data every 6 hours to limit request ?
 export const getClicks = cache(
   async (
     supabase: SupabaseClient,
@@ -71,7 +69,7 @@ export const getClicks = cache(
   }
 );
 
-export type SnapshotInfos = {
+export type Snapshot = {
   url: string;
   label: string;
   device: string;
@@ -86,11 +84,11 @@ export type SnapshotInfos = {
 export const addSnapshot = cache(
   async (
     supabase: SupabaseClient,
-    snapshotInfos: SnapshotInfos
+    snapshot: Snapshot
   ): Promise<string | null> => {
     const { data, error } = await supabase
       .from("snapshots")
-      .insert(snapshotInfos)
+      .insert(snapshot)
       .select("id")
       .single();
 
@@ -108,10 +106,13 @@ export const getSnapshot = cache(
   async (
     supabase: SupabaseClient,
     id: string
-  ): Promise<Omit<SnapshotInfos, "layout_hash" | "tracking_id"> | null> => {
+  ): Promise<Omit<
+    Snapshot,
+    "layout_hash" | "tracking_id" | "dom_data"
+  > | null> => {
     const { data, error } = await supabase
       .from("snapshots")
-      .select("url, label, device, dom_data, screenshot_url, width, height")
+      .select("url, label, device, screenshot_url, width, height")
       .eq("id", id)
       .single();
 
@@ -121,6 +122,29 @@ export const getSnapshot = cache(
     }
 
     return data;
+  }
+);
+
+export const doesSnapshotExist = cache(
+  async (
+    supabase: SupabaseClient,
+    trackingId: string,
+    url: string,
+    device: string
+  ): Promise<boolean> => {
+    const { count, error } = await supabase
+      .from("snapshots")
+      .select("id", { count: "exact", head: true })
+      .eq("tracking_id", trackingId)
+      .eq("url", url)
+      .eq("device", device);
+
+    if (error) {
+      console.log("Error checking if snapshot exists:", error);
+      return false;
+    }
+
+    return count ? count > 0 : false;
   }
 );
 
@@ -200,8 +224,8 @@ export const uploadScreenshot = cache(
   }
 );
 
-export type SnapshotUrl = Omit<
-  SnapshotInfos,
+export type SnapshotInfos = Omit<
+  Snapshot,
   | "dom_data"
   | "layout_hash"
   | "screenshot_url"
@@ -213,11 +237,11 @@ export type SnapshotUrl = Omit<
   id: string;
 };
 
-export const getSnapshotsUrls = cache(
+export const getSnapshotsInfos = cache(
   async (
     supabase: SupabaseClient,
     userId: string
-  ): Promise<SnapshotUrl[] | null> => {
+  ): Promise<SnapshotInfos[] | null> => {
     const { data, error } = await supabase
       .from("snapshots")
       .select("id, url, label, device, created_at")
@@ -248,6 +272,30 @@ export const getTrackingId = cache(
     return data.id;
   }
 );
+
+export type ClickedElement = {
+  snapshot_id: string;
+  s: string;
+  l: number;
+  t: number;
+  w: number;
+  h: number;
+  clicks_count: number;
+};
+
+export const addClickedElements = async (
+  supabase: SupabaseClient,
+  clickedElements: ClickedElement[]
+) => {
+  const { error } = await supabase
+    .from("clicked_elements")
+    .insert(clickedElements);
+
+  if (error) {
+    console.log("Error inserting snapshot:", error);
+    return error;
+  }
+};
 
 export type AggregatedClick = {
   snapshot_id: string;

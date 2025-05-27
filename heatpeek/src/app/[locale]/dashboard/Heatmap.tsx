@@ -3,21 +3,11 @@
 import { useEffect, useRef, useMemo, useState } from "react";
 import Image from "next/image";
 import simpleheat from "simpleheat";
-import DebugBoundingBoxes from "../../../components/DebugBoundingBoxes";
-import { SnapshotInfos, AggregatedClick } from "@/lib/supabase/queries";
-
-type VisibleElement = {
-  s: string;
-  l: number;
-  t: number;
-  w: number;
-  h: number;
-};
+import { Snapshot, AggregatedClick } from "@/lib/supabase/queries";
 
 type HeatmapProps = {
   aggregatedClicks: AggregatedClick[];
-  pageData: Omit<SnapshotInfos, "layout_hash" | "tracking_id">;
-  visibleElement: VisibleElement[];
+  pageData: Omit<Snapshot, "layout_hash" | "tracking_id" | "dom_data">;
 };
 
 const HEATMAP_CONFIG = {
@@ -30,11 +20,7 @@ const HEATMAP_CONFIG = {
   OVERLAY_OPACITY: 0.7,
 } as const;
 
-export default function Heatmap({
-  aggregatedClicks,
-  pageData,
-  visibleElement,
-}: HeatmapProps) {
+export default function Heatmap({ aggregatedClicks, pageData }: HeatmapProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const heatmapRef = useRef<ReturnType<typeof simpleheat> | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -146,6 +132,7 @@ export default function Heatmap({
               priority
             />
           )}
+
           <div
             className="absolute inset-0 pointer-events-none z-10"
             style={{
@@ -154,17 +141,12 @@ export default function Heatmap({
               height: containerDimensions.height,
             }}
           />
-          <DebugBoundingBoxes
-            pageData={pageData}
-            visibleElement={visibleElement}
-            width={containerDimensions.width}
-            height={containerDimensions.height}
-          />
           <canvas
             ref={canvasRef}
             width={containerDimensions.width}
             height={containerDimensions.height}
-            className="absolute inset-0 z-20"
+            className="absolute inset-0 z-30"
+            style={{ pointerEvents: "none" }}
             aria-hidden="true"
           />
         </div>

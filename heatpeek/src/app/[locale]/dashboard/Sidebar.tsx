@@ -4,11 +4,15 @@ import { ChevronLeft, ChevronRight, Plus } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 import { UrlList } from "@/components/UrlList";
-import { SnapshotUrl } from "@/lib/supabase/queries";
+import { SnapshotInfos } from "@/lib/supabase/queries";
 import { Separator } from "@/components/ui/separator";
 import { useI18n } from "@locales/client";
 
-export function Sidebar({ snapshotsUrls }: { snapshotsUrls: SnapshotUrl[] }) {
+export function Sidebar({
+  snapshotsInfos,
+}: {
+  snapshotsInfos: SnapshotInfos[];
+}) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const t = useI18n();
 
@@ -39,12 +43,15 @@ export function Sidebar({ snapshotsUrls }: { snapshotsUrls: SnapshotUrl[] }) {
               {t("sidebar.newPage")}
             </Link>
           </Button>
+          <Separator orientation="horizontal" className="w-full my-4" />
+
+          {/* Create a block contains 4 stats with big number total number of clicks */}
+
+          <Separator orientation="horizontal" className="w-full my-4" />
+
+          <UrlList isVisible={isSidebarOpen} snapshotsInfos={snapshotsInfos} />
         </div>
       )}
-
-      <Separator orientation="horizontal" className="w-full my-4" />
-
-      <UrlList isVisible={isSidebarOpen} snapshotsUrls={snapshotsUrls} />
     </div>
   );
 }
