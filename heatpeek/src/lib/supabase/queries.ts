@@ -88,16 +88,12 @@ export type Snapshot = {
   tracking_id: string;
 };
 
-export const addSnapshot = cache(
+export const addSnapshots = cache(
   async (
     supabase: SupabaseClient,
-    snapshot: Snapshot
+    snapshots: Snapshot[]
   ): Promise<string | null> => {
-    const { data, error } = await supabase
-      .from("snapshots")
-      .insert(snapshot)
-      .select("id")
-      .single();
+    const { data, error } = await supabase.from("snapshots").insert(snapshots);
 
     if (error) {
       console.log("Error inserting snapshot:", error);
@@ -105,7 +101,7 @@ export const addSnapshot = cache(
     }
     console.log("Snapshot inserted:", data);
 
-    return data.id;
+    return "success";
   }
 );
 
@@ -202,32 +198,39 @@ export type UploadScreenshotInfos = {
   buffer: Uint8Array;
 };
 
-export const uploadScreenshot = cache(
+export const uploadScreenshots = cache(
   async (
     supabase: SupabaseClient,
-    uploadInfos: UploadScreenshotInfos
-  ): Promise<string | null> => {
-    const fileName = `${uploadInfos.userId}/screenshot-${
-      uploadInfos.layoutHash
-    }-${Date.now()}.webp`;
+    uploadInfos: UploadScreenshotInfos[]
+  ): Promise<Record<string, string | null>> => {
+    const results: Record<string, string | null> = {};
 
-    const { error: uploadError } = await supabase.storage
-      .from("screenshots")
-      .upload(fileName, uploadInfos.buffer, {
-        contentType: "image/webp",
-        upsert: true,
-      });
+    for (const info of uploadInfos) {
+      const fileName = `${info.userId}/screenshot-${
+        info.layoutHash
+      }-${Date.now()}.webp`;
 
-    if (uploadError) {
-      console.log("Error uploading screenshot:", uploadError);
-      return null;
+      const { error: uploadError } = await supabase.storage
+        .from("screenshots")
+        .upload(fileName, info.buffer, {
+          contentType: "image/webp",
+          upsert: true,
+        });
+
+      if (uploadError) {
+        console.log("Error uploading screenshot:", uploadError);
+        results[info.layoutHash] = null;
+        continue;
+      }
+
+      const { data: publicUrlData } = supabase.storage
+        .from("screenshots")
+        .getPublicUrl(fileName);
+
+      results[info.layoutHash] = publicUrlData.publicUrl;
     }
 
-    const { data: publicUrlData } = supabase.storage
-      .from("screenshots")
-      .getPublicUrl(fileName);
-
-    return publicUrlData.publicUrl;
+    return results;
   }
 );
 
