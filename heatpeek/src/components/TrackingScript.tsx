@@ -18,7 +18,7 @@ export function TrackingScript({ id }: TrackingScriptProps) {
   }
 
   const script = `<script
-  defer
+  async
   id="${id}"
   src="${process.env.NEXT_PUBLIC_TRACKING_URL}h.js"
 ></script>`;

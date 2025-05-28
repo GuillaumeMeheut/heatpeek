@@ -115,32 +115,38 @@ export async function POST(request: Request) {
 
       let hasError = false;
 
-      // Capture for each device type
-      for (const device of Object.keys(viewportSizes) as DeviceType[]) {
-        const contextStart = performance.now();
-        const context = await browser.newContext({});
-        const page = await context.newPage();
-        timings.context_init = performance.now() - contextStart;
+      // Create a single page instance for all captures
+      const contextStart = performance.now();
+      const context = await browser.newContext({});
+      const page = await context.newPage();
+      timings.context_init = performance.now() - contextStart;
 
-        try {
+      try {
+        // Capture for each device type
+        for (const device of Object.keys(viewportSizes) as DeviceType[]) {
           // Set viewport based on device type
           const selectedViewport = viewportSizes[device];
           await page.setViewportSize(selectedViewport);
+          await page.waitForTimeout(500);
 
           const pageLoadStart = performance.now();
-          await page.goto(formattedUrl, {
-            waitUntil: "domcontentloaded",
-          });
+          // Only navigate on first device, reuse the page for others
+          if (device === "desktop") {
+            await page.goto(formattedUrl, {
+              waitUntil: "domcontentloaded",
+            });
 
-          await page.waitForSelector("body");
+            await page.waitForSelector("body");
 
-          // Scroll to bottom and back to top to ensure all content is loaded
-          await page.evaluate(() => {
-            window.scrollTo(0, document.body.scrollHeight);
-          });
-          await page.evaluate(() => {
-            window.scrollTo(0, 0);
-          });
+            // Scroll to bottom and back to top to ensure all content is loaded
+            await page.evaluate(() => {
+              window.scrollTo(0, document.body.scrollHeight);
+            });
+            await page.waitForTimeout(2000);
+            await page.evaluate(() => {
+              window.scrollTo(0, 0);
+            });
+          }
           timings.page_load = performance.now() - pageLoadStart;
 
           // Get the actual page dimensions
@@ -216,15 +222,20 @@ export async function POST(request: Request) {
             width: pageDimensions.width,
             height: pageDimensions.height,
           };
-        } catch (error) {
-          console.error(`Error capturing ${device}:`, error);
-          const errorMessage =
-            error instanceof Error ? error.message : "Unknown error occurred";
-          results[device] = { error: errorMessage };
-          hasError = true;
-        } finally {
-          await context.close();
         }
+      } catch (error) {
+        console.error("Error capturing page:", error);
+        const errorMessage =
+          error instanceof Error ? error.message : "Unknown error occurred";
+        hasError = true;
+        // Mark all remaining devices as failed
+        for (const device of Object.keys(viewportSizes) as DeviceType[]) {
+          if (!deviceCaptures[device]) {
+            results[device] = { error: errorMessage };
+          }
+        }
+      } finally {
+        await context.close();
       }
 
       // If any device capture failed, return error
