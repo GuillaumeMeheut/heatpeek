@@ -139,6 +139,7 @@ export async function POST(request: NextRequest) {
         t: event.t,
         w: event.w,
         h: event.h,
+        first_click_rank: event.firstClickRank,
       };
       clickDataArray.push(clickData);
     }

@@ -10,15 +10,7 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  ArrowLeft,
-  ArrowRight,
-  FileText,
-  Monitor,
-  Tablet,
-  Smartphone,
-  Loader2,
-} from "lucide-react";
+import { ArrowLeft, ArrowRight, FileText, Loader2 } from "lucide-react";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useState, useMemo } from "react";
 import { useI18n } from "@locales/client";
@@ -53,9 +45,6 @@ export function SimpleStep({ onBack, trackingId }: SimpleStepProps) {
             "specific-elements",
           ]),
           cssSelectors: z.string().optional(),
-          selectedDevices: z
-            .array(z.string())
-            .min(1, t("addPage.simple.validation.selectDevice")),
         })
         .refine(
           (data) => {
@@ -84,53 +73,38 @@ export function SimpleStep({ onBack, trackingId }: SimpleStepProps) {
     resolver: zodResolver(formSchema),
     defaultValues: {
       popupBlocking: "omit-popups",
-      selectedDevices: ["desktop"],
       cssSelectors: "",
     },
   });
 
   const popupBlocking = watch("popupBlocking");
-  const selectedDevices = watch("selectedDevices");
-
-  const toggleDevice = (device: string) => {
-    setValue(
-      "selectedDevices",
-      selectedDevices.includes(device)
-        ? selectedDevices.filter((d) => d !== device)
-        : [...selectedDevices, device],
-      { shouldValidate: true }
-    );
-  };
 
   const onSubmit = async (data: FormData) => {
     setIsLoading(true);
     try {
       // First capture the page for each selected device
-      for (const device of data.selectedDevices) {
-        const captureResponse = await fetch(`/api/capturePage`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            url: data.pageUrl,
-            label: data.snapshotName,
-            device: device,
-            trackingId,
-          }),
-        });
+      const captureResponse = await fetch(`/api/capturePage`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          url: data.pageUrl,
+          label: data.snapshotName,
+          trackingId,
+        }),
+      });
 
-        const responseData = await captureResponse.json();
-        console.log(responseData);
+      const responseData = await captureResponse.json();
+      console.log(responseData);
 
-        if (responseData.redirect) {
-          router.push(responseData.redirect);
-          return;
-        }
+      if (responseData.redirect) {
+        router.push(responseData.redirect);
+        return;
+      }
 
-        if (!captureResponse.ok) {
-          throw new Error(`Failed to capture page for device: ${device}`);
-        }
+      if (!captureResponse.ok) {
+        throw new Error(`Failed to capture page`);
       }
 
       toast({
@@ -208,55 +182,6 @@ export function SimpleStep({ onBack, trackingId }: SimpleStepProps) {
                     )}
                   </div>
                 </div>
-              </div>
-            </CardContent>
-            <CardContent>
-              <div className="space-y-4">
-                <h4 className="font-medium">
-                  {t("addPage.simple.selectDevices")}
-                </h4>
-                <div className="flex gap-4">
-                  <Button
-                    type="button"
-                    variant={
-                      selectedDevices.includes("desktop")
-                        ? "default"
-                        : "outline"
-                    }
-                    size="icon"
-                    onClick={() => toggleDevice("desktop")}
-                    className="h-12 w-12"
-                  >
-                    <Monitor className="h-6 w-6" />
-                  </Button>
-                  <Button
-                    type="button"
-                    variant={
-                      selectedDevices.includes("tablet") ? "default" : "outline"
-                    }
-                    size="icon"
-                    onClick={() => toggleDevice("tablet")}
-                    className="h-12 w-12"
-                  >
-                    <Tablet className="h-6 w-6" />
-                  </Button>
-                  <Button
-                    type="button"
-                    variant={
-                      selectedDevices.includes("mobile") ? "default" : "outline"
-                    }
-                    size="icon"
-                    onClick={() => toggleDevice("mobile")}
-                    className="h-12 w-12"
-                  >
-                    <Smartphone className="h-6 w-6" />
-                  </Button>
-                </div>
-                {errors.selectedDevices && (
-                  <p className="text-sm text-red-500">
-                    {errors.selectedDevices.message}
-                  </p>
-                )}
               </div>
             </CardContent>
             <CardContent>

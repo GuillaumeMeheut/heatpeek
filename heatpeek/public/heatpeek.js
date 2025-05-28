@@ -1,5 +1,8 @@
 (function () {
+  "use strict";
+
   const trackingId = document.currentScript.getAttribute("id");
+  // const endpoint = "https://heatpeek.com/api/e";
   const endpoint = "http://localhost:3000/api/e";
 
   if (!trackingId) {
@@ -12,10 +15,63 @@
 
   let lastClickTime = 0;
   const THROTTLE_MS = 500;
+  let firstThreeClicks = 0;
+  const MAX_FIRST_CLICKS = 3;
 
   const clickBuffer = [];
   const MAX_BUFFER_SIZE = 10;
   const MAX_INTERVAL_MS = 5000;
+
+  var lastPage;
+
+  function handlePageChange(isSPANavigation) {
+    const currentPath = location.pathname;
+    if (isSPANavigation && lastPage === currentPath) return;
+
+    lastPage = currentPath;
+    firstThreeClicks = 0;
+  }
+
+  // Handle hash-based routing
+  window.addEventListener("hashchange", function () {
+    handlePageChange(true);
+  });
+
+  // Handle history API routing
+  var his = window.history;
+  if (his.pushState) {
+    var originalPushState = his["pushState"];
+    his.pushState = function () {
+      originalPushState.apply(this, arguments);
+      handlePageChange(true);
+    };
+    window.addEventListener("popstate", function () {
+      handlePageChange(true);
+    });
+  }
+
+  // Handle initial page load
+  function handleVisibilityChange() {
+    if (!lastPage && document.visibilityState === "visible") {
+      handlePageChange(false);
+    }
+  }
+
+  if (
+    document.visibilityState === "hidden" ||
+    document.visibilityState === "prerender"
+  ) {
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+  } else {
+    handlePageChange(false);
+  }
+
+  // Handle back/forward cache restoration
+  window.addEventListener("pageshow", function (event) {
+    if (event.persisted) {
+      handlePageChange(false);
+    }
+  });
 
   function flushBuffer() {
     if (clickBuffer.length === 0) return;
@@ -82,9 +138,15 @@
       t: top,
       w: width,
       h: height,
+      firstClickRank:
+        firstThreeClicks < MAX_FIRST_CLICKS ? firstThreeClicks + 1 : null,
     };
+    console.log(
+      firstThreeClicks < MAX_FIRST_CLICKS ? firstThreeClicks + 1 : null
+    );
 
     clickBuffer.push(payload);
+    firstThreeClicks++;
     if (clickBuffer.length >= MAX_BUFFER_SIZE) {
       flushBuffer();
     }

@@ -49,6 +49,7 @@ Deno.serve(async (req) => {
       t: event.t,
       w: event.w,
       h: event.h,
+      first_click_rank: event.first_click_rank,
     };
     clicks.push(clickData);
   }

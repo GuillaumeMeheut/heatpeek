@@ -22,6 +22,7 @@ export type ClickInfos = {
   t: number;
   w: number;
   h: number;
+  first_click_rank: number | null;
 };
 
 export const addClicks = cache(
@@ -41,7 +42,13 @@ export const addClicks = cache(
 
 export type Click = Omit<
   ClickInfos,
-  "tracking_id" | "url" | "timestamp" | "user_agent" | "device" | "visible"
+  | "tracking_id"
+  | "url"
+  | "timestamp"
+  | "user_agent"
+  | "device"
+  | "visible"
+  | "first_click_rank"
 >;
 
 export const getClicks = cache(
