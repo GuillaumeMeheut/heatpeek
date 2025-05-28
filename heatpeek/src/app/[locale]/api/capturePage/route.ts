@@ -16,17 +16,25 @@ import { SupabaseClient } from "@supabase/supabase-js";
 const MAX_SIZE_PX = 16384;
 const isDevelopment = process.env.NODE_ENV === "development";
 
+const viewportSizes = {
+  desktop: { width: 1510, height: 1080 },
+  tablet: { width: 768, height: 1024 },
+  mobile: { width: 375, height: 812 },
+} as const;
+
+type DeviceType = keyof typeof viewportSizes;
+
 export async function POST(request: Request) {
   const startTime = performance.now();
   const timings: Record<string, number> = {};
 
   try {
     const body = await request.json();
-    const { url, device, label, trackingId } = body;
+    const { url, label, trackingId } = body;
 
     // Validate required fields
     const validationStart = performance.now();
-    const validationErrors = validateRequiredFields({ url, device });
+    const validationErrors = validateRequiredFields({ url });
     const urlResult = formatSnapshotUrl(url);
     timings.validation = performance.now() - validationStart;
 
@@ -54,20 +62,6 @@ export async function POST(request: Request) {
       return NextResponse.json(trackingIdError, { status: 403 });
     }
 
-    const snapshotAlreadyExists = await doesSnapshotExist(
-      supabase,
-      trackingId,
-      formattedUrl,
-      device
-    );
-
-    if (snapshotAlreadyExists) {
-      return NextResponse.json(
-        { error: "Snapshot already exists" },
-        { status: 400 }
-      );
-    }
-
     let browser;
     const browserStart = performance.now();
     try {
@@ -82,177 +76,184 @@ export async function POST(request: Request) {
     }
 
     try {
-      const contextStart = performance.now();
-      const context = await browser.newContext({});
-      const page = await context.newPage();
-      timings.context_init = performance.now() - contextStart;
-
-      // Set viewport based on device type
-      const viewportSizes = {
-        desktop: { width: 1510, height: 1080 },
-        tablet: { width: 768, height: 1024 },
-        mobile: { width: 375, height: 812 },
+      const results: Record<DeviceType, { id?: string; error?: string }> = {
+        desktop: {},
+        tablet: {},
+        mobile: {},
       };
 
-      const selectedViewport =
-        viewportSizes[device as keyof typeof viewportSizes] ||
-        viewportSizes.desktop;
-      await page.setViewportSize(selectedViewport);
-
-      const pageLoadStart = performance.now();
-      await page.goto(formattedUrl, {
-        waitUntil: "domcontentloaded",
-      });
-
-      await page.waitForSelector("body");
-
-      // Scroll to bottom and back to top to ensure all content is loaded
-      await page.evaluate(() => {
-        window.scrollTo(0, document.body.scrollHeight);
-      });
-      await page.evaluate(() => {
-        window.scrollTo(0, 0);
-      });
-      timings.page_load = performance.now() - pageLoadStart;
-
-      // Get the actual page dimensions
-      const dimensionsStart = performance.now();
-      const pageDimensions = await page.evaluate(() => {
-        return {
-          width: document.documentElement.scrollWidth,
-          height: document.documentElement.scrollHeight,
-        };
-      });
-      timings.get_dimensions = performance.now() - dimensionsStart;
-
-      // Check if page is too long
-      if (pageDimensions.height > MAX_SIZE_PX) {
-        await browser.close();
-        return NextResponse.json(
-          {
-            error: `Page is too long (${pageDimensions.height}px). Maximum allowed height is ${MAX_SIZE_PX}px.`,
-          },
-          { status: 400 }
+      // Capture for each device type
+      for (const device of Object.keys(viewportSizes) as DeviceType[]) {
+        const snapshotAlreadyExists = await doesSnapshotExist(
+          supabase,
+          trackingId,
+          formattedUrl,
+          device
         );
-      }
 
-      // Capture screenshot
-      const screenshotStart = performance.now();
-      let screenshotBuffer;
-      try {
-        screenshotBuffer = await page.screenshot({
-          fullPage: true,
-          type: "png",
-        });
-
-        if (!screenshotBuffer || screenshotBuffer.length === 0) {
-          throw new Error("Screenshot buffer is empty");
+        if (snapshotAlreadyExists) {
+          results[device] = { error: "Snapshot already exists" };
+          continue;
         }
 
-        console.log(
-          `Screenshot captured successfully. Size: ${screenshotBuffer.length} bytes`
+        const contextStart = performance.now();
+        const context = await browser.newContext({});
+        const page = await context.newPage();
+        timings.context_init = performance.now() - contextStart;
+
+        // Set viewport based on device type
+        const selectedViewport = viewportSizes[device];
+        await page.setViewportSize(selectedViewport);
+
+        const pageLoadStart = performance.now();
+        await page.goto(formattedUrl, {
+          waitUntil: "domcontentloaded",
+        });
+
+        await page.waitForSelector("body");
+
+        // Scroll to bottom and back to top to ensure all content is loaded
+        await page.evaluate(() => {
+          window.scrollTo(0, document.body.scrollHeight);
+        });
+        await page.evaluate(() => {
+          window.scrollTo(0, 0);
+        });
+        timings.page_load = performance.now() - pageLoadStart;
+
+        // Get the actual page dimensions
+        const dimensionsStart = performance.now();
+        const pageDimensions = await page.evaluate(() => {
+          return {
+            width: document.documentElement.scrollWidth,
+            height: document.documentElement.scrollHeight,
+          };
+        });
+        timings.get_dimensions = performance.now() - dimensionsStart;
+
+        // Check if page is too long
+        if (pageDimensions.height > MAX_SIZE_PX) {
+          results[device] = {
+            error: `Page is too long (${pageDimensions.height}px). Maximum allowed height is ${MAX_SIZE_PX}px.`,
+          };
+          await context.close();
+          continue;
+        }
+
+        // Capture screenshot
+        const screenshotStart = performance.now();
+        let screenshotBuffer;
+        try {
+          screenshotBuffer = await page.screenshot({
+            fullPage: true,
+            type: "png",
+          });
+
+          if (!screenshotBuffer || screenshotBuffer.length === 0) {
+            throw new Error("Screenshot buffer is empty");
+          }
+        } catch (error: unknown) {
+          console.error("Error capturing screenshot:", error);
+          const errorMessage =
+            error instanceof Error ? error.message : "Unknown error occurred";
+          results[device] = {
+            error: `Failed to capture screenshot: ${errorMessage}`,
+          };
+          await context.close();
+          continue;
+        }
+        timings.screenshot_capture = performance.now() - screenshotStart;
+
+        // Convert to WebP format
+        const compressionStart = performance.now();
+        const compressedBuffer = await sharp(screenshotBuffer)
+          .webp({
+            quality: 80,
+            lossless: false,
+            nearLossless: false,
+            smartSubsample: true,
+            effort: 4,
+          })
+          .toBuffer();
+        timings.image_compression = performance.now() - compressionStart;
+
+        // Capture DOM data
+        const domCaptureStart = performance.now();
+        const visibleDomElements = await captureDom(page);
+        timings.dom_capture = performance.now() - domCaptureStart;
+
+        await context.close();
+
+        // Generate a layout hash
+        const hashStart = performance.now();
+        visibleDomElements.sort(
+          (a, b) => a.t - b.t || a.l - b.l || a.w - b.w || a.h - b.h
         );
-      } catch (error: unknown) {
-        console.error("Error capturing screenshot:", error);
-        const errorMessage =
-          error instanceof Error ? error.message : "Unknown error occurred";
-        throw new Error(`Failed to capture screenshot: ${errorMessage}`);
+
+        const layoutHash = crypto
+          .createHash("md5")
+          .update(JSON.stringify(visibleDomElements))
+          .digest("hex");
+        timings.hash_generation = performance.now() - hashStart;
+
+        // Upload screenshot to Supabase Storage
+        const uploadStart = performance.now();
+        let screenshotUrl;
+        try {
+          screenshotUrl = await uploadScreenshot(supabase, {
+            userId: user.id,
+            layoutHash,
+            buffer: compressedBuffer,
+          });
+        } catch (error) {
+          console.error("Error uploading screenshot:", error);
+          results[device] = { error: "Failed to upload screenshot" };
+          continue;
+        }
+        timings.screenshot_upload = performance.now() - uploadStart;
+
+        if (!screenshotUrl) {
+          results[device] = { error: "Failed to upload screenshot" };
+          continue;
+        }
+
+        // Store data in snapshots table
+        const storeStart = performance.now();
+        try {
+          const id = await addSnapshot(supabase, {
+            url: formattedUrl,
+            label,
+            device,
+            dom_data: JSON.stringify(visibleDomElements),
+            layout_hash: layoutHash,
+            screenshot_url: screenshotUrl,
+            width: pageDimensions.width,
+            height: pageDimensions.height,
+            tracking_id: trackingId,
+          });
+
+          if (!id) {
+            throw new Error("Failed to retrieve snapshot id");
+          }
+          results[device] = { id };
+          timings.data_storage = performance.now() - storeStart;
+        } catch (error) {
+          console.error("Error storing snapshot:", error);
+          results[device] = { error: "Failed to store snapshot" };
+        }
       }
-      timings.screenshot_capture = performance.now() - screenshotStart;
-
-      // Convert to WebP format
-      const compressionStart = performance.now();
-      const compressedBuffer = await sharp(screenshotBuffer)
-        .webp({
-          quality: 80,
-          lossless: false,
-          nearLossless: false,
-          smartSubsample: true,
-          effort: 4,
-        })
-        .toBuffer();
-      timings.image_compression = performance.now() - compressionStart;
-
-      // Capture DOM data
-      const domCaptureStart = performance.now();
-      const visibleDomElements = await captureDom(page);
-      timings.dom_capture = performance.now() - domCaptureStart;
 
       await browser.close();
       browser = null;
 
-      // Generate a layout hash
-      const hashStart = performance.now();
-      visibleDomElements.sort(
-        (a, b) => a.t - b.t || a.l - b.l || a.w - b.w || a.h - b.h
-      );
-
-      const layoutHash = crypto
-        .createHash("md5")
-        .update(JSON.stringify(visibleDomElements))
-        .digest("hex");
-      timings.hash_generation = performance.now() - hashStart;
-
-      // Upload screenshot to Supabase Storage
-      const uploadStart = performance.now();
-      let screenshotUrl;
-      try {
-        screenshotUrl = await uploadScreenshot(supabase, {
-          userId: user.id,
-          layoutHash,
-          buffer: compressedBuffer,
-        });
-      } catch (error) {
-        console.error("Error uploading screenshot:", error);
-        return NextResponse.json(
-          { error: "Failed to upload screenshot" },
-          { status: 500 }
-        );
-      }
-      timings.screenshot_upload = performance.now() - uploadStart;
-
-      if (!screenshotUrl) {
-        return NextResponse.json(
-          { error: "Failed to upload screenshot" },
-          { status: 500 }
-        );
-      }
-
-      // Store data in snapshots table
-      const storeStart = performance.now();
-      try {
-        const id = await addSnapshot(supabase, {
-          url: formattedUrl,
-          label,
-          device,
-          dom_data: JSON.stringify(visibleDomElements),
-          layout_hash: layoutHash,
-          screenshot_url: screenshotUrl,
-          width: pageDimensions.width,
-          height: pageDimensions.height,
-          tracking_id: trackingId,
-        });
-
-        if (!id) {
-          throw new Error("Failed to retrieve snapshot id");
-        }
-        timings.data_storage = performance.now() - storeStart;
-
-        return NextResponse.json({
-          success: true,
-          redirect: `/dashboard?id=${id}`,
-          timings: {
-            total: performance.now() - startTime,
-            ...timings,
-          },
-        });
-      } catch (error) {
-        console.error("Error storing snapshot:", error);
-        return NextResponse.json(
-          { error: "Failed to store snapshot" },
-          { status: 500 }
-        );
-      }
+      return NextResponse.json({
+        success: true,
+        results,
+        timings: {
+          total: performance.now() - startTime,
+          ...timings,
+        },
+      });
     } catch (error) {
       console.error("Error capturing page:", error);
       const errorMessage =
@@ -295,18 +296,9 @@ export async function POST(request: Request) {
 }
 
 // Helper functions
-function validateRequiredFields({
-  url,
-  device,
-}: {
-  url?: string;
-  device?: string;
-}) {
+function validateRequiredFields({ url }: { url?: string }) {
   if (!url) {
     return { error: "No URL provided" };
-  }
-  if (!device) {
-    return { error: "No device provided" };
   }
   return null;
 }
@@ -371,11 +363,6 @@ function parseUrl(urlString: string): URL | null {
   }
 }
 
-/**
- * Formats and normalizes a URL for snapshot capture.
- * @param input - The URL string to format
- * @returns A Result type containing either the normalized URL or an error message
- */
 function formatSnapshotUrl(input: string): Result<string> {
   if (!input) {
     return {
@@ -404,6 +391,14 @@ function formatSnapshotUrl(input: string): Result<string> {
     return {
       success: false,
       error: "Invalid URL format",
+    };
+  }
+
+  // Allow localhost in development environment
+  if (isDevelopment && url.hostname === "localhost") {
+    return {
+      success: true,
+      data: urlWithProtocol,
     };
   }
 
