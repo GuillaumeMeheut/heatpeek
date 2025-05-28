@@ -62,6 +62,21 @@ export async function POST(request: Request) {
       return NextResponse.json(trackingIdError, { status: 403 });
     }
 
+    // Check if any snapshot exists for this URL
+    const snapshotAlreadyExists = await doesSnapshotExist(
+      supabase,
+      trackingId,
+      formattedUrl,
+      "desktop"
+    );
+
+    if (snapshotAlreadyExists) {
+      return NextResponse.json(
+        { error: "Snapshot already exists for this URL" },
+        { status: 400 }
+      );
+    }
+
     let browser;
     const browserStart = performance.now();
     try {
@@ -81,21 +96,6 @@ export async function POST(request: Request) {
         tablet: {},
         mobile: {},
       };
-
-      // Check if any snapshot exists for this URL
-      const snapshotAlreadyExists = await doesSnapshotExist(
-        supabase,
-        trackingId,
-        formattedUrl,
-        "desktop"
-      );
-
-      if (snapshotAlreadyExists) {
-        return NextResponse.json(
-          { error: "Snapshot already exists for this URL" },
-          { status: 400 }
-        );
-      }
 
       // Store all device captures before inserting
       const deviceCaptures: Record<
