@@ -6,7 +6,6 @@ import { createClient } from "@/lib/supabase/server";
 import {
   getUser,
   uploadScreenshots,
-  getTrackingId,
   doesSnapshotExist,
   addSnapshots,
 } from "@/lib/supabase/queries";
@@ -52,10 +51,7 @@ export async function POST(request: Request) {
 
     // Get user and validate tracking ID
     const userValidationStart = performance.now();
-    const { user, trackingIdError } = await validateUserAndTrackingId(
-      supabase,
-      trackingId
-    );
+    const { user, trackingIdError } = await validateUserAndTrackingId(supabase);
     timings.user_validation = performance.now() - userValidationStart;
 
     if (trackingIdError) {
@@ -382,8 +378,8 @@ function validateRequiredFields({ url }: { url?: string }) {
 }
 
 async function validateUserAndTrackingId(
-  supabase: SupabaseClient,
-  clientTrackingId: string
+  supabase: SupabaseClient
+  // clientTrackingId: string
 ) {
   const { user } = await getUser(supabase);
 
@@ -394,13 +390,13 @@ async function validateUserAndTrackingId(
     };
   }
 
-  const serverTrackingId = await getTrackingId(supabase, user.id);
-  if (clientTrackingId !== serverTrackingId) {
-    return {
-      user: null,
-      trackingIdError: { error: "Invalid tracking ID" },
-    };
-  }
+  // const serverTrackingId = await getTrackingId(supabase, user.id);
+  // if (clientTrackingId !== serverTrackingId) {
+  //   return {
+  //     user: null,
+  //     trackingIdError: { error: "Invalid tracking ID" },
+  //   };
+  // }
 
   return { user, trackingIdError: null };
 }

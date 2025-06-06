@@ -2,7 +2,6 @@ import Heatmap from "./Heatmap";
 import {
   getSnapshot,
   getSnapshotsInfos,
-  getTrackingId,
   getUser,
   getAggregatedClicks,
 } from "@/lib/supabase/queries";
@@ -14,7 +13,7 @@ import { Card } from "@/components/ui/card";
 import { Suspense } from "react";
 import { Loader2 } from "lucide-react";
 
-export default async function Dashboard({
+export default async function HeatmapPage({
   searchParams,
 }: {
   searchParams: { id?: string; url?: string; device?: string };
@@ -25,7 +24,7 @@ export default async function Dashboard({
 
   const snapshotsInfos = await getSnapshotsInfos(supabase, user.id);
   if (!snapshotsInfos || snapshotsInfos.length === 0) {
-    redirect(`/add-page`);
+    redirect(`/sites`);
   }
   if (snapshotsInfos && snapshotsInfos.length > 0) {
     const currentId = searchParams.id;
@@ -37,8 +36,6 @@ export default async function Dashboard({
   }
 
   const id = searchParams.id as string;
-  const trackingId = await getTrackingId(supabase, user.id);
-  if (!trackingId) return;
   const currentSnapshot = snapshotsInfos.find((snapshot) => snapshot.id === id);
   if (!currentSnapshot) return;
 

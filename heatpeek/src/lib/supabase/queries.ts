@@ -267,11 +267,14 @@ export const getSnapshotsInfos = cache(
 );
 
 export const getTrackingId = cache(
-  async (supabase: SupabaseClient, userId: string): Promise<string | null> => {
+  async (
+    supabase: SupabaseClient,
+    projectId: string
+  ): Promise<string | null> => {
     const { data, error } = await supabase
-      .from("tracking_ids")
-      .select("id")
-      .eq("user_id", userId)
+      .from("projects")
+      .select("tracking_id")
+      .eq("id", projectId)
       .single();
 
     if (error) {
@@ -279,7 +282,7 @@ export const getTrackingId = cache(
       return null;
     }
 
-    return data.id;
+    return data.tracking_id;
   }
 );
 
@@ -344,5 +347,53 @@ export const getAggregatedClicks = cache(
     }
 
     return data;
+  }
+);
+
+export type Project = {
+  id: string;
+  label: string;
+  base_url: string;
+  type: string | null;
+  created_at: string;
+};
+
+export const getProjects = cache(
+  async (
+    supabase: SupabaseClient,
+    userId: string
+  ): Promise<Project[] | null> => {
+    console.log("Fetching projects for user:", userId);
+
+    const { data, error } = await supabase
+      .from("projects")
+      .select("id, label, base_url, type, created_at")
+      .eq("user_id", userId);
+
+    if (error) {
+      console.log("Error fetching projects:", error);
+      return null;
+    }
+
+    return data;
+  }
+);
+
+export const deleteProject = cache(
+  async (
+    supabase: SupabaseClient,
+    projectId: string
+  ): Promise<{ success: boolean } | null> => {
+    const { error } = await supabase
+      .from("projects")
+      .delete()
+      .eq("id", projectId);
+
+    if (error) {
+      console.error("Error deleting project:", error);
+      return null;
+    }
+
+    return { success: true };
   }
 );

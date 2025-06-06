@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "../../styles/globals.css";
-import { Navbar } from "@/components/Navbar";
 import { Toaster } from "@/components/ui/Toast/toaster";
 import { ReactElement, Suspense } from "react";
 import { I18nProviderClient } from "../../../locales/client";
@@ -39,12 +38,7 @@ export default async function RootLayout({
     <html lang={locale}>
       <body className={inter.className}>
         <I18nProviderClient locale={locale}>
-          <div className="flex flex-col min-h-screen">
-            <Navbar />
-            <main className="flex-1 flex items-center justify-center">
-              {children}
-            </main>
-          </div>
+          {children}
           <Suspense>
             <Toaster />
           </Suspense>

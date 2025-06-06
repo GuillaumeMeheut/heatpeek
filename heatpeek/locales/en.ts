@@ -3,8 +3,14 @@ export default {
     why: "Why Heatpeek?",
     pricing: "Pricing",
     dashboard: "Dashboard",
+    overview: "Overview",
+    view: "View",
     signIn: "Sign In",
     signUp: "Sign Up",
+    upgrade: "Upgrade",
+    getStarted: "Get Started",
+    heatmap: "Heatmap",
+    elements: "Elements",
   },
   auth: {
     signOut: "Sign Out",
@@ -80,6 +86,10 @@ export default {
     title: "Tracking Script",
     copy: "Copy",
     copied: "Copied!",
+    verify: "Verify",
+    verifying: "Verifying...",
+    verified: "Installation verified",
+    not_verified: "Installation not found",
     instructions:
       "Add this script to your website's HTML, either at the top of the <head> section after <meta> tags. Add it to every page you wish to track, then verify your installation.",
   },
@@ -196,5 +206,26 @@ export default {
       getStarted: "Get Started",
       contactUs: "Contact Us",
     },
+  },
+  setupSite: {
+    title: "Setup Your Site",
+    siteLabel: "Site Label",
+    siteLabelPlaceholder: "Enter your site label",
+    websiteType: "Website Type",
+    websiteTypePlaceholder: "Select your website type",
+    baseUrl: "Base URL",
+    baseUrlPlaceholder: "https://example.com",
+    baseUrlDescription:
+      "Enter the root URL of your website (e.g., https://example.com)",
+    validate: "Validate",
+    error: {
+      title: "Error",
+      description: "Failed to create site",
+    },
+  },
+  projects: {
+    title: "Your Projects",
+    addNew: "Add New Site",
+    delete: "Delete",
   },
 } as const;

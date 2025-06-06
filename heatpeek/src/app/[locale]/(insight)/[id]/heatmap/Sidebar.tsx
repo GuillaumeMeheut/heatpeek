@@ -38,7 +38,7 @@ export function Sidebar({
       {isSidebarOpen && (
         <div className="relative space-y-4">
           <Button asChild>
-            <Link href="/add-page" className="flex items-center gap-2 w-full">
+            <Link href="/add-site" className="flex items-center gap-2 w-full">
               <Plus className="h-4 w-4" />
               {t("sidebar.newPage")}
             </Link>

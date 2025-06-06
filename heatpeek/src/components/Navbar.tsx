@@ -14,8 +14,8 @@ export async function Navbar() {
   const t = await getI18n();
 
   return (
-    <nav className="w-full border-b">
-      <div className="w-full flex h-16 items-center justify-evenly">
+    <header className="w-full border-b">
+      <nav className="w-full flex h-16 items-center justify-evenly">
         <Link href="/" className="font-bold text-xl flex items-center gap-2">
           <Image
             src="/logo.png"
@@ -69,7 +69,7 @@ export async function Navbar() {
           )}
           <LanguageSwitcher />
         </div>
-      </div>
-    </nav>
+      </nav>
+    </header>
   );
 }

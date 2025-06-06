@@ -2,12 +2,28 @@
   "use strict";
 
   const trackingId = document.currentScript.getAttribute("id");
-  // const endpoint = "https://heatpeek.com/api/e";
-  const endpoint = "http://localhost:3000/api/e";
+  // const endpoint = "https://heatpeek.com";
+  const endpoint = "http://localhost:3000";
 
-  if (!trackingId) {
-    console.error("Heatpeek: Project ID is required");
-    return;
+  const script = document.createElement("script");
+  script.src = "https://html2canvas.hertzen.com/dist/html2canvas.min.js";
+  document.head.appendChild(script);
+
+  if (!trackingId) return;
+
+  const urlParams = new URLSearchParams(window.location.search);
+  if (urlParams.get("verifyHp") === trackingId) {
+    fetch(`${endpoint}/api/verify/${trackingId}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ verified: true }),
+    })
+      .then(() => {
+        window.close();
+      })
+      .catch((error) => {
+        console.error(error);
+      });
   }
 
   const device = getViewportDeviceCategory();
@@ -22,7 +38,7 @@
   const MAX_BUFFER_SIZE = 10;
   const MAX_INTERVAL_MS = 5000;
 
-  var lastPage;
+  let lastPage;
 
   function handlePageChange(isSPANavigation) {
     const currentPath = location.pathname;
@@ -38,10 +54,10 @@
   });
 
   // Handle history API routing
-  var his = window.history;
-  if (his.pushState) {
-    var originalPushState = his["pushState"];
-    his.pushState = function () {
+  let history = window.history;
+  if (history.pushState) {
+    let originalPushState = history["pushState"];
+    history.pushState = function () {
       originalPushState.apply(this, arguments);
       handlePageChange(true);
     };
@@ -82,9 +98,9 @@
       events: clickBuffer.splice(0, clickBuffer.length),
     });
     if (navigator.sendBeacon) {
-      navigator.sendBeacon(endpoint, data);
+      navigator.sendBeacon(`${endpoint}/api/e`, data);
     } else {
-      fetch(endpoint, {
+      fetch(`${endpoint}/api/e`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: data,
@@ -102,6 +118,14 @@
     if (document.visibilityState === "hidden") {
       flushBuffer();
     }
+  });
+
+  // Take screenshot when everything is fully loaded
+  window.addEventListener("load", () => {
+    // Add a small delay to ensure everything is properly rendered
+    setTimeout(() => {
+      takeScreenshot();
+    }, 3000);
   });
 
   document.addEventListener("click", (e) => {
@@ -151,6 +175,59 @@
       flushBuffer();
     }
   });
+
+  async function takeScreenshot() {
+    try {
+      // Wait for html2canvas to be loaded
+      if (typeof html2canvas === "undefined") {
+        await new Promise((resolve) => {
+          const checkInterval = setInterval(() => {
+            if (typeof html2canvas !== "undefined") {
+              clearInterval(checkInterval);
+              resolve();
+            }
+          }, 100);
+        });
+      }
+
+      const canvas = await html2canvas(document.body, {
+        scale: 1,
+        useCORS: true,
+        logging: false,
+        allowTaint: true,
+        windowWidth: document.documentElement.scrollWidth,
+        windowHeight: document.documentElement.scrollHeight,
+        scrollX: 0,
+        scrollY: 0,
+      });
+
+      // Convert canvas to data URL
+      const dataUrl = canvas.toDataURL("image/png");
+
+      // Open in new tab
+      const newTab = window.open();
+      newTab.document.write(`
+        <html>
+          <head>
+            <title>Screenshot</title>
+            <style>
+              body { margin: 0; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
+              img { max-width: 100%; height: auto; }
+            </style>
+          </head>
+          <body>
+            <img src="${dataUrl}" alt="Screenshot" />
+          </body>
+        </html>
+      `);
+      newTab.document.close();
+
+      return true;
+    } catch (error) {
+      console.error("Heatpeek: Error taking screenshot:", error);
+      return false;
+    }
+  }
 })();
 
 function getViewportDeviceCategory() {

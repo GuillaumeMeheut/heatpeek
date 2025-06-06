@@ -1,11 +1,11 @@
 "use client";
-import { Button } from "@/components/ui/button";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Globe } from "lucide-react";
 import { useCurrentLocale } from "../../locales/client";
 import { useChangeLocale } from "../../locales/client";
@@ -31,25 +31,20 @@ export function LanguageSwitcher() {
     languages.find((lang) => lang.code === locale) || languages[0];
 
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="sm" className="h-8 gap-2">
+    <Select value={locale} onValueChange={changeLocale}>
+      <SelectTrigger className="h-8">
+        <div className="flex items-center gap-2">
           <Globe className="h-4 w-4" />
-          {currentLanguage.letter}
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end">
+          <SelectValue placeholder={currentLanguage.letter} />
+        </div>
+      </SelectTrigger>
+      <SelectContent>
         {languages.map((language) => (
-          <DropdownMenuItem
-            key={language.code}
-            className="flex items-center gap-2"
-            onClick={() => changeLocale(language.code)}
-          >
-            <span className="font-medium">{language.letter}</span>
-            {language.name}
-          </DropdownMenuItem>
+          <SelectItem key={language.code} value={language.code}>
+            <div className="flex items-center gap-2">{language.name}</div>
+          </SelectItem>
         ))}
-      </DropdownMenuContent>
-    </DropdownMenu>
+      </SelectContent>
+    </Select>
   );
 }

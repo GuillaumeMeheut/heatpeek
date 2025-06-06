@@ -2,9 +2,15 @@ export default {
   nav: {
     why: "Pourquoi Heatpeek ?",
     pricing: "Tarifs",
-    dashboard: "Dashboard",
+    dashboard: "Tableau de bord",
+    overview: "Vue d'ensemble",
+    view: "Voir",
     signIn: "Connexion",
     signUp: "Inscription",
+    upgrade: "Passer à la version supérieure",
+    getStarted: "Commencer",
+    heatmap: "Heatmap",
+    elements: "Éléments",
   },
   auth: {
     signOut: "Déconnexion",
@@ -80,6 +86,10 @@ export default {
     title: "Tracking script",
     copy: "Copier",
     copied: "Copié !",
+    verify: "Vérifier",
+    verifying: "Vérification...",
+    verified: "Installation vérifiée",
+    not_verified: "Installation non trouvée",
     instructions:
       "Ajoutez ce script à votre site web dans la section <head> après les balises <meta>. Ajoutez-le à chaque page que vous souhaitez suivre, puis vérifiez votre installation.",
   },
@@ -202,5 +212,26 @@ export default {
       getStarted: "Commencer",
       contactUs: "Contactez-nous",
     },
+  },
+  setupSite: {
+    title: "Configuration du Site",
+    siteLabel: "Nom du Site",
+    siteLabelPlaceholder: "Entrez le nom de votre site",
+    websiteType: "Type de site",
+    websiteTypePlaceholder: "Selectionner votre type de site",
+    baseUrl: "URL de Base",
+    baseUrlPlaceholder: "https://exemple.com",
+    baseUrlDescription:
+      "Entrez l'URL racine de votre site web (ex: https://exemple.com)",
+    validate: "Valider",
+    error: {
+      title: "Erreur",
+      description: "Échec de la création du site",
+    },
+  },
+  projects: {
+    title: "Vos Projets",
+    addNew: "Ajouter un Site",
+    delete: "Supprimer",
   },
 } as const;

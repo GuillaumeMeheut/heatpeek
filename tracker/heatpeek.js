@@ -2,11 +2,23 @@
   "use strict";
 
   const trackingId = document.currentScript.getAttribute("id");
-  const endpoint = "https://heatpeek.com/api/e";
+  const endpoint = "https://heatpeek.com";
 
-  if (!trackingId) {
-    console.error("Heatpeek: Project ID is required");
-    return;
+  if (!trackingId) return;
+
+  const urlParams = new URLSearchParams(window.location.search);
+  if (urlParams.get("verifyHp") === trackingId) {
+    fetch(`${endpoint}/api/verify/${trackingId}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ verified: true }),
+    })
+      .then(() => {
+        window.close();
+      })
+      .catch((error) => {
+        console.error(error);
+      });
   }
 
   const device = getViewportDeviceCategory();
@@ -21,7 +33,7 @@
   const MAX_BUFFER_SIZE = 10;
   const MAX_INTERVAL_MS = 5000;
 
-  var lastPage;
+  let lastPage;
 
   function handlePageChange(isSPANavigation) {
     const currentPath = location.pathname;
@@ -37,10 +49,10 @@
   });
 
   // Handle history API routing
-  var his = window.history;
-  if (his.pushState) {
-    var originalPushState = his["pushState"];
-    his.pushState = function () {
+  let history = window.history;
+  if (history.pushState) {
+    let originalPushState = history["pushState"];
+    history.pushState = function () {
       originalPushState.apply(this, arguments);
       handlePageChange(true);
     };
@@ -81,9 +93,9 @@
       events: clickBuffer.splice(0, clickBuffer.length),
     });
     if (navigator.sendBeacon) {
-      navigator.sendBeacon(endpoint, data);
+      navigator.sendBeacon(`${endpoint}/api/e`, data);
     } else {
-      fetch(endpoint, {
+      fetch(`${endpoint}/api/e`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: data,
