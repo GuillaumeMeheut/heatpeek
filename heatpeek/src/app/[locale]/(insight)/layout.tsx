@@ -4,13 +4,12 @@ import { getProjects } from "@/lib/supabase/queries";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 
-export default async function DashboardLayout({
+export default async function Layout({
   children,
 }: {
   children: React.ReactNode;
 }) {
   const supabase = await createClient();
-
   const { user } = await getUser(supabase);
 
   if (!user) redirect("/signin");

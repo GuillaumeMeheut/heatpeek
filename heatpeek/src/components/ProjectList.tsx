@@ -11,20 +11,18 @@ import {
 import { ChevronDown, Plus } from "lucide-react";
 import Link from "next/link";
 import { Project } from "@/lib/supabase/queries";
-import { useParams } from "next/navigation";
+import { usePathname } from "next/navigation";
 
 interface ProjectListProps {
   projects: Project[];
-  // currentProject: Project;
+  currentProject: Project | undefined;
 }
 
-export function ProjectList({ projects }: ProjectListProps) {
-  const params = useParams();
-  const currentId = params.id as string;
-  const currentProject = projects.find((project) => project.id === currentId);
-  if (projects.length === 0 || !params.id) {
-    return null;
-  }
+export function ProjectList({ projects, currentProject }: ProjectListProps) {
+  const pathname = usePathname();
+
+  if (!currentProject || projects.length === 0) return null;
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -40,17 +38,23 @@ export function ProjectList({ projects }: ProjectListProps) {
       </DropdownMenuTrigger>
       <DropdownMenuContent align="start" className="w-[200px]">
         {projects.length > 0 &&
-          projects.map((project) => (
-            <DropdownMenuItem key={project.id} className="cursor-pointer">
-              <Link
-                href={`/${project.id}/get-started`}
-                className="w-full truncate"
-                title={project.label || new URL(project.base_url).hostname}
-              >
-                {project.label || new URL(project.base_url).hostname}
-              </Link>
-            </DropdownMenuItem>
-          ))}
+          projects.map((project) => {
+            const segments = pathname.split("/");
+            segments[1] = project.id;
+            const newPath = segments.join("/");
+
+            return (
+              <DropdownMenuItem key={project.id} className="cursor-pointer">
+                <Link
+                  href={newPath}
+                  className="w-full truncate"
+                  title={project.label || new URL(project.base_url).hostname}
+                >
+                  {project.label || new URL(project.base_url).hostname}
+                </Link>
+              </DropdownMenuItem>
+            );
+          })}
         {projects.length > 0 && <DropdownMenuSeparator />}
         <DropdownMenuItem className="cursor-pointer">
           <Link href="/add-site" className="flex items-center w-full">
