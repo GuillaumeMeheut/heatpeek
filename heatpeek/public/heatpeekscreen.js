@@ -5,16 +5,13 @@
   // const endpoint = "https://heatpeek.com";
   const endpoint = "http://localhost:3000";
 
-  if (!trackingId) return;
-
   // Config management
   const config = {
     data: null,
     lastFetch: 0,
-    CACHE_DURATION: 5 * 60 * 1000, // 2 minutes cache
+    CACHE_DURATION: 5 * 60 * 1000, // 5 minutes cache
 
     async fetch() {
-      console.log("fetching config");
       // Return cached config if it's still valid
       const now = Date.now();
       if (this.data && now - this.lastFetch < this.CACHE_DURATION) {
@@ -22,9 +19,7 @@
       }
 
       try {
-        const response = await fetch(
-          `http://localhost:8787/?tracking_id=${trackingId}`
-        );
+        const response = await fetch(`${endpoint}/api/config/${trackingId}`);
         if (!response.ok) throw new Error("Failed to fetch config");
 
         this.data = await response.json();
@@ -41,18 +36,38 @@
     },
   };
 
-  // Initialize config
-  config.fetch().then((configData) => {
-    if (!configData) {
-      console.error("Heatpeek: Failed to load configuration");
-      return;
-    }
-    initializeTracking();
-  });
+  const script = document.createElement("script");
+  script.src = "https://html2canvas.hertzen.com/dist/html2canvas.min.js";
+  document.head.appendChild(script);
 
-  verifyTracking(endpoint, trackingId);
+  if (!trackingId) return;
+
+  // Initialize config
+  // config.fetch().then((configData) => {
+  //   if (!configData) {
+  //     console.error("Heatpeek: Failed to load configuration");
+  //     return;
+  //   }
+  // Start tracking only if config is loaded successfully
+  initializeTracking();
+  // });
 
   function initializeTracking() {
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get("verifyHp") === trackingId) {
+      fetch(`${endpoint}/api/verify/${trackingId}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ verified: true }),
+      })
+        .then(() => {
+          window.close();
+        })
+        .catch((error) => {
+          console.error(error);
+        });
+    }
+
     const device = getViewportDeviceCategory();
     if (device === "large-desktop") return;
 
@@ -70,6 +85,18 @@
     function handlePageChange(isSPANavigation) {
       const currentPath = location.pathname;
       if (isSPANavigation && lastPage === currentPath) return;
+
+      // Check if we should track this page
+      const configData = config.get();
+      if (configData && configData.excludedPages) {
+        if (
+          configData.excludedPages.some((pattern) =>
+            new RegExp(pattern).test(currentPath)
+          )
+        ) {
+          return;
+        }
+      }
 
       lastPage = currentPath;
       firstThreeClicks = 0;
@@ -147,6 +174,14 @@
       }
     });
 
+    // Take screenshot when everything is fully loaded
+    window.addEventListener("load", () => {
+      // Add a small delay to ensure everything is properly rendered
+      setTimeout(() => {
+        // takeScreenshot();
+      }, 3000);
+    });
+
     document.addEventListener("click", (e) => {
       const now = Date.now();
       if (now - lastClickTime < THROTTLE_MS) return;
@@ -184,6 +219,9 @@
         firstClickRank:
           firstThreeClicks < MAX_FIRST_CLICKS ? firstThreeClicks + 1 : null,
       };
+      console.log(
+        firstThreeClicks < MAX_FIRST_CLICKS ? firstThreeClicks + 1 : null
+      );
 
       clickBuffer.push(payload);
       firstThreeClicks++;
@@ -191,26 +229,65 @@
         flushBuffer();
       }
     });
+
+    setTimeout(async () => {
+      await takeScreenshot();
+    }, 3000);
+
+    async function takeScreenshot() {
+      try {
+        // Wait for html2canvas to be loaded
+        if (typeof html2canvas === "undefined") {
+          await new Promise((resolve) => {
+            const checkInterval = setInterval(() => {
+              if (typeof html2canvas !== "undefined") {
+                clearInterval(checkInterval);
+                resolve();
+              }
+            }, 100);
+          });
+        }
+
+        const canvas = await html2canvas(document.body, {
+          scale: 1,
+          useCORS: true,
+          logging: false,
+          allowTaint: true,
+          windowWidth: document.documentElement.scrollWidth,
+          windowHeight: document.documentElement.scrollHeight,
+          scrollX: 0,
+          scrollY: 0,
+        });
+
+        // Convert canvas to data URL
+        const dataUrl = canvas.toDataURL("image/png");
+
+        // Open in new tab
+        const newTab = window.open();
+        newTab.document.write(`
+          <html>
+            <head>
+              <title>Screenshot</title>
+              <style>
+                body { margin: 0; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
+                img { max-width: 100%; height: auto; }
+              </style>
+            </head>
+            <body>
+              <img src="${dataUrl}" alt="Screenshot" />
+            </body>
+          </html>
+        `);
+        newTab.document.close();
+
+        return true;
+      } catch (error) {
+        console.error("Heatpeek: Error taking screenshot:", error);
+        return false;
+      }
+    }
   }
 })();
-
-async function verifyTracking(endpoint, trackingId) {
-  const urlParams = new URLSearchParams(window.location.search);
-  console.log(urlParams.get("verifyHp"), trackingId);
-  if (urlParams.get("verifyHp") === trackingId) {
-    fetch(`${endpoint}/api/verify/${trackingId}`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ verified: true }),
-    })
-      .then(() => {
-        window.close();
-      })
-      .catch((error) => {
-        console.error(error);
-      });
-  }
-}
 
 function getViewportDeviceCategory() {
   const viewportWidth = window.innerWidth;

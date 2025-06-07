@@ -3,7 +3,7 @@
 ## 🖥️ Dashboard
 
 - [ ] Handle "Snapshot Not Found"
-- [ ] Fix auth error when signin with existing account (say success)
+- [ ] Fix auth error when signin with existing account (it say success)
 - [ ] Handle and display errors:
   - [ ] Add Snapshot
 - [ ] Review the auth system
@@ -26,6 +26,7 @@
   - [ ] Aggregate data every X hours
   - [ ] Determine website size (traffic insights)
 - [ ] Include traffic data in config
+- [ ] SEO
 
 ---
 
@@ -34,6 +35,7 @@
 - [ ] Compress public images
 - [ ] Change landing dashboard image
 - [ ] Redraw logo as SVG:
+  - [ ] Blue as cursor
   - [ ] Improve design
   - [ ] Set as favicon
 
