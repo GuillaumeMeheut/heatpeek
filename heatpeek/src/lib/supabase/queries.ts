@@ -266,14 +266,14 @@ export const getSnapshotsInfos = cache(
   }
 );
 
-export const getTrackingId = cache(
+export const getTrackingIdAndBaseUrl = cache(
   async (
     supabase: SupabaseClient,
     projectId: string
-  ): Promise<string | null> => {
+  ): Promise<{ tracking_id: string; base_url: string } | null> => {
     const { data, error } = await supabase
       .from("projects")
-      .select("tracking_id")
+      .select("tracking_id, base_url")
       .eq("id", projectId)
       .single();
 
@@ -282,7 +282,7 @@ export const getTrackingId = cache(
       return null;
     }
 
-    return data.tracking_id;
+    return data;
   }
 );
 

@@ -10,8 +10,6 @@ interface VerificationData {
 
 const verificationStatus = new Map<string, VerificationData>();
 
-// Helper function to add CORS headers
-
 export async function OPTIONS() {
   return NextResponse.json({}, { headers: corsHeaders() });
 }
@@ -45,7 +43,7 @@ export async function POST(
       );
     }
 
-    if (origin !== project.base_url) {
+    if (origin + "/" !== project.base_url) {
       return NextResponse.json(
         { error: "Invalid origin" },
         { status: 403, headers: corsHeaders() }

@@ -50,7 +50,13 @@ function DeployStep() {
   );
 }
 
-function VerifyStep({ trackingId }: { trackingId: string | null }) {
+function VerifyStep({
+  trackingId,
+  baseUrl,
+}: {
+  trackingId: string | null;
+  baseUrl: string | null;
+}) {
   const [verifying, setVerifying] = useState(false);
   const [verificationResult, setVerificationResult] = useState<boolean | null>(
     null
@@ -63,8 +69,7 @@ function VerifyStep({ trackingId }: { trackingId: string | null }) {
     setVerificationResult(null);
 
     try {
-      // Open the verification URL in a new window
-      window.open(`http://localhost:3001/?verifyHp=${trackingId}`, "_blank");
+      window.open(`${baseUrl}?verifyHp=${trackingId}`, "_blank");
 
       // Poll for verification status
       const checkVerification = async () => {
@@ -148,7 +153,13 @@ function VerifyStep({ trackingId }: { trackingId: string | null }) {
   );
 }
 
-export function SetupSite({ trackingId }: { trackingId: string | null }) {
+export function SetupSite({
+  trackingId,
+  baseUrl,
+}: {
+  trackingId: string | null;
+  baseUrl: string | null;
+}) {
   return (
     <div className="max-w-3xl mx-auto space-y-8">
       <div className="space-y-2">
@@ -161,7 +172,7 @@ export function SetupSite({ trackingId }: { trackingId: string | null }) {
       <div className="space-y-6">
         <CopyScriptStep trackingId={trackingId} />
         <DeployStep />
-        <VerifyStep trackingId={trackingId} />
+        <VerifyStep trackingId={trackingId} baseUrl={baseUrl} />
       </div>
     </div>
   );

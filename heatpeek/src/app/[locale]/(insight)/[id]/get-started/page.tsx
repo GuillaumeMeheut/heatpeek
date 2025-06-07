@@ -1,4 +1,4 @@
-import { getTrackingId, getUser } from "@/lib/supabase/queries";
+import { getTrackingIdAndBaseUrl, getUser } from "@/lib/supabase/queries";
 import { SetupSite } from "./setup-site";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
@@ -14,7 +14,12 @@ export default async function PageGetStarted({
 
   const { id } = await params;
 
-  const trackingId = await getTrackingId(supabase, id);
+  const result = await getTrackingIdAndBaseUrl(supabase, id);
+  if (!result) {
+    return <div>Error</div>;
+  }
 
-  return <SetupSite trackingId={trackingId} />;
+  return (
+    <SetupSite trackingId={result.tracking_id} baseUrl={result.base_url} />
+  );
 }
