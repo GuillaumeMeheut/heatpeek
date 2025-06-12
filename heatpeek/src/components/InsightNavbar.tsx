@@ -6,19 +6,25 @@ import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { ProjectList } from "@/components/ProjectList";
 import { Project } from "@/lib/supabase/queries";
 import type { User } from "@supabase/supabase-js";
-import { useParams, usePathname } from "next/navigation";
+import { useParams, usePathname, useSearchParams } from "next/navigation";
 import { useI18n } from "@locales/client";
 
 interface NavLinkProps {
   href: string;
   isActive: boolean;
   children: React.ReactNode;
+  queryUrl: string | null;
 }
 
-function NavLink({ href, isActive, children }: NavLinkProps) {
+function NavLink({ href, isActive, children, queryUrl }: NavLinkProps) {
   return (
     <Link
-      href={href}
+      href={{
+        pathname: href,
+        query: {
+          url: queryUrl,
+        },
+      }}
       className={`text-sm text-gray-500 ${
         isActive ? "text-primary border-b-2 border-primary" : ""
       }`}
@@ -41,6 +47,9 @@ export function InsightNavbar({
   const params = useParams();
   const currentId = params.id as string;
   const currentProject = projects.find((project) => project.id === currentId);
+
+  const searchParams = useSearchParams();
+  const queryUrl = searchParams.get("url");
 
   const isDashboard = pathname.includes("/dashboard");
   const isHeatmap = pathname.includes("/heatmap");
@@ -66,16 +75,29 @@ export function InsightNavbar({
               <NavLink
                 href={`/${currentId}/get-started`}
                 isActive={isGetStarted}
+                queryUrl={queryUrl}
               >
                 {t("nav.getStarted")}
               </NavLink>
-              <NavLink href={`/${currentId}/dashboard`} isActive={isDashboard}>
+              <NavLink
+                href={`/${currentId}/dashboard`}
+                isActive={isDashboard}
+                queryUrl={queryUrl}
+              >
                 {t("nav.dashboard")}
               </NavLink>
-              <NavLink href={`/${currentId}/heatmap`} isActive={isHeatmap}>
+              <NavLink
+                href={`/${currentId}/heatmap`}
+                isActive={isHeatmap}
+                queryUrl={queryUrl}
+              >
                 {t("nav.heatmap")}
               </NavLink>
-              <NavLink href={`/${currentId}/elements`} isActive={isElements}>
+              <NavLink
+                href={`/${currentId}/elements`}
+                isActive={isElements}
+                queryUrl={queryUrl}
+              >
                 {t("nav.elements")}
               </NavLink>
             </>

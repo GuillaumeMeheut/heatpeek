@@ -1,50 +1,41 @@
 import Heatmap from "./Heatmap";
 import {
   getSnapshot,
-  getSnapshotsInfos,
   getUser,
   getAggregatedClicks,
 } from "@/lib/supabase/queries";
 import { createClient } from "@/lib/supabase/server";
 import { OptionsBar } from "./OptionsBar";
-import { Sidebar } from "./Sidebar";
 import { redirect } from "next/navigation";
 import { Card } from "@/components/ui/card";
 import { Suspense } from "react";
 import { Loader2 } from "lucide-react";
 
 export default async function HeatmapPage({
+  params,
   searchParams,
 }: {
-  searchParams: { id?: string; url?: string; device?: string };
+  params: Promise<{ id: string }>;
+  searchParams: { url?: string; device?: string };
 }) {
   const supabase = await createClient();
   const { user } = await getUser(supabase);
   if (!user) redirect("/signin");
+  const { id: projectId } = await params;
+  const url = searchParams.url;
+  const device = searchParams.device || "desktop";
 
-  const snapshotsInfos = await getSnapshotsInfos(supabase, user.id);
-  if (!snapshotsInfos || snapshotsInfos.length === 0) {
-    redirect(`/sites`);
-  }
-  if (snapshotsInfos && snapshotsInfos.length > 0) {
-    const currentId = searchParams.id;
-
-    if (!currentId) {
-      const firstSnapshot = snapshotsInfos[0];
-      redirect(`/dashboard?id=${firstSnapshot.id}`);
-    }
+  if (!url) {
+    return <div>No url found</div>;
   }
 
-  const id = searchParams.id as string;
-  const currentSnapshot = snapshotsInfos.find((snapshot) => snapshot.id === id);
-  if (!currentSnapshot) return;
-
-  const snapshot = await getSnapshot(supabase, id);
-  const aggregatedClicks = await getAggregatedClicks(supabase, id);
+  const snapshot = await getSnapshot(supabase, projectId, url, device);
 
   if (!snapshot) {
     return <div>No snapshot found</div>;
   }
+
+  const aggregatedClicks = await getAggregatedClicks(supabase, snapshot.id);
 
   return (
     <Suspense
@@ -55,7 +46,6 @@ export default async function HeatmapPage({
       }
     >
       <div className="flex">
-        <Sidebar snapshotsInfos={snapshotsInfos || []} />
         <div className="flex-1 p-4">
           <Card className="border-primary/20">
             <div className="container mx-auto p-4 relative">

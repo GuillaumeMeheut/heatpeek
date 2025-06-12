@@ -77,6 +77,7 @@ export const getClicks = cache(
 );
 
 export type Snapshot = {
+  id: string;
   url: string;
   label: string;
   device: string;
@@ -91,7 +92,7 @@ export type Snapshot = {
 export const addSnapshots = cache(
   async (
     supabase: SupabaseClient,
-    snapshots: Snapshot[]
+    snapshots: Omit<Snapshot, "id">[]
   ): Promise<string | null> => {
     const { data, error } = await supabase.from("snapshots").insert(snapshots);
 
@@ -108,15 +109,19 @@ export const addSnapshots = cache(
 export const getSnapshot = cache(
   async (
     supabase: SupabaseClient,
-    id: string
+    projectId: string,
+    url: string,
+    device: string
   ): Promise<Omit<
     Snapshot,
-    "layout_hash" | "tracking_id" | "dom_data"
+    "layout_hash" | "tracking_id" | "dom_data" | "url" | "device"
   > | null> => {
     const { data, error } = await supabase
       .from("snapshots")
-      .select("url, label, device, screenshot_url, width, height")
-      .eq("id", id)
+      .select("id, label, screenshot_url, width, height")
+      .eq("project_id", projectId)
+      .eq("url", url)
+      .eq("device", device)
       .single();
 
     if (error) {
@@ -242,20 +247,17 @@ export type SnapshotInfos = Omit<
   | "width"
   | "height"
   | "tracking_id"
-> & {
-  created_at: string;
-  id: string;
-};
+>;
 
 export const getSnapshotsInfos = cache(
   async (
     supabase: SupabaseClient,
-    userId: string
+    projectId: string
   ): Promise<SnapshotInfos[] | null> => {
     const { data, error } = await supabase
       .from("snapshots")
-      .select("id, url, label, device, created_at")
-      .eq("user_id", userId);
+      .select("id, url, label, device")
+      .eq("project_id", projectId);
 
     if (error) {
       console.log("Error fetching snapshot:", error);

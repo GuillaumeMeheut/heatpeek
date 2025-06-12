@@ -7,7 +7,10 @@ import { Snapshot, AggregatedClick } from "@/lib/supabase/queries";
 
 type HeatmapProps = {
   aggregatedClicks: AggregatedClick[];
-  pageData: Omit<Snapshot, "layout_hash" | "tracking_id" | "dom_data">;
+  pageData: Omit<
+    Snapshot,
+    "layout_hash" | "tracking_id" | "dom_data" | "url" | "device"
+  >;
 };
 
 const HEATMAP_CONFIG = {
@@ -17,7 +20,7 @@ const HEATMAP_CONFIG = {
     MAX: 25,
   },
   MAX_INTENSITY: 10,
-  OVERLAY_OPACITY: 0.7,
+  OVERLAY_OPACITY: 0.4,
 } as const;
 
 export default function Heatmap({ aggregatedClicks, pageData }: HeatmapProps) {
@@ -121,7 +124,7 @@ export default function Heatmap({ aggregatedClicks, pageData }: HeatmapProps) {
           {pageData?.screenshot_url && (
             <Image
               src={pageData.screenshot_url}
-              alt={`Screenshot of ${pageData.url}`}
+              alt={`Screenshot of ${pageData.label}`}
               className="absolute inset-0"
               style={{
                 width: containerDimensions.width,

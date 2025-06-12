@@ -120,7 +120,7 @@
       if (clickBuffer.length === 0) return;
       const data = JSON.stringify({
         trackingId,
-        url: window.location.href,
+        url: window.location.pathname,
         device,
         events: clickBuffer.splice(0, clickBuffer.length),
       });
