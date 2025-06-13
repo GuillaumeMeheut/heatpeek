@@ -10,15 +10,11 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
-import { SnapshotInfos } from "@/lib/supabase/queries";
+import { Url } from "@/lib/supabase/queries";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState, useEffect } from "react";
 
-export function FiltersUrl({
-  snapshots,
-}: {
-  snapshots: SnapshotInfos[] | null;
-}) {
+export function FiltersUrl({ urls }: { urls: Url[] | null }) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const urlParam = searchParams.get("url");
@@ -61,9 +57,9 @@ export function FiltersUrl({
             <Input placeholder="Search pages..." className="mb-2" />
           </div>
           <SelectItem value={"all"}>All Pages</SelectItem>
-          {snapshots?.map((page) => (
-            <SelectItem key={page.id} value={page.url}>
-              {page.label || page.url}
+          {urls?.map((url) => (
+            <SelectItem key={url.id} value={url.path}>
+              {url.label || url.path}
             </SelectItem>
           ))}
         </SelectContent>

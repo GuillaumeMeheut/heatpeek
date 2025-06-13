@@ -2,19 +2,20 @@
   "use strict";
 
   const trackingId = document.currentScript.getAttribute("id");
-  // const endpoint = "https://heatpeek.com";
   const endpoint = "http://localhost:3000";
+  const endpointAPI = "http://localhost:8787";
 
   if (!trackingId) return;
+  if (detectBot()) return;
 
-  // Config management
+  verifyTracking(endpoint, trackingId);
+
   const config = {
     data: null,
     lastFetch: 0,
-    CACHE_DURATION: 5 * 60 * 1000, // 2 minutes cache
+    CACHE_DURATION: 1 * 60 * 1000, // 1 minute cache
 
     async fetch() {
-      console.log("fetching config");
       // Return cached config if it's still valid
       const now = Date.now();
       if (this.data && now - this.lastFetch < this.CACHE_DURATION) {
@@ -23,7 +24,7 @@
 
       try {
         const response = await fetch(
-          `http://localhost:8787/?tracking_id=${trackingId}`
+          `${endpointAPI}/?id=${trackingId}&p=${window.location.pathname}`
         );
         if (!response.ok) throw new Error("Failed to fetch config");
 
@@ -50,11 +51,13 @@
     initializeTracking();
   });
 
-  verifyTracking(endpoint, trackingId);
-
   function initializeTracking() {
     const device = getViewportDeviceCategory();
     if (device === "large-desktop") return;
+
+    console.log("config", config.get());
+
+    const path = window.location.pathname;
 
     let lastClickTime = 0;
     const THROTTLE_MS = 500;
@@ -120,7 +123,7 @@
       if (clickBuffer.length === 0) return;
       const data = JSON.stringify({
         trackingId,
-        url: window.location.pathname,
+        url: path,
         device,
         events: clickBuffer.splice(0, clickBuffer.length),
       });
@@ -191,12 +194,104 @@
         flushBuffer();
       }
     });
+
+    document.addEventListener("DOMContentLoaded", () => {
+      //Use requestAnimationFrame for the moment until I build a good dom tree
+      requestAnimationFrame(() => {
+        setTimeout(() => {
+          shouldSendSnapshot();
+        }, 2000);
+      });
+    });
+
+    function shouldSendSnapshot() {
+      if (getBrowserName() !== "Chrome") return;
+
+      const pageConfig = config.get();
+      if (pageConfig.page_config.update_snap) {
+        sendSnapshot();
+      }
+    }
+
+    function sendSnapshot() {
+      fetch(`${endpoint}/api/screenPage`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          trackingId,
+          url: window.location.href,
+          device,
+          snapshot: captureHeatpeekSnapshot(),
+        }),
+      });
+    }
+
+    function captureHeatpeekSnapshot() {
+      const html = document.documentElement.outerHTML;
+      const viewport = {
+        width: window.innerWidth,
+        height: window.innerHeight,
+      };
+
+      return {
+        html,
+        viewport,
+        styles: getUsedStyles(),
+      };
+    }
+
+    function getUsedStyles() {
+      let css = "";
+      for (const sheet of Array.from(document.styleSheets)) {
+        try {
+          for (const rule of sheet.cssRules) {
+            css += rule.cssText + "\n";
+          }
+        } catch (e) {}
+      }
+      return css;
+    }
   }
 })();
 
+function getBrowserName() {
+  const userAgent = navigator.userAgent;
+  let browserName = "Unknown";
+
+  // Arc
+  if (/Arc/.test(userAgent)) {
+    browserName = "Arc";
+  }
+  // Chrome
+  else if (
+    /Chrome/.test(userAgent) &&
+    !/Edge/.test(userAgent) &&
+    !/OPR/.test(userAgent)
+  ) {
+    browserName = "Chrome";
+  }
+  // Firefox
+  else if (/Firefox/.test(userAgent)) {
+    browserName = "Firefox";
+  }
+  // Safari
+  else if (/Safari/.test(userAgent) && !/Chrome/.test(userAgent)) {
+    browserName = "Safari";
+  }
+  // Edge
+  else if (/Edg/.test(userAgent)) {
+    browserName = "Edge";
+  }
+  // Opera
+  else if (/OPR/.test(userAgent)) {
+    browserName = "Opera";
+  }
+
+  return browserName;
+}
+
 async function verifyTracking(endpoint, trackingId) {
   const urlParams = new URLSearchParams(window.location.search);
-  console.log(urlParams.get("verifyHp"), trackingId);
   if (urlParams.get("verifyHp") === trackingId) {
     fetch(`${endpoint}/api/verify/${trackingId}`, {
       method: "POST",
@@ -279,4 +374,59 @@ function generateShortHash(str) {
   }
   // Convert to base36 (alphanumeric) and take first 8 characters
   return Math.abs(hash).toString(36).substring(0, 8);
+}
+
+function detectBot() {
+  const userAgent = navigator.userAgent.toLowerCase();
+  const botPatterns = [
+    // Common bot identifiers
+    "bot",
+    "crawler",
+    "spider",
+    "headless",
+    "selenium",
+    // Search engine bots
+    "googlebot",
+    "bingbot",
+    "yandexbot",
+    "duckduckbot",
+    "baiduspider",
+    // Monitoring and testing tools
+    "lighthouse",
+    "webdriver",
+    "phantomjs",
+    "puppeteer",
+    "playwright",
+    // Security scanners
+    "nmap",
+    "nikto",
+    "acunetix",
+    "nessus",
+    "burp",
+    "zap",
+    // Automation tools
+    "curl",
+    "wget",
+    "python-requests",
+    "java-http-client",
+    // Analytics and monitoring
+    "pingdom",
+    "uptimerobot",
+    "newrelic",
+    "datadog",
+    // Social media bots
+    "facebookexternalhit",
+    "twitterbot",
+    "linkedinbot",
+    // Other common patterns
+    "apache-httpclient",
+    "python-urllib",
+    "java-http-client",
+    "mozilla/5.0 (compatible;)",
+    "mozilla/5.0 (bot;)",
+    "mozilla/5.0 (crawler;)",
+    "mozilla/5.0 (spider;)",
+    "mozilla/5.0 (monitoring;)",
+  ];
+  return botPatterns.some((pattern) => userAgent.includes(pattern));
 }

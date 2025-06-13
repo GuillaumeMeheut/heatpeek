@@ -26,17 +26,11 @@ export type ClickInfos = {
 };
 
 export const addClicks = cache(
-  async (
-    supabase: SupabaseClient,
-    clickInfos: ClickInfos[]
-  ): Promise<ClickInfos[] | null> => {
-    const { data, error } = await supabase.from("clicks").insert(clickInfos);
+  async (supabase: SupabaseClient, clickInfos: ClickInfos[]): Promise<void> => {
+    const { error } = await supabase.from("clicks").insert(clickInfos);
     if (error) {
-      console.log("Error inserting click:", error);
-      return null;
+      throw new Error("Error inserting click : ", error);
     }
-
-    return data;
   }
 );
 
@@ -76,9 +70,33 @@ export const getClicks = cache(
   }
 );
 
+export type Url = {
+  id: string;
+  path: string;
+  label: string;
+};
+
+export const getUrls = cache(
+  async (
+    supabase: SupabaseClient,
+    projectId: string
+  ): Promise<Url[] | null> => {
+    const { data, error } = await supabase
+      .from("urls")
+      .select("id, path, label")
+      .eq("project_id", projectId);
+
+    if (error) {
+      console.log("Error fetching urls:", error);
+      return null;
+    }
+
+    return data;
+  }
+);
+
 export type Snapshot = {
   id: string;
-  url: string;
   label: string;
   device: string;
   dom_data: string;
@@ -86,21 +104,48 @@ export type Snapshot = {
   screenshot_url: string;
   width: number;
   height: number;
-  tracking_id: string;
+  url_id: string;
+  should_update: boolean;
 };
 
-export const addSnapshots = cache(
+export const addSnapshot = cache(
   async (
     supabase: SupabaseClient,
-    snapshots: Omit<Snapshot, "id">[]
-  ): Promise<string | null> => {
-    const { data, error } = await supabase.from("snapshots").insert(snapshots);
+    snapshot: Omit<
+      Snapshot,
+      | "id"
+      | "screenshot_url"
+      | "width"
+      | "height"
+      | "dom_data"
+      | "layout_hash"
+      | "should_update"
+    >
+  ): Promise<void> => {
+    const { error } = await supabase.from("snapshots").insert(snapshot);
 
     if (error) {
-      console.log("Error inserting snapshot:", error);
+      throw new Error("Error inserting snapshot:", error);
+    }
+  }
+);
+
+export const updateSnapshot = cache(
+  async (
+    supabase: SupabaseClient,
+    urlId: string,
+    snapshot: Partial<Snapshot>
+  ): Promise<string | null> => {
+    const { error } = await supabase
+      .from("snapshots")
+      .update(snapshot)
+      .eq("url_id", urlId)
+      .eq("is_outdated", false);
+
+    if (error) {
+      console.log("Error updating snapshot:", error);
       return null;
     }
-    console.log("Snapshot inserted:", data);
 
     return "success";
   }
@@ -114,14 +159,22 @@ export const getSnapshot = cache(
     device: string
   ): Promise<Omit<
     Snapshot,
-    "layout_hash" | "tracking_id" | "dom_data" | "url" | "device"
+    "layout_hash" | "dom_data" | "device" | "should_update"
   > | null> => {
     const { data, error } = await supabase
       .from("snapshots")
-      .select("id, label, screenshot_url, width, height")
-      .eq("project_id", projectId)
-      .eq("url", url)
+      .select(
+        `id, label, screenshot_url, width, height, url_id,
+        urls (
+          path, 
+          project_id
+        )
+      `
+      )
+      .eq("urls.project_id", projectId)
+      .eq("urls.path", url)
       .eq("device", device)
+      .eq("is_outdated", false)
       .single();
 
     if (error) {
@@ -130,46 +183,6 @@ export const getSnapshot = cache(
     }
 
     return data;
-  }
-);
-
-export const doesSnapshotExist = cache(
-  async (
-    supabase: SupabaseClient,
-    trackingId: string,
-    url: string,
-    device: string
-  ): Promise<boolean> => {
-    const { count, error } = await supabase
-      .from("snapshots")
-      .select("id", { count: "exact", head: true })
-      .eq("tracking_id", trackingId)
-      .eq("url", url)
-      .eq("device", device);
-
-    if (error) {
-      console.log("Error checking if snapshot exists:", error);
-      return false;
-    }
-
-    return count ? count > 0 : false;
-  }
-);
-
-export const getSnapshotDomData = cache(
-  async (supabase: SupabaseClient, id: string): Promise<string | null> => {
-    const { data, error } = await supabase
-      .from("snapshots")
-      .select("dom_data")
-      .eq("id", id)
-      .single();
-
-    if (error) {
-      console.log("Error fetching snapshot:", error);
-      return null;
-    }
-
-    return data.dom_data;
   }
 );
 
@@ -182,10 +195,22 @@ export const getSnapshotIdAndDomData = cache(
   ): Promise<{ id: string; dom_data: string } | null> => {
     const { data, error } = await supabase
       .from("snapshots")
-      .select("id, dom_data")
-      .eq("tracking_id", trackingId)
-      .eq("url", url)
+      .select(
+        `
+    id,
+    dom_data,
+    device,
+    url_id,
+    urls (
+      tracking_id,
+      path
+    )
+  `
+      )
+      .eq("urls.tracking_id", trackingId)
+      .eq("urls.path", url)
       .eq("device", device)
+      .eq("is_outdated", false)
       .single();
 
     if (error) {
@@ -198,69 +223,62 @@ export const getSnapshotIdAndDomData = cache(
 );
 
 export type UploadScreenshotInfos = {
-  userId: string;
+  urlId: string;
   layoutHash: string;
   buffer: Uint8Array;
 };
 
-export const uploadScreenshots = cache(
+export const uploadScreenshot = cache(
   async (
     supabase: SupabaseClient,
-    uploadInfos: UploadScreenshotInfos[]
-  ): Promise<Record<string, string | null>> => {
-    const results: Record<string, string | null> = {};
+    uploadInfos: UploadScreenshotInfos
+  ): Promise<string | null> => {
+    const fileName = `${uploadInfos.urlId}/${uploadInfos.layoutHash}.webp`;
 
-    for (const info of uploadInfos) {
-      const fileName = `${info.userId}/screenshot-${
-        info.layoutHash
-      }-${Date.now()}.webp`;
+    const { error: uploadError } = await supabase.storage
+      .from("screenshots")
+      .upload(fileName, uploadInfos.buffer, {
+        contentType: "image/webp",
+        upsert: true,
+      });
 
-      const { error: uploadError } = await supabase.storage
-        .from("screenshots")
-        .upload(fileName, info.buffer, {
-          contentType: "image/webp",
-          upsert: true,
-        });
-
-      if (uploadError) {
-        console.log("Error uploading screenshot:", uploadError);
-        results[info.layoutHash] = null;
-        continue;
-      }
-
-      const { data: publicUrlData } = supabase.storage
-        .from("screenshots")
-        .getPublicUrl(fileName);
-
-      results[info.layoutHash] = publicUrlData.publicUrl;
+    if (uploadError) {
+      console.error("Error uploading screenshot:", uploadError);
+      return null;
     }
 
-    return results;
+    const { data: publicUrlData } = supabase.storage
+      .from("screenshots")
+      .getPublicUrl(fileName);
+
+    return publicUrlData.publicUrl;
   }
 );
 
-export type SnapshotInfos = Omit<
-  Snapshot,
-  | "dom_data"
-  | "layout_hash"
-  | "screenshot_url"
-  | "width"
-  | "height"
-  | "tracking_id"
->;
-
-export const getSnapshotsInfos = cache(
+export const getSnapshotInfos = cache(
   async (
     supabase: SupabaseClient,
-    projectId: string
-  ): Promise<SnapshotInfos[] | null> => {
+    trackingId: string,
+    url: string,
+    device: string
+  ): Promise<{ should_update: boolean; url_id: string } | null> => {
     const { data, error } = await supabase
       .from("snapshots")
-      .select("id, url, label, device")
-      .eq("project_id", projectId);
+      .select(
+        `should_update, url_id,
+        urls (
+          tracking_id
+        )
+      `
+      )
+      .eq("urls.tracking_id", trackingId)
+      .eq("urls.path", url)
+      .eq("device", device)
+      .eq("is_outdated", false)
+      .single();
 
     if (error) {
-      console.log("Error fetching snapshot:", error);
+      console.log("Error fetching snapshot id:", error);
       return null;
     }
 
@@ -301,14 +319,13 @@ export type ClickedElement = {
 export const addClickedElements = async (
   supabase: SupabaseClient,
   clickedElements: ClickedElement[]
-) => {
+): Promise<void> => {
   const { error } = await supabase
     .from("clicked_elements")
     .insert(clickedElements);
 
   if (error) {
-    console.log("Error inserting snapshot:", error);
-    return error;
+    throw new Error("Error inserting clicked elements:", error);
   }
 };
 
@@ -365,8 +382,6 @@ export const getProjects = cache(
     supabase: SupabaseClient,
     userId: string
   ): Promise<Project[] | null> => {
-    console.log("Fetching projects for user:", userId);
-
     const { data, error } = await supabase
       .from("projects")
       .select("id, label, base_url, type, created_at")
@@ -397,5 +412,35 @@ export const deleteProject = cache(
     }
 
     return { success: true };
+  }
+);
+
+export type PageConfig = {
+  id: string;
+  path: string;
+  created_at: string;
+  ignored_el: string[];
+  privacy_el: string[];
+  url_id: string;
+  update_snap: boolean;
+};
+
+export const updatePageConfig = cache(
+  async (
+    supabase: SupabaseClient,
+    urlId: string,
+    pageConfig: Partial<PageConfig>
+  ): Promise<string | null> => {
+    const { error } = await supabase
+      .from("page_config")
+      .update(pageConfig)
+      .eq("url_id", urlId);
+
+    if (error) {
+      console.log("Error updating page config:", error);
+      return null;
+    }
+
+    return "success";
   }
 );

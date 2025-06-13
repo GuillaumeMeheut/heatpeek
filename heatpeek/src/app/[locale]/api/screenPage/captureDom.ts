@@ -1,6 +1,14 @@
 import { Page } from "playwright";
 
-export async function captureDom(page: Page) {
+export type VisibleDomElement = {
+  s: string;
+  l: number;
+  t: number;
+  w: number;
+  h: number;
+};
+
+export async function captureDom(page: Page): Promise<VisibleDomElement[]> {
   return await page.evaluate(() => {
     function getUniqueSelector(el: Element): string {
       if (el.id) {

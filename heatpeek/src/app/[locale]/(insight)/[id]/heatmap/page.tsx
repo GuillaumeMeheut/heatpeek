@@ -10,6 +10,7 @@ import { redirect } from "next/navigation";
 import { Card } from "@/components/ui/card";
 import { Suspense } from "react";
 import { Loader2 } from "lucide-react";
+import VersioningButton from "./VersioningButton";
 
 export default async function HeatmapPage({
   params,
@@ -35,23 +36,29 @@ export default async function HeatmapPage({
     return <div>No snapshot found</div>;
   }
 
+  if (snapshot.screenshot_url === null) {
+    return <div>The data is still being processed</div>;
+  }
+
   const aggregatedClicks = await getAggregatedClicks(supabase, snapshot.id);
 
   return (
-    <Suspense
-      fallback={
-        <div className="flex justify-center items-center h-screen">
-          <Loader2 className="h-10 w-10 animate-spin" />
-        </div>
-      }
-    >
-      <div className="flex">
-        <div className="flex-1 p-4">
+    <div className="flex">
+      <div className="flex-1 p-4">
+        <VersioningButton urlId={snapshot.url_id} device={device} />
+        <Suspense
+          fallback={
+            <div className="flex justify-center items-center h-screen">
+              <Loader2 className="h-10 w-10 animate-spin" />
+            </div>
+          }
+        >
           <Card className="border-primary/20">
             <div className="container mx-auto p-4 relative">
               <div className="w-full">
                 <div className="relative min-w-full">
                   <OptionsBar />
+
                   <Heatmap
                     aggregatedClicks={aggregatedClicks || []}
                     pageData={snapshot}
@@ -60,8 +67,8 @@ export default async function HeatmapPage({
               </div>
             </div>
           </Card>
-        </div>
+        </Suspense>
       </div>
-    </Suspense>
+    </div>
   );
 }

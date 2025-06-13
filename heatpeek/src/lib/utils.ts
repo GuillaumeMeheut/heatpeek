@@ -32,6 +32,7 @@ export const getURL = (path: string = "") => {
 const toastKeyMap: { [key: string]: string[] } = {
   status: ["status", "status_description"],
   error: ["error", "error_description"],
+  success: ["success", "success_description"],
 };
 
 const getToastRedirect = (
@@ -79,6 +80,22 @@ export const getStatusRedirect = (
     arbitraryParams
   );
 
+export const getSuccessRedirect = (
+  path: string,
+  statusName: string,
+  statusDescription: string = "",
+  disableButton: boolean = false,
+  arbitraryParams: string = ""
+) =>
+  getToastRedirect(
+    path,
+    "success",
+    statusName,
+    statusDescription,
+    disableButton,
+    arbitraryParams
+  );
+
 export const getErrorRedirect = (
   path: string,
   errorName: string,
@@ -98,7 +115,7 @@ export const getErrorRedirect = (
 export function corsHeaders() {
   return {
     "Access-Control-Allow-Origin": "*",
-    "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+    "Access-Control-Allow-Methods": "GET, POST, PUT, OPTIONS",
     "Access-Control-Allow-Headers": "Content-Type, Authorization",
   };
 }

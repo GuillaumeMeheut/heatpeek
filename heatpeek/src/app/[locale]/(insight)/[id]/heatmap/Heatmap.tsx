@@ -9,7 +9,7 @@ type HeatmapProps = {
   aggregatedClicks: AggregatedClick[];
   pageData: Omit<
     Snapshot,
-    "layout_hash" | "tracking_id" | "dom_data" | "url" | "device"
+    "layout_hash" | "dom_data" | "url_id" | "device" | "should_update"
   >;
 };
 
