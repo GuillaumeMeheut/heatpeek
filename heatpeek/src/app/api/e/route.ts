@@ -102,6 +102,13 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    if (!snapshot.dom_data) {
+      return new Response(
+        JSON.stringify({ error: "No dom data found for snapshot" }),
+        { status: 400, headers: { "Content-Type": "application/json" } }
+      );
+    }
+
     const domElements = JSON.parse(snapshot.dom_data) as Array<{
       s: string;
       l: number;

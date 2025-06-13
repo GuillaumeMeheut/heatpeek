@@ -2,7 +2,7 @@
   "use strict";
 
   const trackingId = document.currentScript.getAttribute("id");
-  const endpoint = "https://heatpeek.com";
+  const endpoint = "https://www.heatpeek.com";
   const endpointAPI = "https://api.heatpeek.com";
 
   if (!trackingId) return;
