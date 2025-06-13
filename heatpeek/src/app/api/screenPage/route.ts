@@ -116,11 +116,8 @@ export async function POST(request: NextRequest) {
     await browser.close();
 
     const compressedScreenshot = await sharp(screenshotBuffer)
-      .webp({
-        quality: 80,
-        lossless: false,
-        nearLossless: false,
-        smartSubsample: true,
+      .jpeg({
+        quality: 75,
       })
       .toBuffer();
     measure("Image Compression");
