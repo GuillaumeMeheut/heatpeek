@@ -228,4 +228,70 @@ export default {
     addNew: "Add New Site",
     delete: "Delete",
   },
+  why: {
+    hero: {
+      description:
+        "The next generation of web analytics that puts privacy first while delivering powerful insights",
+    },
+    features: {
+      dashboard: {
+        title: "User-Friendly Dashboard",
+        description:
+          "Experience a streamlined analytics dashboard that puts the most important metrics at your fingertips. Our intuitive interface makes it easy to understand your users' behavior without any technical expertise.",
+        benefits: {
+          realtime: "Real-time data visualization",
+          customizable: "Customizable metrics and reports",
+          responsive: "Mobile-responsive design",
+        },
+      },
+      lightweight: {
+        title: "Lightweight & Fast",
+        description:
+          "Our analytics script is incredibly lightweight, weighing in at under 10KB. This means zero impact on your website's performance and loading times.",
+        benefits: {
+          footprint: "Less than 10KB footprint",
+          performance: "Zero impact on Core Web Vitals",
+          loading: "Asynchronous loading",
+        },
+      },
+      privacy: {
+        title: "Privacy First",
+        description:
+          "Built with privacy in mind from the ground up. No cookies required, fully GDPR compliant, and we never collect personally identifiable information (PII). No cookie banner needed!",
+        benefits: {
+          gdpr: "GDPR compliant by design",
+          cookies: "No cookies or local storage",
+          pii: "No PII collection",
+        },
+      },
+      respect: {
+        title: "Respects User Privacy",
+        description:
+          "Unlike other heatmap analytics tools, we don't use screen recording. We believe in gathering insights while respecting your users' privacy and comfort.",
+        benefits: {
+          tracking: "No invasive tracking",
+          ethical: "Ethical data collection",
+          transparent: "Transparent analytics",
+        },
+      },
+    },
+    additional: {
+      title: "Additional Benefits",
+      analytics: {
+        title: "Advanced Analytics",
+        description:
+          "Get detailed insights into user behavior, page performance, and conversion metrics.",
+      },
+      infrastructure: {
+        title: "Reliable Infrastructure",
+        description:
+          "Built on robust cloud infrastructure ensuring 99.9% uptime and fast data processing.",
+      },
+      security: {
+        title: "Secure Data",
+        description:
+          "Enterprise-grade security with encrypted data transmission and storage.",
+      },
+    },
+  },
 } as const;

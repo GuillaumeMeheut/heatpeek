@@ -23,6 +23,9 @@ export const metadata: Metadata = {
     "heatmap",
     "analytics",
   ],
+  verification: {
+    google: "hsOjJBRlLPdcjorDyYrG7bXlybkfODPMrxehr2Bgqr8",
+  },
 };
 
 export default async function RootLayout({

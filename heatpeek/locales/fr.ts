@@ -234,4 +234,70 @@ export default {
     addNew: "Ajouter un Site",
     delete: "Supprimer",
   },
+  why: {
+    hero: {
+      description:
+        "La nouvelle génération d'analytique web qui privilégie la confidentialité tout en offrant des analyses puissantes",
+    },
+    features: {
+      dashboard: {
+        title: "Tableau de Bord Intuitif",
+        description:
+          "Profitez d'un tableau de bord d'analyse rationalisé qui met les métriques les plus importantes à portée de main. Notre interface intuitive facilite la compréhension du comportement de vos utilisateurs sans aucune expertise technique.",
+        benefits: {
+          realtime: "Visualisation des données en temps réel",
+          customizable: "Métriques et rapports personnalisables",
+          responsive: "Design adaptatif mobile",
+        },
+      },
+      lightweight: {
+        title: "Léger et Rapide",
+        description:
+          "Notre script d'analyse est incroyablement léger, pesant moins de 10KB. Cela signifie un impact nul sur les performances et les temps de chargement de votre site web.",
+        benefits: {
+          footprint: "Empreinte inférieure à 10KB",
+          performance: "Impact nul sur les Core Web Vitals",
+          loading: "Chargement asynchrone",
+        },
+      },
+      privacy: {
+        title: "Confidentialité en Priorité",
+        description:
+          "Conçu avec la confidentialité en tête. Pas de cookies requis, entièrement conforme au RGPD, et nous ne collectons jamais d'informations personnellement identifiables (PII). Pas besoin de bannière de cookies !",
+        benefits: {
+          gdpr: "Conforme au RGPD par conception",
+          cookies: "Pas de cookies ni de stockage local",
+          pii: "Pas de collecte de PII",
+        },
+      },
+      respect: {
+        title: "Respect de la Vie Privée",
+        description:
+          "Contrairement aux autres outils d'analyse de heatmap, nous n'utilisons pas l'enregistrement d'écran. Nous croyons en la collecte d'informations tout en respectant la vie privée et le confort de vos utilisateurs.",
+        benefits: {
+          tracking: "Pas de suivi invasif",
+          ethical: "Collecte de données éthique",
+          transparent: "Analytique transparente",
+        },
+      },
+    },
+    additional: {
+      title: "Avantages Supplémentaires",
+      analytics: {
+        title: "Analytique Avancée",
+        description:
+          "Obtenez des analyses détaillées du comportement des utilisateurs, des performances des pages et des métriques de conversion.",
+      },
+      infrastructure: {
+        title: "Infrastructure Fiable",
+        description:
+          "Construite sur une infrastructure cloud robuste garantissant une disponibilité de 99,9% et un traitement rapide des données.",
+      },
+      security: {
+        title: "Données Sécurisées",
+        description:
+          "Sécurité de niveau entreprise avec transmission et stockage des données chiffrés.",
+      },
+    },
+  },
 } as const;
