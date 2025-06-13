@@ -1,1 +1,440 @@
-(function(_0x5aefce,_0x49f522){var _0x340f09=a0_0x1061,_0x257ff4=_0x5aefce();while(!![]){try{var _0x32e0c2=-parseInt(_0x340f09(0xdd))/0x1*(parseInt(_0x340f09(0x103))/0x2)+parseInt(_0x340f09(0x116))/0x3+parseInt(_0x340f09(0x124))/0x4+-parseInt(_0x340f09(0x129))/0x5*(parseInt(_0x340f09(0xcd))/0x6)+-parseInt(_0x340f09(0xd1))/0x7+-parseInt(_0x340f09(0xe6))/0x8+-parseInt(_0x340f09(0x119))/0x9*(-parseInt(_0x340f09(0xd2))/0xa);if(_0x32e0c2===_0x49f522)break;else _0x257ff4['push'](_0x257ff4['shift']());}catch(_0x5b0d1b){_0x257ff4['push'](_0x257ff4['shift']());}}}(a0_0x205e,0xa8135));function getBrowserName(){var _0x1e475d=a0_0x1061,_0x56051e=navigator[_0x1e475d(0x108)];let _0x51ff57=_0x1e475d(0xdf);return/Arc/[_0x1e475d(0x10b)](_0x56051e)?_0x51ff57=_0x1e475d(0x10d):!/Chrome/[_0x1e475d(0x10b)](_0x56051e)||/Edge/[_0x1e475d(0x10b)](_0x56051e)||/OPR/[_0x1e475d(0x10b)](_0x56051e)?/Firefox/[_0x1e475d(0x10b)](_0x56051e)?_0x51ff57=_0x1e475d(0x128):/Safari/['test'](_0x56051e)&&!/Chrome/['test'](_0x56051e)?_0x51ff57=_0x1e475d(0xf9):/Edg/[_0x1e475d(0x10b)](_0x56051e)?_0x51ff57=_0x1e475d(0xe3):/OPR/['test'](_0x56051e)&&(_0x51ff57='Opera'):_0x51ff57=_0x1e475d(0xdc),_0x51ff57;}function a0_0x1061(_0x30a2cf,_0x35a75a){var _0x205eb1=a0_0x205e();return a0_0x1061=function(_0x106154,_0x3041a0){_0x106154=_0x106154-0xca;var _0x237fe7=_0x205eb1[_0x106154];return _0x237fe7;},a0_0x1061(_0x30a2cf,_0x35a75a);}async function verifyTracking(_0x512dee,_0x333c76){var _0x13a865=a0_0x1061;new URLSearchParams(window[_0x13a865(0xe7)][_0x13a865(0x114)])['get']('verifyHp')===_0x333c76&&fetch(_0x512dee+_0x13a865(0xef)+_0x333c76,{'method':_0x13a865(0xfa),'headers':{'Content-Type':_0x13a865(0x107)},'body':JSON[_0x13a865(0xce)]({'verified':!0x0})})[_0x13a865(0x10f)](()=>{var _0x1daa2a=_0x13a865;window[_0x1daa2a(0xf8)]();})[_0x13a865(0x12d)](_0x5113f8=>{console['error'](_0x5113f8);});}function getViewportDeviceCategory(){var _0x1daa5e=a0_0x1061,_0x404dc5=window[_0x1daa5e(0x110)];const _0x14fab2=0x300,_0x49bda4=0x400,_0x592482=0x780;return _0x404dc5<=_0x14fab2?_0x1daa5e(0x144):_0x404dc5<=_0x49bda4?'tablet':_0x404dc5<=_0x592482?_0x1daa5e(0xd4):_0x1daa5e(0xf7);}function getUniqueSelector(_0x164a8d){var _0xd6be57=a0_0x1061;if(_0x164a8d['id'])return'#'+CSS[_0xd6be57(0x10e)](_0x164a8d['id']);for(var _0x1a3bb2=[];_0x164a8d&&_0x164a8d[_0xd6be57(0x143)]===Node['ELEMENT_NODE'];){let _0x25a581=_0x164a8d['nodeName'][_0xd6be57(0xd9)]();_0x164a8d['className']&&(_0x253664=Array['from'](_0x164a8d[_0xd6be57(0x125)])[_0xd6be57(0xec)](_0x9dbb6=>'.'+CSS[_0xd6be57(0x10e)](_0x9dbb6))[_0xd6be57(0x14a)](''),_0x25a581+=_0x253664);var _0x1c1706,_0x253664=_0x164a8d[_0xd6be57(0x121)];_0x253664&&0x1<(_0x1c1706=Array[_0xd6be57(0x131)](_0x253664[_0xd6be57(0x135)])['filter'](_0x5cb919=>_0x5cb919['tagName']===_0x164a8d[_0xd6be57(0xeb)]))[_0xd6be57(0xd3)]&&(_0x1c1706=_0x1c1706['indexOf'](_0x164a8d)+0x1,_0x25a581+=':nth-of-type('+_0x1c1706+')'),_0x1a3bb2[_0xd6be57(0xff)](_0x25a581),_0x164a8d=_0x164a8d[_0xd6be57(0x121)];}return generateShortHash(_0x1a3bb2[_0xd6be57(0x14a)](_0xd6be57(0x12b)));}function a0_0x205e(){var _0x51a7ee=['pageX','beforeunload','Chrome','209806xHykFV','error','Unknown','spider','left','getBoundingClientRect','Edge','visibilityState','linkedinbot','10465536sVzKfg','location','outerHTML','baiduspider','python-urllib','tagName','map','update_snap','sendSnapshot','/api/verify/','googlebot','getClientRects','datadog','round','webdriver','https://api.heatpeek.com/?id=','DOMContentLoaded','large-desktop','close','Safari','POST','nikto','nmap','lighthouse','Heatpeek:\x20Failed\x20to\x20load\x20configuration','unshift','bot','styleSheets','hidden','12oUtaFs','pushState','sendBeacon','top','application/json','userAgent','offsetWidth','newrelic','test','cssRules','Arc','escape','then','innerWidth','captureHeatpeekSnapshot','click','/api/screenPage','search','mozilla/5.0\x20(compatible;)','2031807vzDMHb','nessus','pageY','31537683BrgVnP','mozilla/5.0\x20(monitoring;)','https://heatpeek.com','Failed\x20to\x20fetch\x20config','cssText','playwright','acunetix','data','parentElement','toString','Heatpeek:\x20Error\x20fetching\x20config:','2241784hirWxU','classList','substring','getAttribute','Firefox','4055YEFxAs','pageshow','\x20>\x20','puppeteer','catch','lastFetch','uptimerobot','splice','from','visibilitychange','documentElement','abs','children','log','scrollY','phantomjs','java-http-client','config','includes','fetch','hashchange','persisted','/api/e','curl','get','pathname','nodeType','mobile','prerender','addEventListener','now','mozilla/5.0\x20(crawler;)','mozilla/5.0\x20(spider;)','join','facebookexternalhit','innerHeight','visible','bingbot','7302FdBsNQ','stringify','crawler','python-requests','3496150ChOqWO','10LwBPit','length','desktop','toISOString','page_config','target','json','toLowerCase'];a0_0x205e=function(){return _0x51a7ee;};return a0_0x205e();}function generateShortHash(_0x25e063){var _0x38ef11=a0_0x1061;let _0xfdb8a1=0x0;for(let _0x802dae=0x0;_0x802dae<_0x25e063[_0x38ef11(0xd3)];_0x802dae++){var _0x3f55d5=_0x25e063['charCodeAt'](_0x802dae);_0xfdb8a1=(_0xfdb8a1<<0x5)-_0xfdb8a1+_0x3f55d5,_0xfdb8a1&=_0xfdb8a1;}return Math[_0x38ef11(0x134)](_0xfdb8a1)[_0x38ef11(0x122)](0x24)[_0x38ef11(0x126)](0x0,0x8);}function detectBot(){var _0xc680c3=a0_0x1061;let _0x3d72f2=navigator[_0xc680c3(0x108)][_0xc680c3(0xd9)]();return[_0xc680c3(0x100),_0xc680c3(0xcf),_0xc680c3(0xe0),'headless','selenium',_0xc680c3(0xf0),_0xc680c3(0xcc),'yandexbot','duckduckbot',_0xc680c3(0xe9),_0xc680c3(0xfd),_0xc680c3(0xf4),_0xc680c3(0x138),_0xc680c3(0x12c),_0xc680c3(0x11e),_0xc680c3(0xfc),_0xc680c3(0xfb),_0xc680c3(0x11f),_0xc680c3(0x117),'burp','zap',_0xc680c3(0x140),'wget',_0xc680c3(0xd0),'java-http-client','pingdom',_0xc680c3(0x12f),_0xc680c3(0x10a),_0xc680c3(0xf2),_0xc680c3(0x14b),'twitterbot',_0xc680c3(0xe5),'apache-httpclient',_0xc680c3(0xea),_0xc680c3(0x139),_0xc680c3(0x115),'mozilla/5.0\x20(bot;)',_0xc680c3(0x148),_0xc680c3(0x149),_0xc680c3(0x11a)]['some'](_0x192018=>_0x3d72f2[_0xc680c3(0x13b)](_0x192018));}((()=>{var _0x1308b9=a0_0x1061;let _0x2b7ebc=document['currentScript'][_0x1308b9(0x127)]('id'),_0x141d30=_0x1308b9(0x11b);if(_0x2b7ebc&&!detectBot()){verifyTracking(_0x141d30,_0x2b7ebc);let _0x2c0142={'data':null,'lastFetch':0x0,'CACHE_DURATION':0xea60,async 'fetch'(){var _0x3c13e1=_0x1308b9,_0x2b727e=Date[_0x3c13e1(0x147)]();if(this['data']&&_0x2b727e-this['lastFetch']<this['CACHE_DURATION'])return this[_0x3c13e1(0x120)];try{var _0x532881=await fetch(_0x3c13e1(0xf5)+_0x2b7ebc+'&p='+window[_0x3c13e1(0xe7)][_0x3c13e1(0x142)]);if(_0x532881['ok'])return this['data']=await _0x532881[_0x3c13e1(0xd8)](),this[_0x3c13e1(0x12e)]=_0x2b727e,this['data'];throw new Error(_0x3c13e1(0x11c));}catch(_0x281a7c){return console[_0x3c13e1(0xde)](_0x3c13e1(0x123),_0x281a7c),null;}},'get'(){var _0x3786a7=_0x1308b9;return this[_0x3786a7(0x120)];}};_0x2c0142[_0x1308b9(0x13c)]()[_0x1308b9(0x10f)](_0x2a8c9f=>{var _0x10f4e4=_0x1308b9;if(_0x2a8c9f){let _0x3becc3=getViewportDeviceCategory();if(_0x10f4e4(0xf7)!==_0x3becc3){console[_0x10f4e4(0x136)](_0x10f4e4(0x13a),_0x2c0142[_0x10f4e4(0x141)]());let _0x5c5b9d=window['location']['pathname'],_0x4dd139=0x0,_0x2998e0=0x0,_0x2c85c6=[],_0x3c0f3b;window[_0x10f4e4(0x146)](_0x10f4e4(0x13d),function(){_0x11bf47(!0x0);}),_0x2a8c9f=window['history'];if(_0x2a8c9f[_0x10f4e4(0x104)]){let _0x2332f2=_0x2a8c9f[_0x10f4e4(0x104)];_0x2a8c9f['pushState']=function(){_0x2332f2['apply'](this,arguments),_0x11bf47(!0x0);},window[_0x10f4e4(0x146)]('popstate',function(){_0x11bf47(!0x0);});}function _0x11bf47(_0x3a5695){var _0x1a5a96=_0x10f4e4,_0xc65938=location[_0x1a5a96(0x142)];_0x3a5695&&_0x3c0f3b===_0xc65938||(_0x3c0f3b=_0xc65938,_0x2998e0=0x0);}function _0x31ead1(){var _0xb269a8=_0x10f4e4,_0x175ce1;0x0!==_0x2c85c6[_0xb269a8(0xd3)]&&(_0x175ce1=JSON[_0xb269a8(0xce)]({'trackingId':_0x2b7ebc,'url':_0x5c5b9d,'device':_0x3becc3,'events':_0x2c85c6[_0xb269a8(0x130)](0x0,_0x2c85c6[_0xb269a8(0xd3)])}),navigator[_0xb269a8(0x105)]?navigator[_0xb269a8(0x105)](_0x141d30+'/api/e',_0x175ce1):fetch(_0x141d30+_0xb269a8(0x13f),{'method':_0xb269a8(0xfa),'headers':{'Content-Type':'application/json'},'body':_0x175ce1})['catch'](_0x1b8972=>{var _0x56f111=_0xb269a8;console[_0x56f111(0xde)]('Heatpeek:\x20Error\x20sending\x20click\x20data:',_0x1b8972);}));}function _0x3d4e41(){var _0x3eefdb=_0x10f4e4;let _0x262a0d='';for(var _0x165079 of Array[_0x3eefdb(0x131)](document[_0x3eefdb(0x101)]))try{for(var _0x5a4e22 of _0x165079[_0x3eefdb(0x10c)])_0x262a0d+=_0x5a4e22[_0x3eefdb(0x11d)]+'\x0a';}catch(_0x2885a4){}return _0x262a0d;}_0x10f4e4(0x102)===document[_0x10f4e4(0xe4)]||_0x10f4e4(0x145)===document[_0x10f4e4(0xe4)]?document[_0x10f4e4(0x146)](_0x10f4e4(0x132),function(){var _0x1fd155=_0x10f4e4;_0x3c0f3b||_0x1fd155(0xcb)!==document[_0x1fd155(0xe4)]||_0x11bf47(!0x1);}):_0x11bf47(!0x1),window[_0x10f4e4(0x146)](_0x10f4e4(0x12a),function(_0x322e60){var _0x305214=_0x10f4e4;_0x322e60[_0x305214(0x13e)]&&_0x11bf47(!0x1);}),setInterval(_0x31ead1,0x1388),window[_0x10f4e4(0x146)](_0x10f4e4(0xdb),_0x31ead1),document[_0x10f4e4(0x146)]('visibilitychange',function(){var _0x394c27=_0x10f4e4;_0x394c27(0x102)===document[_0x394c27(0xe4)]&&_0x31ead1();}),document[_0x10f4e4(0x146)](_0x10f4e4(0x112),_0xca3ded=>{var _0x1a6385=_0x10f4e4,_0x33ed22,_0x3d7194,_0x1d4c8a,_0x5346c3,_0x296eb7,_0xfa757b,_0x4bfd00=Date['now']();_0x4bfd00-_0x4dd139<0x1f4||(_0x4dd139=_0x4bfd00,_0x5346c3=(_0x4bfd00=_0xca3ded[_0x1a6385(0xd7)])[_0x1a6385(0xe2)](),_0x33ed22=Math[_0x1a6385(0xf3)](_0x5346c3[_0x1a6385(0xe1)]+window['scrollX']),_0x3d7194=Math['round'](_0x5346c3[_0x1a6385(0x106)]+window[_0x1a6385(0x137)]),_0x1d4c8a=Math['round'](_0x5346c3['width']),_0x5346c3=Math[_0x1a6385(0xf3)](_0x5346c3['height']),_0xfa757b=!!(_0x4bfd00[_0x1a6385(0x109)]||_0x4bfd00['offsetHeight']||_0x4bfd00[_0x1a6385(0xf1)]()[_0x1a6385(0xd3)]),_0x4bfd00=getUniqueSelector(_0x4bfd00),_0x296eb7=(_0xca3ded[_0x1a6385(0xda)]-_0x33ed22)/_0x1d4c8a,_0xca3ded=(_0xca3ded[_0x1a6385(0x118)]-_0x3d7194)/_0x5346c3,_0xfa757b={'timestamp':new Date()[_0x1a6385(0xd5)](),'visible':_0xfa757b,'erx':_0x296eb7,'ery':_0xca3ded,'s':_0x4bfd00,'l':_0x33ed22,'t':_0x3d7194,'w':_0x1d4c8a,'h':_0x5346c3,'firstClickRank':_0x2998e0<0x3?_0x2998e0+0x1:null},_0x2c85c6['push'](_0xfa757b),_0x2998e0++,0xa<=_0x2c85c6[_0x1a6385(0xd3)]&&_0x31ead1());}),document[_0x10f4e4(0x146)](_0x10f4e4(0xf6),()=>{requestAnimationFrame(()=>{setTimeout(()=>{var _0x1ef49d=a0_0x1061;console[_0x1ef49d(0x136)]('shouldSendSnapshot'),_0x1ef49d(0xdc)===getBrowserName()&&(console[_0x1ef49d(0x136)](_0x1ef49d(0x13a),_0x2c0142[_0x1ef49d(0x141)]()),_0x2c0142[_0x1ef49d(0x141)]()[_0x1ef49d(0xd6)][_0x1ef49d(0xed)])&&(console[_0x1ef49d(0x136)](_0x1ef49d(0xee)),fetch(_0x141d30+_0x1ef49d(0x113),{'method':_0x1ef49d(0xfa),'headers':{'Content-Type':_0x1ef49d(0x107)},'body':JSON[_0x1ef49d(0xce)]({'trackingId':_0x2b7ebc,'url':window['location']['href'],'device':_0x3becc3,'snapshot':((()=>{var _0x13ced9=_0x1ef49d,_0x35cc39=document[_0x13ced9(0x133)][_0x13ced9(0xe8)],_0x6ebdd={'width':window[_0x13ced9(0x110)],'height':window[_0x13ced9(0xca)]};return console[_0x13ced9(0x136)](_0x13ced9(0x111),{'html':_0x35cc39,'viewport':_0x6ebdd,'styles':_0x3d4e41()}),{'html':_0x35cc39,'viewport':_0x6ebdd,'styles':_0x3d4e41()};})())})}));},0x7d0);});});}}else console['error'](_0x10f4e4(0xfe));});}})());
+(function () {
+  "use strict";
+
+  const trackingId = document.currentScript.getAttribute("id");
+  const endpoint = "https://heatpeek.com";
+  const endpointAPI = "https://api.heatpeek.com";
+
+  if (!trackingId) return;
+  if (detectBot()) return;
+
+  verifyTracking(endpoint, trackingId);
+
+  const config = {
+    data: null,
+    lastFetch: 0,
+    CACHE_DURATION: 1 * 60 * 1000, // 1 minute cache
+
+    async fetch() {
+      // Return cached config if it's still valid
+      const now = Date.now();
+      if (this.data && now - this.lastFetch < this.CACHE_DURATION) {
+        return this.data;
+      }
+
+      try {
+        const response = await fetch(
+          `${endpointAPI}/?id=${trackingId}&p=${window.location.pathname}`
+        );
+        if (!response.ok) throw new Error("Failed to fetch config");
+
+        this.data = await response.json();
+        this.lastFetch = now;
+        return this.data;
+      } catch (error) {
+        console.error("Heatpeek: Error fetching config:", error);
+        return null;
+      }
+    },
+
+    get() {
+      return this.data;
+    },
+  };
+
+  // Initialize config
+  config.fetch().then((configData) => {
+    if (!configData) {
+      console.error("Heatpeek: Failed to load configuration");
+      return;
+    }
+    initializeTracking();
+  });
+
+  function initializeTracking() {
+    const device = getViewportDeviceCategory();
+    if (device === "large-desktop") return;
+
+    console.log("config", config.get());
+
+    const path = window.location.pathname;
+
+    let lastClickTime = 0;
+    const THROTTLE_MS = 500;
+    let firstThreeClicks = 0;
+    const MAX_FIRST_CLICKS = 3;
+
+    const clickBuffer = [];
+    const MAX_BUFFER_SIZE = 10;
+    const MAX_INTERVAL_MS = 5000;
+
+    let lastPage;
+
+    function handlePageChange(isSPANavigation) {
+      const currentPath = location.pathname;
+      if (isSPANavigation && lastPage === currentPath) return;
+
+      lastPage = currentPath;
+      firstThreeClicks = 0;
+    }
+
+    // Handle hash-based routing
+    window.addEventListener("hashchange", function () {
+      handlePageChange(true);
+    });
+
+    // Handle history API routing
+    let history = window.history;
+    if (history.pushState) {
+      let originalPushState = history["pushState"];
+      history.pushState = function () {
+        originalPushState.apply(this, arguments);
+        handlePageChange(true);
+      };
+      window.addEventListener("popstate", function () {
+        handlePageChange(true);
+      });
+    }
+
+    // Handle initial page load
+    function handleVisibilityChange() {
+      if (!lastPage && document.visibilityState === "visible") {
+        handlePageChange(false);
+      }
+    }
+
+    if (
+      document.visibilityState === "hidden" ||
+      document.visibilityState === "prerender"
+    ) {
+      document.addEventListener("visibilitychange", handleVisibilityChange);
+    } else {
+      handlePageChange(false);
+    }
+
+    // Handle back/forward cache restoration
+    window.addEventListener("pageshow", function (event) {
+      if (event.persisted) {
+        handlePageChange(false);
+      }
+    });
+
+    function flushBuffer() {
+      if (clickBuffer.length === 0) return;
+      const data = JSON.stringify({
+        trackingId,
+        url: path,
+        device,
+        events: clickBuffer.splice(0, clickBuffer.length),
+      });
+      if (navigator.sendBeacon) {
+        navigator.sendBeacon(`${endpoint}/api/e`, data);
+      } else {
+        fetch(`${endpoint}/api/e`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: data,
+        }).catch((error) => {
+          console.error("Heatpeek: Error sending click data:", error);
+        });
+      }
+    }
+
+    // Set up interval to flush buffer
+    setInterval(flushBuffer, MAX_INTERVAL_MS);
+
+    window.addEventListener("beforeunload", flushBuffer);
+    document.addEventListener("visibilitychange", function () {
+      if (document.visibilityState === "hidden") {
+        flushBuffer();
+      }
+    });
+
+    document.addEventListener("click", (e) => {
+      const now = Date.now();
+      if (now - lastClickTime < THROTTLE_MS) return;
+      lastClickTime = now;
+
+      const el = e.target;
+      const rect = el.getBoundingClientRect();
+      const left = Math.round(rect.left + window.scrollX);
+      const top = Math.round(rect.top + window.scrollY);
+      const width = Math.round(rect.width);
+      const height = Math.round(rect.height);
+      const visible = !!(
+        el.offsetWidth ||
+        el.offsetHeight ||
+        el.getClientRects().length
+      );
+
+      // Generate selector using the same method as route.ts
+      const selector = getUniqueSelector(el);
+
+      // Calculate click position relative to the element
+      const erx = (e.pageX - left) / width;
+      const ery = (e.pageY - top) / height;
+
+      const payload = {
+        timestamp: new Date().toISOString(),
+        visible,
+        erx,
+        ery,
+        s: selector,
+        l: left,
+        t: top,
+        w: width,
+        h: height,
+        firstClickRank:
+          firstThreeClicks < MAX_FIRST_CLICKS ? firstThreeClicks + 1 : null,
+      };
+
+      clickBuffer.push(payload);
+      firstThreeClicks++;
+      if (clickBuffer.length >= MAX_BUFFER_SIZE) {
+        flushBuffer();
+      }
+    });
+
+    document.addEventListener("DOMContentLoaded", () => {
+      //Use requestAnimationFrame for the moment until I build a good dom tree
+      requestAnimationFrame(() => {
+        setTimeout(() => {
+          shouldSendSnapshot();
+        }, 2000);
+      });
+    });
+
+    function shouldSendSnapshot() {
+      console.log("shouldSendSnapshot");
+      if (getBrowserName() !== "Chrome") return;
+      console.log("config", config.get());
+      const pageConfig = config.get();
+      if (pageConfig.page_config.update_snap) {
+        sendSnapshot();
+      }
+    }
+
+    function sendSnapshot() {
+      console.log("sendSnapshot");
+      fetch(`${endpoint}/api/screenPage`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          trackingId,
+          url: window.location.href,
+          device,
+          snapshot: captureHeatpeekSnapshot(),
+        }),
+      });
+    }
+
+    function captureHeatpeekSnapshot() {
+      const html = document.documentElement.outerHTML;
+      const viewport = {
+        width: window.innerWidth,
+        height: window.innerHeight,
+      };
+
+      console.log("captureHeatpeekSnapshot", {
+        html,
+        viewport,
+        styles: getUsedStyles(),
+      });
+
+      return {
+        html,
+        viewport,
+        styles: getUsedStyles(),
+      };
+    }
+
+    function getUsedStyles() {
+      let css = "";
+      for (const sheet of Array.from(document.styleSheets)) {
+        try {
+          for (const rule of sheet.cssRules) {
+            css += rule.cssText + "\n";
+          }
+        } catch (e) {}
+      }
+      return css;
+    }
+  }
+})();
+
+function getBrowserName() {
+  const userAgent = navigator.userAgent;
+  let browserName = "Unknown";
+
+  // Arc
+  if (/Arc/.test(userAgent)) {
+    browserName = "Arc";
+  }
+  // Chrome
+  else if (
+    /Chrome/.test(userAgent) &&
+    !/Edge/.test(userAgent) &&
+    !/OPR/.test(userAgent)
+  ) {
+    browserName = "Chrome";
+  }
+  // Firefox
+  else if (/Firefox/.test(userAgent)) {
+    browserName = "Firefox";
+  }
+  // Safari
+  else if (/Safari/.test(userAgent) && !/Chrome/.test(userAgent)) {
+    browserName = "Safari";
+  }
+  // Edge
+  else if (/Edg/.test(userAgent)) {
+    browserName = "Edge";
+  }
+  // Opera
+  else if (/OPR/.test(userAgent)) {
+    browserName = "Opera";
+  }
+
+  return browserName;
+}
+
+async function verifyTracking(endpoint, trackingId) {
+  const urlParams = new URLSearchParams(window.location.search);
+  if (urlParams.get("verifyHp") === trackingId) {
+    fetch(`${endpoint}/api/verify/${trackingId}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ verified: true }),
+    })
+      .then(() => {
+        window.close();
+      })
+      .catch((error) => {
+        console.error(error);
+      });
+  }
+}
+
+function getViewportDeviceCategory() {
+  const viewportWidth = window.innerWidth;
+
+  // Device breakpoints in pixels
+  const BREAKPOINTS = {
+    MOBILE: 768,
+    TABLET: 1024,
+    DESKTOP: 1920,
+  };
+
+  if (viewportWidth <= BREAKPOINTS.MOBILE) {
+    return "mobile";
+  } else if (viewportWidth <= BREAKPOINTS.TABLET) {
+    return "tablet";
+  } else if (viewportWidth <= BREAKPOINTS.DESKTOP) {
+    return "desktop";
+  }
+
+  return "large-desktop";
+}
+
+function getUniqueSelector(el) {
+  if (el.id) {
+    return `#${CSS.escape(el.id)}`;
+  }
+
+  const parts = [];
+
+  while (el && el.nodeType === Node.ELEMENT_NODE) {
+    let part = el.nodeName.toLowerCase();
+
+    if (el.className) {
+      const classList = Array.from(el.classList)
+        .map((cls) => `.${CSS.escape(cls)}`)
+        .join("");
+      part += classList;
+    }
+
+    const parent = el.parentElement;
+    if (parent) {
+      const siblings = Array.from(parent.children).filter(
+        (child) => child.tagName === el.tagName
+      );
+
+      if (siblings.length > 1) {
+        const index = siblings.indexOf(el) + 1;
+        part += `:nth-of-type(${index})`;
+      }
+    }
+
+    parts.unshift(part);
+    el = el.parentElement;
+  }
+
+  const fullSelector = parts.join(" > ");
+  return generateShortHash(fullSelector);
+}
+
+function generateShortHash(str) {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    const char = str.charCodeAt(i);
+    hash = (hash << 5) - hash + char;
+    hash = hash & hash; // Convert to 32bit integer
+  }
+  // Convert to base36 (alphanumeric) and take first 8 characters
+  return Math.abs(hash).toString(36).substring(0, 8);
+}
+
+function detectBot() {
+  const userAgent = navigator.userAgent.toLowerCase();
+  const botPatterns = [
+    // Common bot identifiers
+    "bot",
+    "crawler",
+    "spider",
+    "headless",
+    "selenium",
+    // Search engine bots
+    "googlebot",
+    "bingbot",
+    "yandexbot",
+    "duckduckbot",
+    "baiduspider",
+    // Monitoring and testing tools
+    "lighthouse",
+    "webdriver",
+    "phantomjs",
+    "puppeteer",
+    "playwright",
+    // Security scanners
+    "nmap",
+    "nikto",
+    "acunetix",
+    "nessus",
+    "burp",
+    "zap",
+    // Automation tools
+    "curl",
+    "wget",
+    "python-requests",
+    "java-http-client",
+    // Analytics and monitoring
+    "pingdom",
+    "uptimerobot",
+    "newrelic",
+    "datadog",
+    // Social media bots
+    "facebookexternalhit",
+    "twitterbot",
+    "linkedinbot",
+    // Other common patterns
+    "apache-httpclient",
+    "python-urllib",
+    "java-http-client",
+    "mozilla/5.0 (compatible;)",
+    "mozilla/5.0 (bot;)",
+    "mozilla/5.0 (crawler;)",
+    "mozilla/5.0 (spider;)",
+    "mozilla/5.0 (monitoring;)",
+  ];
+  return botPatterns.some((pattern) => userAgent.includes(pattern));
+}
