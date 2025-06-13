@@ -55,8 +55,6 @@
     const device = getViewportDeviceCategory();
     if (device === "large-desktop") return;
 
-    console.log("config", config.get());
-
     const path = window.location.pathname;
 
     let lastClickTime = 0;
@@ -205,9 +203,7 @@
     });
 
     function shouldSendSnapshot() {
-      console.log("shouldSendSnapshot");
       if (getBrowserName() !== "Chrome") return;
-      console.log("config", config.get());
       const pageConfig = config.get();
       if (pageConfig.page_config.update_snap) {
         sendSnapshot();
@@ -215,7 +211,6 @@
     }
 
     function sendSnapshot() {
-      console.log("sendSnapshot");
       fetch(`${endpoint}/api/screenPage`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -234,12 +229,6 @@
         width: window.innerWidth,
         height: window.innerHeight,
       };
-
-      console.log("captureHeatpeekSnapshot", {
-        html,
-        viewport,
-        styles: getUsedStyles(),
-      });
 
       return {
         html,

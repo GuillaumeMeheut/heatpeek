@@ -1,9 +1,15 @@
 import { createServerClient } from "@supabase/ssr";
 import { type NextRequest, NextResponse } from "next/server";
 
-const PUBLIC_ROUTES = ["/signin", "/signup", "/auth/callback", "/auth/confirm"];
+const PUBLIC_ROUTES = [
+  "/signin",
+  "/signup",
+  "/auth/callback",
+  "/auth/confirm",
+  "/pricing",
+];
 
-const PROTECTED_ROUTES = ["/dashboard"];
+const PROTECTED_ROUTES = ["/sites"];
 
 export const updateSession = async (request: NextRequest) => {
   // This `try/catch` block is only here for the interactive tutorial.
