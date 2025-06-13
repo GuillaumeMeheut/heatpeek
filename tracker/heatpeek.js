@@ -193,13 +193,8 @@
       }
     });
 
-    document.addEventListener("DOMContentLoaded", () => {
-      //Use requestAnimationFrame for the moment until I build a good dom tree
-      requestAnimationFrame(() => {
-        setTimeout(() => {
-          shouldSendSnapshot();
-        }, 2000);
-      });
+    window.addEventListener("load", () => {
+      shouldSendSnapshot();
     });
 
     function shouldSendSnapshot() {
