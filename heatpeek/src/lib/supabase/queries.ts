@@ -164,7 +164,12 @@ export const getSnapshot = cache(
     const { data, error } = await supabase
       .from("snapshots")
       .select(
-        `id, label, screenshot_url, width, height, url_id,
+        `id, 
+        label, 
+        screenshot_url, 
+        width, 
+        height, 
+        url_id,
         urls (
           path, 
           project_id
@@ -197,15 +202,13 @@ export const getSnapshotIdAndDomData = cache(
       .from("snapshots")
       .select(
         `
-    id,
-    dom_data,
-    device,
-    url_id,
-    urls (
-      tracking_id,
-      path
-    )
-  `
+        id,
+        dom_data,
+        urls (
+          tracking_id,
+          path
+        )
+      `
       )
       .eq("urls.tracking_id", trackingId)
       .eq("urls.path", url)
