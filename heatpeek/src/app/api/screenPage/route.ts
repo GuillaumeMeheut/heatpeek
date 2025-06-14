@@ -30,7 +30,8 @@ export async function POST(request: NextRequest) {
   };
 
   const { trackingId, url, device, snapshot } = await request.json();
-  const { html, viewport } = snapshot;
+  console.log("snapshot", snapshot);
+  const { html, viewport, styles } = snapshot;
 
   let urlId: string | null = null;
 
@@ -79,6 +80,7 @@ export async function POST(request: NextRequest) {
     measure("Image Inlining");
 
     const page = await browser.newPage();
+    await page.addStyleTag({ content: styles });
     await page.setContent(inlinedHtml, { waitUntil: "load" });
 
     await page.setViewportSize({
