@@ -194,7 +194,9 @@
     });
 
     window.addEventListener("load", () => {
-      shouldSendSnapshot();
+      setTimeout(() => {
+        shouldSendSnapshot();
+      }, 2000);
     });
 
     function shouldSendSnapshot() {
@@ -228,20 +230,7 @@
       return {
         html,
         viewport,
-        styles: getUsedStyles(),
       };
-    }
-
-    function getUsedStyles() {
-      let css = "";
-      for (const sheet of Array.from(document.styleSheets)) {
-        try {
-          for (const rule of sheet.cssRules) {
-            css += rule.cssText + "\n";
-          }
-        } catch (e) {}
-      }
-      return css;
     }
   }
 })();

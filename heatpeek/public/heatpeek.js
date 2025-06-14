@@ -55,8 +55,6 @@
     const device = getViewportDeviceCategory();
     if (device === "large-desktop") return;
 
-    console.log("config", config.get());
-
     const path = window.location.pathname;
 
     let lastClickTime = 0;
@@ -195,18 +193,15 @@
       }
     });
 
-    document.addEventListener("DOMContentLoaded", () => {
-      //Use requestAnimationFrame for the moment until I build a good dom tree
-      requestAnimationFrame(() => {
-        setTimeout(() => {
-          shouldSendSnapshot();
-        }, 2000);
-      });
+    window.addEventListener("load", () => {
+      setTimeout(() => {
+        shouldSendSnapshot();
+      }, 2000);
     });
 
     function shouldSendSnapshot() {
+      console.log("shouldSendSnapshot");
       if (getBrowserName() !== "Chrome") return;
-
       const pageConfig = config.get();
       if (pageConfig.page_config.update_snap) {
         sendSnapshot();
@@ -214,6 +209,7 @@
     }
 
     function sendSnapshot() {
+      console.log("sendSnapshot");
       fetch(`${endpoint}/api/screenPage`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -236,20 +232,7 @@
       return {
         html,
         viewport,
-        styles: getUsedStyles(),
       };
-    }
-
-    function getUsedStyles() {
-      let css = "";
-      for (const sheet of Array.from(document.styleSheets)) {
-        try {
-          for (const rule of sheet.cssRules) {
-            css += rule.cssText + "\n";
-          }
-        } catch (e) {}
-      }
-      return css;
     }
   }
 })();

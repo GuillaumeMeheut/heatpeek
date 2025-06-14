@@ -31,7 +31,7 @@ export async function POST(request: NextRequest) {
 
   const { trackingId, url, device, snapshot } = await request.json();
   console.log("snapshot", snapshot);
-  const { html, viewport, styles } = snapshot;
+  const { html, viewport } = snapshot;
 
   let urlId: string | null = null;
 
@@ -80,7 +80,6 @@ export async function POST(request: NextRequest) {
     measure("Image Inlining");
 
     const page = await browser.newPage();
-    await page.addStyleTag({ content: styles });
     await page.setContent(inlinedHtml, { waitUntil: "load" });
 
     await page.setViewportSize({
@@ -187,6 +186,18 @@ async function inlineImagesAndBackgrounds(
   const dom = new JSDOM(html);
   const document = dom.window.document;
 
+  await Promise.all([
+    inlineImages(document, baseUrl),
+    inlineStylesheets(document, baseUrl),
+  ]);
+
+  return "<!DOCTYPE html>\n" + document.documentElement.outerHTML;
+}
+
+async function inlineImages(
+  document: Document,
+  baseUrl: string
+): Promise<void> {
   const srcToBase64Map = new Map<string, string>();
   const imageUrls = new Set<string>();
 
@@ -257,8 +268,40 @@ async function inlineImagesAndBackgrounds(
       el.setAttribute("style", style);
     }
   }
+}
 
-  return "<!DOCTYPE html>\n" + document.documentElement.outerHTML;
+async function inlineStylesheets(
+  document: Document,
+  baseUrl: string
+): Promise<void> {
+  const linkElements = Array.from(
+    document.querySelectorAll("link[rel='stylesheet']")
+  );
+  for (const link of linkElements) {
+    try {
+      const href = link.getAttribute("href");
+      if (href && !href.startsWith("data:")) {
+        const absoluteUrl = new URL(href, baseUrl).href.replace(
+          "http://localhost:3001",
+          "https://guillaume-meheut.vercel.app"
+        );
+        const res = await fetch(absoluteUrl);
+        const css = await res.text();
+
+        // Create a new style element
+        const styleElement = document.createElement("style");
+        styleElement.textContent = css;
+
+        // Replace the link element with the style element
+        link.parentNode?.replaceChild(styleElement, link);
+      }
+    } catch (err) {
+      console.warn(
+        `Failed to inline stylesheet: ${link.getAttribute("href")}`,
+        err
+      );
+    }
+  }
 }
 
 function createLayoutHash(visibleDomElements: VisibleDomElement[]) {
