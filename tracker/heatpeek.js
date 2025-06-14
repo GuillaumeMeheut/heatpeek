@@ -196,7 +196,7 @@
     window.addEventListener("load", () => {
       setTimeout(() => {
         shouldSendSnapshot();
-      }, 2000);
+      }, 2500);
     });
 
     function shouldSendSnapshot() {
