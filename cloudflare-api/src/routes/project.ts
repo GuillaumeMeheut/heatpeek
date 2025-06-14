@@ -1,5 +1,5 @@
 import { Hono } from "hono";
-import type { Env } from "../env.d";
+import type { Env } from "../env";
 import { SupabaseService } from "../services/supabase";
 
 const router = new Hono<{ Bindings: Env }>();

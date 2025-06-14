@@ -1,7 +1,7 @@
 /// <reference lib="webworker" />
 import { Hono } from "hono";
 import { cors } from "hono/cors";
-import type { Env } from "./env.d";
+import type { Env } from "./env";
 import projectRouter from "./routes/project";
 
 const app = new Hono<{ Bindings: Env }>();
