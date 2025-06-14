@@ -165,16 +165,15 @@ export const getSnapshot = cache(
       .from("snapshots")
       .select(
         `id, 
-        label, 
-        screenshot_url, 
-        width, 
-        height, 
-        url_id,
-        urls (
-          path, 
-          project_id
-        )
-      `
+       label, 
+       screenshot_url, 
+       width, 
+       height, 
+       url_id,
+       urls!inner (
+         path, 
+         project_id
+       )`
       )
       .eq("urls.project_id", projectId)
       .eq("urls.path", url)
@@ -204,7 +203,7 @@ export const getSnapshotIdAndDomData = cache(
         `
         id,
         dom_data,
-        urls (
+        urls!inner (
           tracking_id,
           path
         )
