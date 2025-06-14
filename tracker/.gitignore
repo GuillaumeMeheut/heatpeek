@@ -2,3 +2,8 @@
 .env*
 
 /node_modules
+
+node_modules/
+.DS_Store
+heatpeek.min.js
+e/h.js

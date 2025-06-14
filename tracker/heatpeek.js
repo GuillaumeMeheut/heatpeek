@@ -24,7 +24,7 @@
 
       try {
         const response = await fetch(
-          `${endpointAPI}/?id=${trackingId}&p=${window.location.pathname}`
+          `${endpointAPI}/api/project/config?id=${trackingId}&p=${window.location.pathname}`
         );
         if (!response.ok) throw new Error("Failed to fetch config");
 

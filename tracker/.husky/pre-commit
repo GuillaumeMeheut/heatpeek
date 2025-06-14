@@ -1,0 +1,16 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+echo "Running npm run build before commit..."
+npm run build
+
+# Check if the build was successful
+if [ $? -eq 0 ]; then
+    echo "Build successful, staging built files..."
+    git add heatpeek.min.js e/h.js
+    echo "Proceeding with commit..."
+    exit 0
+else
+    echo "Build failed, aborting commit..."
+    exit 1
+fi
