@@ -6,9 +6,6 @@ import projectRouter from "./routes/project";
 
 const app = new Hono<{ Bindings: Env }>();
 
-// Add CORS middleware
-app.use("*", cors());
-
 // Mount routes
 app.route("/api/project", projectRouter);
 

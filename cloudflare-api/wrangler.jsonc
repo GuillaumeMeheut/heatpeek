@@ -2,19 +2,19 @@
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "cloudflare-api",
   "main": "src/index.ts",
-  "compatibility_date": "2025-06-14"
+  "compatibility_date": "2025-06-14",
+  "kv_namespaces": [
+    {
+      "binding": "CONFIG_CACHE",
+      "id": "72935171a7ec43cab5caec10331b1476"
+    }
+  ]
   // "compatibility_flags": [
   //   "nodejs_compat"
   // ],
   // "vars": {
   //   "MY_VAR": "my-variable"
   // },
-  // "kv_namespaces": [
-  //   {
-  //     "binding": "MY_KV_NAMESPACE",
-  //     "id": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
-  //   }
-  // ],
   // "r2_buckets": [
   //   {
   //     "binding": "MY_BUCKET",
