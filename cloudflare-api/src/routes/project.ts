@@ -9,6 +9,7 @@ const CACHE_HEADERS = {
   "Cache-Control": "public, max-age=60",
   "X-Source": "supabase",
 };
+const EXPIRATION_TTL = 300;
 
 router.get("/config", cors(), async (c) => {
   const trackingId = c.req.query("id");
@@ -38,7 +39,7 @@ router.get("/config", cors(), async (c) => {
     }
 
     await CONFIG_CACHE.put(kvKey, JSON.stringify(config), {
-      expirationTtl: 300,
+      expirationTtl: EXPIRATION_TTL,
     });
 
     if (config === ProjectConfigError.NOT_FOUND) {
