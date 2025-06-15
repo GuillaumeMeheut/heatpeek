@@ -16,13 +16,14 @@ router.get("/config", cors(), async (c) => {
   const { SUPABASE_URL, SUPABASE_ANON_KEY, CONFIG_CACHE } = c.env;
   const supabaseService = new SupabaseService(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-  // KV key format: site:{trackingId}:path:{path}
-  const kvKey = `site:${trackingId}:path:${path}`;
+  // KV key format: t-{trackingId}-p-{path}
+  const kvKey = `t-${trackingId}-p-${path}`;
 
   try {
     // 1. Try reading from KV
     const cached = await CONFIG_CACHE.get(kvKey, { type: "json" });
     if (cached) {
+      console.log("cache hit", cached);
       return c.json(cached, 200, {
         "Cache-Control": "public, max-age=60",
         "X-Source": "cache",
@@ -34,7 +35,7 @@ router.get("/config", cors(), async (c) => {
     if (!config) {
       return c.body(null, 204);
     }
-
+    console.log("storing in kv", config);
     // 3. Store in KV for 5 minutes
     await CONFIG_CACHE.put(kvKey, JSON.stringify(config), {
       expirationTtl: 300,
