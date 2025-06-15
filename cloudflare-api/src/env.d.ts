@@ -1,3 +1,4 @@
+import type { KVNamespace } from "@cloudflare/workers-types";
 interface Env {
   SUPABASE_URL: string;
   SUPABASE_ANON_KEY: string;

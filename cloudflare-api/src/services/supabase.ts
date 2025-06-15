@@ -1,12 +1,31 @@
 import type { SupabaseProjectConfigResponse } from "../types/supabase";
 
+export type ProjectConfigResult = {
+  id: string;
+  usageExceeded: boolean;
+  page_config: {
+    path: string;
+    ignored_el: string[] | null;
+    privacy_el: string[] | null;
+    update_snap: boolean;
+  } | null;
+};
+
+export enum ProjectConfigError {
+  FETCH_ERROR = "FETCH_ERROR",
+  NOT_FOUND = "NOT_FOUND",
+}
+
 export class SupabaseService {
   constructor(
     private readonly supabaseUrl: string,
     private readonly supabaseAnonKey: string
   ) {}
 
-  async getProjectConfig(trackingId: string, path: string) {
+  async getProjectConfig(
+    trackingId: string,
+    path: string
+  ): Promise<ProjectConfigResult | ProjectConfigError> {
     const apiUrl =
       `${this.supabaseUrl}/rest/v1/project_config` +
       `?tracking_id=eq.${encodeURIComponent(trackingId)}` +
@@ -22,12 +41,13 @@ export class SupabaseService {
     });
 
     if (!response.ok) {
-      return null;
+      return ProjectConfigError.FETCH_ERROR;
     }
 
     const data = (await response.json()) as SupabaseProjectConfigResponse;
+
     if (!data.length) {
-      return null;
+      return ProjectConfigError.NOT_FOUND;
     }
 
     return {
