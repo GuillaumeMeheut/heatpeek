@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
+import { createServerSupabaseClientWithServiceRole } from "@/lib/supabase/server";
 import { corsHeaders } from "@/lib/utils";
 
 // Store verification status in memory (will be cleared on server restart)
@@ -20,7 +20,7 @@ export async function POST(
 ) {
   try {
     const { trackingId } = await params;
-    const supabase = await createClient();
+    const supabase = createServerSupabaseClientWithServiceRole();
 
     const origin = request.headers.get("origin");
     if (!origin) {

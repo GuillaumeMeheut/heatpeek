@@ -8,7 +8,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { ChevronDown, Plus } from "lucide-react";
+import { ChevronDown, Settings } from "lucide-react";
 import Link from "next/link";
 import { Project } from "@/lib/supabase/queries";
 import { usePathname } from "next/navigation";
@@ -23,15 +23,20 @@ export function ProjectList({ projects, currentProject }: ProjectListProps) {
 
   if (!currentProject || projects.length === 0) return null;
 
+  function getProjectLabel(project: Project) {
+    if (project.label) {
+      return project.label + " (" + new URL(project.base_url).hostname + ")";
+    }
+    const url = new URL(project.base_url);
+    return url.hostname;
+  }
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button variant="outline" className="w-[200px] justify-between">
           {currentProject && (
-            <span className="truncate">
-              {currentProject.label ||
-                new URL(currentProject.base_url).hostname}
-            </span>
+            <span className="truncate">{getProjectLabel(currentProject)}</span>
           )}
           <ChevronDown className="h-4 w-4" />
         </Button>
@@ -48,18 +53,18 @@ export function ProjectList({ projects, currentProject }: ProjectListProps) {
                 <Link
                   href={newPath}
                   className="w-full truncate"
-                  title={project.label || new URL(project.base_url).hostname}
+                  title={getProjectLabel(project)}
                 >
-                  {project.label || new URL(project.base_url).hostname}
+                  {getProjectLabel(project)}
                 </Link>
               </DropdownMenuItem>
             );
           })}
         {projects.length > 0 && <DropdownMenuSeparator />}
         <DropdownMenuItem className="cursor-pointer">
-          <Link href="/add-site" className="flex items-center w-full">
-            <Plus className="h-4 w-4 mr-2" />
-            Add a new site
+          <Link href="/sites" className="flex items-center w-full">
+            <Settings className="h-4 w-4 mr-2" />
+            Manage sites
           </Link>
         </DropdownMenuItem>
       </DropdownMenuContent>

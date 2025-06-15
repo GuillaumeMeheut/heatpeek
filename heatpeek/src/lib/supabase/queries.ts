@@ -1,5 +1,17 @@
 import { cache } from "react";
 import { SupabaseClient } from "@supabase/supabase-js";
+import { Database } from "@/types/supabase";
+import {
+  ClicksRow,
+  UrlsRow,
+  PageConfigRow,
+  SnapshotsRow,
+  ClickedElementsRow,
+  AggregatedClicksRow,
+  ProjectsRow,
+  UrlsInsert,
+  PageConfigInsert,
+} from "@/types/database";
 
 export const getUser = cache(async (supabase: SupabaseClient) => {
   const {
@@ -9,21 +21,22 @@ export const getUser = cache(async (supabase: SupabaseClient) => {
   return { user, error };
 });
 
-export type ClickInfos = {
-  tracking_id: string;
-  url: string;
-  timestamp: string;
-  device: string;
-  visible: boolean;
-  erx: number;
-  ery: number;
-  s: string;
-  l: number;
-  t: number;
-  w: number;
-  h: number;
-  first_click_rank: number | null;
-};
+export type ClickInfos = Pick<
+  ClicksRow,
+  | "tracking_id"
+  | "url"
+  | "timestamp"
+  | "device"
+  | "visible"
+  | "erx"
+  | "ery"
+  | "s"
+  | "l"
+  | "t"
+  | "w"
+  | "h"
+  | "first_click_rank"
+>;
 
 export const addClicks = cache(
   async (supabase: SupabaseClient, clickInfos: ClickInfos[]): Promise<void> => {
@@ -34,15 +47,9 @@ export const addClicks = cache(
   }
 );
 
-export type Click = Omit<
-  ClickInfos,
-  | "tracking_id"
-  | "url"
-  | "timestamp"
-  | "user_agent"
-  | "device"
-  | "visible"
-  | "first_click_rank"
+export type Click = Pick<
+  ClicksRow,
+  "erx" | "ery" | "s" | "l" | "t" | "w" | "h"
 >;
 
 export const getClicks = cache(
@@ -70,11 +77,38 @@ export const getClicks = cache(
   }
 );
 
-export type Url = {
-  id: string;
-  path: string;
-  label: string;
-};
+export const addUrl = cache(
+  async (supabase: SupabaseClient, url: UrlsInsert): Promise<string> => {
+    const { data, error } = await supabase
+      .from("urls")
+      .insert(url)
+      .select("id")
+      .single();
+
+    if (error) {
+      console.log("Error adding url:", error);
+      throw "Error adding url";
+    }
+
+    return data.id;
+  }
+);
+
+export const addPageConfig = cache(
+  async (
+    supabase: SupabaseClient,
+    pageConfig: PageConfigInsert
+  ): Promise<void> => {
+    const { error } = await supabase.from("page_config").insert(pageConfig);
+
+    if (error) {
+      console.log("Error adding page config:", error);
+      throw "Error adding page config";
+    }
+  }
+);
+
+export type Url = Pick<UrlsRow, "id" | "path" | "label">;
 
 export const getUrls = cache(
   async (
@@ -95,18 +129,57 @@ export const getUrls = cache(
   }
 );
 
-export type Snapshot = {
-  id: string;
-  label: string;
-  device: string;
-  dom_data: string;
-  layout_hash: string;
-  screenshot_url: string;
-  width: number;
-  height: number;
-  url_id: string;
-  should_update: boolean;
+export type UrlAndConfig = Pick<
+  UrlsRow,
+  "id" | "path" | "label" | "views" | "clicks"
+> & {
+  page_config: Pick<PageConfigRow, "id" | "is_active">;
 };
+
+export const getUrlsAndConfig = cache(
+  async (
+    supabase: SupabaseClient<Database>,
+    projectId: string
+  ): Promise<UrlAndConfig[] | null> => {
+    const { data, error } = await supabase
+      .from("urls")
+      .select(
+        `
+        id,
+        path,
+        label,
+        views,
+        clicks,
+        page_config (
+          id,
+          is_active
+        )
+      `
+      )
+      .eq("project_id", projectId);
+
+    if (error) {
+      console.log("Error fetching urls:", error);
+      return null;
+    }
+
+    return data as UrlAndConfig[];
+  }
+);
+
+export type Snapshot = Pick<
+  SnapshotsRow,
+  | "id"
+  | "label"
+  | "device"
+  | "dom_data"
+  | "layout_hash"
+  | "screenshot_url"
+  | "width"
+  | "height"
+  | "url_id"
+  | "should_update"
+>;
 
 export const addSnapshot = cache(
   async (
@@ -300,7 +373,7 @@ export const getTrackingIdAndBaseUrl = cache(
       .single();
 
     if (error) {
-      console.log("Error getting tracking ID:", error);
+      console.log("Error getting tracking ID and base URL:", error);
       return null;
     }
 
@@ -308,15 +381,49 @@ export const getTrackingIdAndBaseUrl = cache(
   }
 );
 
-export type ClickedElement = {
-  snapshot_id: string;
-  s: string;
-  l: number;
-  t: number;
-  w: number;
-  h: number;
-  clicks_count: number;
-};
+export const getTrackingId = cache(
+  async (
+    supabase: SupabaseClient,
+    projectId: string
+  ): Promise<string | null> => {
+    const { data, error } = await supabase
+      .from("projects")
+      .select("tracking_id")
+      .eq("id", projectId)
+      .single();
+
+    if (error) {
+      console.log("Error getting tracking ID:", error);
+      return null;
+    }
+
+    return data.tracking_id;
+  }
+);
+export const getProjectConfigId = cache(
+  async (
+    supabase: SupabaseClient,
+    projectId: string
+  ): Promise<string | null> => {
+    const { data, error } = await supabase
+      .from("project_config")
+      .select("id")
+      .eq("project_id", projectId)
+      .single();
+
+    if (error) {
+      console.log("Error getting project config ID:", error);
+      return null;
+    }
+
+    return data.id;
+  }
+);
+
+export type ClickedElement = Pick<
+  ClickedElementsRow,
+  "snapshot_id" | "s" | "l" | "t" | "w" | "h" | "clicks_count"
+>;
 
 export const addClickedElements = async (
   supabase: SupabaseClient,
@@ -331,13 +438,10 @@ export const addClickedElements = async (
   }
 };
 
-export type AggregatedClick = {
-  snapshot_id: string;
-  grid_x: number;
-  grid_y: number;
-  count: number;
-  last_updated_at: string;
-};
+export type AggregatedClick = Pick<
+  AggregatedClicksRow,
+  "snapshot_id" | "grid_x" | "grid_y" | "count" | "last_updated_at"
+>;
 
 export const addAggregatedClicks = async (
   supabase: SupabaseClient,
@@ -371,13 +475,10 @@ export const getAggregatedClicks = cache(
   }
 );
 
-export type Project = {
-  id: string;
-  label: string;
-  base_url: string;
-  type: string | null;
-  created_at: string;
-};
+export type Project = Pick<
+  ProjectsRow,
+  "id" | "label" | "base_url" | "type" | "created_at"
+>;
 
 export const getProjects = cache(
   async (
@@ -417,15 +518,33 @@ export const deleteProject = cache(
   }
 );
 
-export type PageConfig = {
-  id: string;
-  path: string;
-  created_at: string;
-  ignored_el: string[];
-  privacy_el: string[];
-  url_id: string;
-  update_snap: boolean;
-};
+export const deleteUrl = cache(
+  async (
+    supabase: SupabaseClient,
+    urlId: string
+  ): Promise<{ success: boolean } | null> => {
+    const { error } = await supabase.from("urls").delete().eq("id", urlId);
+
+    if (error) {
+      console.error("Error deleting url:", error);
+      return null;
+    }
+
+    return { success: true };
+  }
+);
+
+export type PageConfig = Pick<
+  PageConfigRow,
+  | "id"
+  | "path"
+  | "created_at"
+  | "ignored_el"
+  | "privacy_el"
+  | "url_id"
+  | "update_snap"
+  | "is_active"
+>;
 
 export const updatePageConfig = cache(
   async (

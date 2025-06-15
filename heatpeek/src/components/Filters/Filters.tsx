@@ -12,7 +12,7 @@ export async function Filters({ projectId }: { projectId: string }) {
   return (
     <div className="flex flex-col sm:flex-row gap-4 mb-6">
       <FiltersDate />
-      <FiltersUrl urls={urls} />
+      <FiltersUrl urls={urls} projectId={projectId} />
       <div className="ml-auto">
         <Button className="bg-primary hover:bg-primary/90">
           <Download className="w-4 h-4 mr-2" />

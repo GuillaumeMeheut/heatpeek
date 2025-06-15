@@ -19,7 +19,7 @@ export default async function Layout({
   return (
     <div className="flex flex-col min-h-screen bg-background">
       <InsightNavbar projects={projects || []} user={user} />
-      {children}
+      <main className="container mx-auto py-8">{children}</main>
     </div>
   );
 }

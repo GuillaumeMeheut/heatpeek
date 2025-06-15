@@ -4,19 +4,15 @@
 
 - [ ] Handle "Snapshot Not Found"
 - [ ] Fix auth error when signin with existing account (it say success)
-- [ ] Handle and display errors:
-  - [ ] Add Snapshot
 - [ ] Review the auth system
 - [ ] Forgot Password flow
 - [ ] On Capture page: check if the script is present
-- [ ] On Capture page: use better succes/error showing
 
 ---
 
 ## 📈 Tracker
 
-- [ ] Fetch config (enabled, sampling rate(based on trafic), quota status, pages to track)
-- [ ] Cache config in memory to retain between page loads
+- [ ] Build DOM tree
 
 ---
 
@@ -43,8 +39,7 @@
 
 ## 💡 Ideas
 
-- [ ] Allow usage limit for X snapshot
-- [ ] Ability to generate a new script ID (invalidate old ones)
+- [ ] Allow usage limit for X page
 
 ---
 

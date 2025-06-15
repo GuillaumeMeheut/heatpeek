@@ -13,7 +13,7 @@
   const config = {
     data: null,
     lastFetch: 0,
-    CACHE_DURATION: 1 * 60 * 1000, // 1 minute cache
+    CACHE_DURATION: 1 * 60 * 1000,
 
     async fetch() {
       // Return cached config if it's still valid
@@ -53,7 +53,7 @@
 
   function initializeTracking() {
     const device = getViewportDeviceCategory();
-    if (device === "large-desktop") return;
+    if (!shouldTrack(device)) return;
 
     const path = window.location.pathname;
 
@@ -234,6 +234,13 @@
     }
   }
 })();
+
+function shouldTrack(device) {
+  if (device === "large-desktop") return false;
+  const pageConfig = config.get();
+  if (pageConfig.page_config.is_active === false) return false;
+  return true;
+}
 
 function getBrowserName() {
   const userAgent = navigator.userAgent;

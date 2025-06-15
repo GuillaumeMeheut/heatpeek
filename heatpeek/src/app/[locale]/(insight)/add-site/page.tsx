@@ -9,9 +9,5 @@ export default async function PageList() {
 
   if (!user) redirect("/signin");
 
-  return (
-    <div className="container mx-auto py-8">
-      <AddSite />
-    </div>
-  );
+  return <AddSite />;
 }

@@ -8,17 +8,26 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
 import { Url } from "@/lib/supabase/queries";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState, useEffect } from "react";
+import { Button } from "../ui/button";
+import { Plus, Settings } from "lucide-react";
+import Link from "next/link";
+import { useI18n } from "@locales/client";
 
-export function FiltersUrl({ urls }: { urls: Url[] | null }) {
+export function FiltersUrl({
+  urls,
+  projectId,
+}: {
+  urls: Url[] | null;
+  projectId: string;
+}) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const urlParam = searchParams.get("url");
   const [selectedUrl, setSelectedUrl] = useState(urlParam || "all");
+  const t = useI18n();
 
   useEffect(() => {
     setSelectedUrl(urlParam || "all");
@@ -43,20 +52,26 @@ export function FiltersUrl({ urls }: { urls: Url[] | null }) {
         onValueChange={handleUrlChange}
         defaultValue={selectedUrl}
       >
-        <SelectTrigger className="w-[200px]">
+        <SelectTrigger className="w-[170px]">
           <SelectValue />
         </SelectTrigger>
         <SelectContent>
-          <div className="px-2 p-2">
-            <Button size={"sm"} variant={"outline"} className="w-full">
-              <Plus className="w-4 h-4 mr-2" />
-              Add new page
+          <div className="px-2 p-2 grid grid-cols-2 gap-2 w-full">
+            <Button size={"sm"} variant={"outline"}>
+              <Plus className="w-4 h-4 " />
+              {t("filters.new")}
             </Button>
+            <Link href={`/${projectId}/manage-pages`}>
+              <Button size={"sm"} variant={"outline"}>
+                <Settings className="w-4 h-4 " />
+                {t("filters.manage")}
+              </Button>
+            </Link>
           </div>
           <div className="px-2 pb-2">
-            <Input placeholder="Search pages..." className="mb-2" />
+            <Input placeholder={t("filters.searchPages")} className="mb-2" />
           </div>
-          <SelectItem value={"all"}>All Pages</SelectItem>
+          <SelectItem value={"all"}>{t("filters.allPages")}</SelectItem>
           {urls?.map((url) => (
             <SelectItem key={url.id} value={url.path}>
               {url.label || url.path}

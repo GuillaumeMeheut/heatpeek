@@ -9,9 +9,9 @@ export default async function DashboardLayout({
 }) {
   const { id } = await params;
   return (
-    <main className="flex-1 container mx-auto py-6">
+    <>
       <Filters projectId={id} />
       {children}
-    </main>
+    </>
   );
 }

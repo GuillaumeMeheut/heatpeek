@@ -7,7 +7,6 @@ export default {
     view: "Voir",
     signIn: "Connexion",
     signUp: "Inscription",
-    upgrade: "Passer à la version supérieure",
     getStarted: "Commencer",
     heatmap: "Heatmap",
     elements: "Éléments",
@@ -299,5 +298,67 @@ export default {
           "Sécurité de niveau entreprise avec transmission et stockage des données chiffrés.",
       },
     },
+  },
+  filters: {
+    searchPages: "Rechercher des pages...",
+    allPages: "Toutes les Pages",
+    new: "Nouveau",
+    manage: "Gérer",
+  },
+  urlManagement: {
+    title: "Gestion des URLs",
+    description: "Gérez et suivez les URLs de votre projet de site web",
+  },
+  urlsTable: {
+    title: "Pages",
+    description: "Gérez vos pages suivies",
+    columns: {
+      urlAndName: "URL & Nom",
+      status: "Statut",
+      performance: "Performance",
+      actions: "Actions",
+    },
+    status: {
+      active: "Actif",
+      inactive: "Inactif",
+    },
+    performance: {
+      views: "vues",
+      clicks: "clics",
+    },
+    deleteUrl: {
+      success: "URL supprimée avec succès",
+      error: "Échec de la suppression de l'URL",
+    },
+    buttons: {
+      view: "Voir",
+      edit: "Modifier",
+      delete: "Supprimer",
+    },
+    editDialog: {
+      title: "Modifier l'URL",
+      description:
+        "Mettre à jour les paramètres de l'URL et la configuration du suivi",
+      urlLabel: "URL",
+      nameLabel: "Nom de la page",
+      trackingLabel: "Activer le suivi",
+      cancelButton: "Annuler",
+      saveButton: "Enregistrer",
+    },
+  },
+  addUrl: {
+    trigger: "Ajouter une URL",
+    title: "Ajouter une nouvelle URL",
+    description:
+      "Ajoutez une nouvelle URL pour suivre les interactions et le comportement des utilisateurs.",
+    urlLabel: "URL *",
+    urlPlaceholder: "https://exemple.com/page",
+    labelLabel: "Label",
+    labelPlaceholder: "Page d'accueil",
+    trackingLabel: "Activer le suivi immédiatement",
+    cancelButton: "Annuler",
+    addButton: "Ajouter l'URL",
+    success: "URL ajoutée avec succès",
+    error: "Échec de l'ajout de l'URL",
   },
 } as const;
