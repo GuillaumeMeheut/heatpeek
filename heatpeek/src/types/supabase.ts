@@ -11,31 +11,31 @@ export type Database = {
     Tables: {
       aggregated_clicks: {
         Row: {
-          count: number | null
+          count: number
           created_at: string
-          grid_x: number | null
-          grid_y: number | null
+          grid_x: number
+          grid_y: number
           id: number
-          last_updated_at: string | null
-          snapshot_id: string | null
+          last_updated_at: string
+          snapshot_id: string
         }
         Insert: {
-          count?: number | null
+          count: number
           created_at?: string
-          grid_x?: number | null
-          grid_y?: number | null
+          grid_x: number
+          grid_y: number
           id?: number
-          last_updated_at?: string | null
-          snapshot_id?: string | null
+          last_updated_at: string
+          snapshot_id: string
         }
         Update: {
-          count?: number | null
+          count?: number
           created_at?: string
-          grid_x?: number | null
-          grid_y?: number | null
+          grid_x?: number
+          grid_y?: number
           id?: number
-          last_updated_at?: string | null
-          snapshot_id?: string | null
+          last_updated_at?: string
+          snapshot_id?: string
         }
         Relationships: [
           {
@@ -93,55 +93,55 @@ export type Database = {
       }
       clicks: {
         Row: {
-          device: string | null
-          erx: number | null
-          ery: number | null
+          device: string
+          erx: number
+          ery: number
           first_click_rank: number | null
-          h: number | null
+          h: number
           id: string
-          inserted_at: string | null
-          l: number | null
-          s: string | null
-          t: number | null
+          inserted_at: string
+          l: number
+          s: string
+          t: number
           timestamp: string
-          tracking_id: string | null
+          tracking_id: string
           url: string
-          visible: boolean | null
-          w: number | null
+          visible: boolean
+          w: number
         }
         Insert: {
-          device?: string | null
-          erx?: number | null
-          ery?: number | null
+          device: string
+          erx: number
+          ery: number
           first_click_rank?: number | null
-          h?: number | null
+          h: number
           id?: string
-          inserted_at?: string | null
-          l?: number | null
-          s?: string | null
-          t?: number | null
+          inserted_at?: string
+          l: number
+          s: string
+          t: number
           timestamp: string
-          tracking_id?: string | null
+          tracking_id: string
           url: string
-          visible?: boolean | null
-          w?: number | null
+          visible: boolean
+          w: number
         }
         Update: {
-          device?: string | null
-          erx?: number | null
-          ery?: number | null
+          device?: string
+          erx?: number
+          ery?: number
           first_click_rank?: number | null
-          h?: number | null
+          h?: number
           id?: string
-          inserted_at?: string | null
-          l?: number | null
-          s?: string | null
-          t?: number | null
+          inserted_at?: string
+          l?: number
+          s?: string
+          t?: number
           timestamp?: string
-          tracking_id?: string | null
+          tracking_id?: string
           url?: string
-          visible?: boolean | null
-          w?: number | null
+          visible?: boolean
+          w?: number
         }
         Relationships: [
           {
@@ -209,7 +209,7 @@ export type Database = {
           created_at: string
           id: string
           is_active: boolean
-          project_id: string | null
+          project_id: string
           tracking_id: string
           usageExceeded: boolean
         }
@@ -217,7 +217,7 @@ export type Database = {
           created_at?: string
           id?: string
           is_active: boolean
-          project_id?: string | null
+          project_id: string
           tracking_id: string
           usageExceeded?: boolean
         }
@@ -225,7 +225,7 @@ export type Database = {
           created_at?: string
           id?: string
           is_active?: boolean
-          project_id?: string | null
+          project_id?: string
           tracking_id?: string
           usageExceeded?: boolean
         }
@@ -248,84 +248,84 @@ export type Database = {
       }
       projects: {
         Row: {
-          base_url: string | null
+          base_url: string
           created_at: string
           id: string
           label: string | null
-          tracking_id: string | null
+          tracking_id: string
           type: string | null
-          user_id: string | null
+          user_id: string
         }
         Insert: {
-          base_url?: string | null
+          base_url: string
           created_at?: string
           id?: string
           label?: string | null
-          tracking_id?: string | null
+          tracking_id: string
           type?: string | null
-          user_id?: string | null
+          user_id?: string
         }
         Update: {
-          base_url?: string | null
+          base_url?: string
           created_at?: string
           id?: string
           label?: string | null
-          tracking_id?: string | null
+          tracking_id?: string
           type?: string | null
-          user_id?: string | null
+          user_id?: string
         }
         Relationships: []
       }
       snapshots: {
         Row: {
           created_at: string
-          device: string | null
+          device: string
           dom_data: string | null
           height: number | null
           id: string
-          is_outdated: boolean | null
+          is_outdated: boolean
           label: string | null
-          last_processed_at: string | null
+          last_processed_at: string
           layout_hash: string | null
           screenshot_url: string | null
-          should_update: boolean | null
-          total_clicks: number | null
-          url_id: string | null
-          user_id: string | null
+          should_update: boolean
+          total_clicks: number
+          url_id: string
+          user_id: string
           width: number | null
         }
         Insert: {
           created_at?: string
-          device?: string | null
+          device: string
           dom_data?: string | null
           height?: number | null
           id?: string
-          is_outdated?: boolean | null
+          is_outdated?: boolean
           label?: string | null
-          last_processed_at?: string | null
+          last_processed_at?: string
           layout_hash?: string | null
           screenshot_url?: string | null
-          should_update?: boolean | null
-          total_clicks?: number | null
-          url_id?: string | null
-          user_id?: string | null
+          should_update?: boolean
+          total_clicks?: number
+          url_id: string
+          user_id?: string
           width?: number | null
         }
         Update: {
           created_at?: string
-          device?: string | null
+          device?: string
           dom_data?: string | null
           height?: number | null
           id?: string
-          is_outdated?: boolean | null
+          is_outdated?: boolean
           label?: string | null
-          last_processed_at?: string | null
+          last_processed_at?: string
           layout_hash?: string | null
           screenshot_url?: string | null
-          should_update?: boolean | null
-          total_clicks?: number | null
-          url_id?: string | null
-          user_id?: string | null
+          should_update?: boolean
+          total_clicks?: number
+          url_id?: string
+          user_id?: string
           width?: number | null
         }
         Relationships: [

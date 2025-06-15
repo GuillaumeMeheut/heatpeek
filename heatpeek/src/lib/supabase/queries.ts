@@ -224,16 +224,20 @@ export const updateSnapshot = cache(
   }
 );
 
+export type HeatmapSnapshot = Pick<
+  SnapshotsRow,
+  "id" | "label" | "screenshot_url" | "width" | "height" | "url_id"
+> & {
+  urls: Pick<UrlsRow, "path" | "project_id">;
+};
+
 export const getSnapshot = cache(
   async (
     supabase: SupabaseClient,
     projectId: string,
     url: string,
     device: string
-  ): Promise<Omit<
-    Snapshot,
-    "layout_hash" | "dom_data" | "device" | "should_update"
-  > | null> => {
+  ): Promise<HeatmapSnapshot | null> => {
     const { data, error } = await supabase
       .from("snapshots")
       .select(
@@ -259,7 +263,7 @@ export const getSnapshot = cache(
       return null;
     }
 
-    return data;
+    return data as unknown as HeatmapSnapshot;
   }
 );
 

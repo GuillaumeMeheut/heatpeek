@@ -3,14 +3,11 @@
 import { useEffect, useRef, useMemo, useState } from "react";
 import Image from "next/image";
 import simpleheat from "simpleheat";
-import { Snapshot, AggregatedClick } from "@/lib/supabase/queries";
+import { AggregatedClick, HeatmapSnapshot } from "@/lib/supabase/queries";
 
 type HeatmapProps = {
   aggregatedClicks: AggregatedClick[];
-  pageData: Omit<
-    Snapshot,
-    "layout_hash" | "dom_data" | "url_id" | "device" | "should_update"
-  >;
+  pageData: HeatmapSnapshot;
 };
 
 const HEATMAP_CONFIG = {
@@ -36,7 +33,7 @@ export default function Heatmap({ aggregatedClicks, pageData }: HeatmapProps) {
   // Update dimensions when container size changes
   useEffect(() => {
     const updateDimensions = () => {
-      if (containerRef.current) {
+      if (containerRef.current && pageData.width && pageData.height) {
         const containerWidth = containerRef.current.clientWidth;
         const aspectRatio = pageData.height / pageData.width;
 
@@ -60,7 +57,13 @@ export default function Heatmap({ aggregatedClicks, pageData }: HeatmapProps) {
 
   // Calculate points with intensity based on aggregated clicks
   const points = useMemo(() => {
-    if (aggregatedClicks.length === 0 || !pageData || !containerDimensions)
+    if (
+      aggregatedClicks.length === 0 ||
+      !pageData ||
+      !containerDimensions ||
+      !pageData.width ||
+      !pageData.height
+    )
       return [];
 
     // Calculate scaling factors
