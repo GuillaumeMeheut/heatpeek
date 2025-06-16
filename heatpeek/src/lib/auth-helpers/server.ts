@@ -44,8 +44,6 @@ export async function signUp(formData: FormData) {
 
   const validationResult = signUpSchema(t).safeParse(data);
 
-  console.log(validationResult.error?.errors[0].path);
-
   if (!validationResult.success) {
     throw new Error(validationResult.error.errors[0].message);
   }

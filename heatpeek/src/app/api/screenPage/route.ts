@@ -149,14 +149,10 @@ export async function POST(request: NextRequest) {
       throw new Error("Failed to update snapshot");
     }
 
-    const resultPageConfig = await updatePageConfig(supabase, urlId, {
+    await updatePageConfig(supabase, urlId, {
       update_snap: false,
     });
     measure("Page Config Update");
-
-    if (!resultPageConfig) {
-      throw new Error("Failed to update page config");
-    }
 
     return new Response(JSON.stringify({ success: true }), {
       headers: corsHeaders(),

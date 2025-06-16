@@ -340,12 +340,21 @@ export default {
       trackingLabel: "Enable tracking",
       cancelButton: "Cancel",
       saveButton: "Save Changes",
+      success: "URL updated successfully",
+      error: "Failed to update URL",
     },
   },
   urlManagement: {
     title: "URL Management",
     description: "Manage and track URLs for your website project",
+    validation: {
+      urlRequired: "URL is required",
+      invalidUrl: "Please enter a valid URL",
+      urlTooLong: "URL must be less than 200 characters",
+      labelTooLong: "Label must be less than 20 characters",
+    },
   },
+
   addUrl: {
     trigger: "Add URL",
     title: "Add New URL",

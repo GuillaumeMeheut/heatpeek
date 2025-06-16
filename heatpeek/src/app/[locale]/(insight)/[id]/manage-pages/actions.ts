@@ -2,56 +2,53 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
-import { z } from "zod";
 import {
   addPageConfig,
   addUrl,
   deleteUrl,
   getTrackingId,
   getProjectConfigId,
+  updateUrl,
+  updatePageConfig,
 } from "@/lib/supabase/queries";
+import { getI18n } from "@locales/server";
+import { urlAddSchema, urlUpdateSchema } from "./types";
+import { z } from "zod";
 
-const urlSchema = z.object({
-  url: z.string().min(1, "URL is required").url("Please enter a valid URL"),
-  label: z.string().max(20, "Label must be less than 20 characters").optional(),
-  is_active: z.boolean(),
-  projectId: z.string(),
-});
-
-export async function addNewUrlAndPageConfigAction(formData: FormData) {
+export async function addNewUrlAndPageConfigAction(
+  data: z.infer<ReturnType<typeof urlAddSchema>>
+) {
+  const t = await getI18n();
   const supabase = await createClient();
 
-  const rawData = {
-    url: formData.get("url"),
-    label: formData.get("label"),
-    is_active: formData.get("is_active") === "on",
-    projectId: formData.get("projectId"),
-  };
+  const result = urlAddSchema(t).safeParse(data);
 
-  const validatedData = urlSchema.parse(rawData);
+  if (!result.success) {
+    throw new Error(result.error.errors[0].message);
+  }
 
-  const trackingId = await getTrackingId(supabase, validatedData.projectId);
+  const trackingId = await getTrackingId(supabase, result.data.projectId);
   if (!trackingId) throw new Error("Tracking ID not found");
 
   const projectConfigId = await getProjectConfigId(
     supabase,
-    validatedData.projectId
+    result.data.projectId
   );
   if (!projectConfigId) throw new Error("Project config ID not found");
 
-  const path = new URL(validatedData.url).pathname;
+  const path = new URL(result.data.url).pathname;
 
   const urlId = await addUrl(supabase, {
     path,
-    label: validatedData.label || null,
-    project_id: validatedData.projectId,
+    label: result.data.label || null,
+    project_id: result.data.projectId,
     tracking_id: trackingId,
   });
 
   try {
     await addPageConfig(supabase, {
       path,
-      is_active: validatedData.is_active,
+      is_active: result.data.is_active,
       project_config_id: projectConfigId,
       url_id: urlId,
     });
@@ -72,6 +69,31 @@ export async function deleteUrlAction(urlId: string) {
 
   if (!result) {
     throw new Error("Failed to delete url.");
+  }
+
+  revalidatePath(`/[locale]/(insight)/[id]/manage-pages`, "page");
+}
+
+export async function updateUrlAction(
+  urlId: string,
+  data: z.infer<ReturnType<typeof urlUpdateSchema>>
+) {
+  const t = await getI18n();
+  const supabase = await createClient();
+
+  const result = urlUpdateSchema(t).safeParse(data);
+  if (!result.success) {
+    throw new Error(result.error.errors[0].message);
+  }
+
+  await updateUrl(supabase, urlId, {
+    label: result.data.label || null,
+  });
+
+  if (result.data.is_active) {
+    await updatePageConfig(supabase, urlId, {
+      is_active: result.data.is_active,
+    });
   }
 
   revalidatePath(`/[locale]/(insight)/[id]/manage-pages`, "page");

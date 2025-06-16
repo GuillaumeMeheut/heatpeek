@@ -233,14 +233,14 @@ export type Database = {
           {
             foreignKeyName: "config_tracking_id_fkey"
             columns: ["tracking_id"]
-            isOneToOne: false
+            isOneToOne: true
             referencedRelation: "projects"
             referencedColumns: ["tracking_id"]
           },
           {
             foreignKeyName: "project_config_project_id_fkey"
             columns: ["project_id"]
-            isOneToOne: false
+            isOneToOne: true
             referencedRelation: "projects"
             referencedColumns: ["id"]
           },

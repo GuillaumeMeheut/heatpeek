@@ -11,6 +11,8 @@ import {
   ProjectsRow,
   UrlsInsert,
   PageConfigInsert,
+  PageConfigUpdate,
+  UrlsUpdate,
 } from "@/types/database";
 
 export const getUser = cache(async (supabase: SupabaseClient) => {
@@ -87,7 +89,10 @@ export const addUrl = cache(
 
     if (error) {
       console.log("Error adding url:", error);
-      throw "Error adding url";
+      if (error.code === "23505") {
+        throw new Error("Url already exists");
+      }
+      throw new Error("Error adding url");
     }
 
     return data.id;
@@ -103,7 +108,7 @@ export const addPageConfig = cache(
 
     if (error) {
       console.log("Error adding page config:", error);
-      throw "Error adding page config";
+      throw new Error("Error adding page config");
     }
   }
 );
@@ -538,34 +543,35 @@ export const deleteUrl = cache(
   }
 );
 
-export type PageConfig = Pick<
-  PageConfigRow,
-  | "id"
-  | "path"
-  | "created_at"
-  | "ignored_el"
-  | "privacy_el"
-  | "url_id"
-  | "update_snap"
-  | "is_active"
->;
+export const updateUrl = cache(
+  async (
+    supabase: SupabaseClient,
+    urlId: string,
+    url: UrlsUpdate
+  ): Promise<void> => {
+    const { error } = await supabase.from("urls").update(url).eq("id", urlId);
+
+    if (error) {
+      console.error("Error updating url:", error);
+      throw new Error("Failed to update url");
+    }
+  }
+);
 
 export const updatePageConfig = cache(
   async (
     supabase: SupabaseClient,
     urlId: string,
-    pageConfig: Partial<PageConfig>
-  ): Promise<string | null> => {
+    pageConfig: PageConfigUpdate
+  ): Promise<void> => {
     const { error } = await supabase
       .from("page_config")
       .update(pageConfig)
       .eq("url_id", urlId);
 
     if (error) {
-      console.log("Error updating page config:", error);
-      return null;
+      console.error("Error updating page config:", error);
+      throw new Error("Failed to update page config");
     }
-
-    return "success";
   }
 );

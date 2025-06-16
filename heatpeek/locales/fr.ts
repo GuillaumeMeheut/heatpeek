@@ -315,6 +315,12 @@ export default {
   urlManagement: {
     title: "Gestion des URLs",
     description: "Gérez et suivez les URLs de votre projet de site web",
+    validation: {
+      urlRequired: "URL est requis",
+      invalidUrl: "Veuillez entrer une URL valide",
+      urlTooLong: "URL doit être inférieure à 200 caractères",
+      labelTooLong: "Label doit être inférieure à 20 caractères",
+    },
   },
   urlsTable: {
     title: "Pages",
@@ -350,7 +356,9 @@ export default {
       nameLabel: "Nom de la page",
       trackingLabel: "Activer le suivi",
       cancelButton: "Annuler",
-      saveButton: "Enregistrer",
+      saveButton: "Enregistrer les modifications",
+      success: "URL mise à jour avec succès",
+      error: "Échec de la mise à jour de l'URL",
     },
   },
   addUrl: {

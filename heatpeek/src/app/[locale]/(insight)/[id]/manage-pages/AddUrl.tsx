@@ -18,6 +18,7 @@ import { useState, useTransition } from "react";
 import { useI18n } from "@locales/client";
 import { addNewUrlAndPageConfigAction } from "./actions";
 import { toast } from "sonner";
+import { urlAddSchema } from "./types";
 
 export default function AddUrlDialog({ projectId }: { projectId: string }) {
   const t = useI18n();
@@ -28,7 +29,20 @@ export default function AddUrlDialog({ projectId }: { projectId: string }) {
     startTransition(async () => {
       try {
         formData.append("projectId", projectId);
-        await addNewUrlAndPageConfigAction(formData);
+
+        const rawData = {
+          url: formData.get("url"),
+          label: formData.get("label"),
+          is_active: formData.get("is_active") === "on",
+          projectId: formData.get("projectId"),
+        };
+        const result = urlAddSchema(t).safeParse(rawData);
+
+        if (!result.success) {
+          throw new Error(result.error.errors[0].message);
+        }
+
+        await addNewUrlAndPageConfigAction(result.data);
         setIsAddDialogOpen(false);
         toast.success(t("addUrl.success"));
       } catch (error) {
