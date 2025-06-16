@@ -1,4 +1,8 @@
 export default {
+  global: {
+    errorTitle: "Erreur",
+    successTitle: "Succès",
+  },
   nav: {
     why: "Pourquoi Heatpeek ?",
     pricing: "Tarifs",
@@ -31,6 +35,11 @@ export default {
         passwordTooShort: "Le mot de passe doit contenir au moins 6 caractères",
         passwordsDontMatch: "Les mots de passe ne correspondent pas",
       },
+      error: "Une erreur est survenue. Veuillez réessayer.",
+      errorEmailTaken: "Cette adresse email est déjà utilisée",
+      successSignUp:
+        "Un email a été envoyé à votre adresse, cliquez sur le lien pour confirmer votre compte.",
+      successSignIn: "Vous êtes maintenant connecté.",
     },
   },
   sidebar: {
@@ -223,10 +232,7 @@ export default {
     baseUrlDescription:
       "Entrez l'URL racine de votre site web (ex: https://exemple.com)",
     validate: "Valider",
-    error: {
-      title: "Erreur",
-      description: "Échec de la création du site",
-    },
+    error: "Échec de la création du site",
   },
   projects: {
     title: "Vos Projets",

@@ -4,7 +4,6 @@ import {
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue,
 } from "@/components/ui/select";
 import { Globe } from "lucide-react";
 import { useCurrentLocale } from "../../locales/client";
@@ -35,7 +34,7 @@ export function LanguageSwitcher() {
       <SelectTrigger className="h-8">
         <div className="flex items-center gap-2">
           <Globe className="h-4 w-4" />
-          <SelectValue placeholder={currentLanguage.letter} />
+          {currentLanguage.letter}
         </div>
       </SelectTrigger>
       <SelectContent>

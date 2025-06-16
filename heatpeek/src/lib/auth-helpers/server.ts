@@ -3,88 +3,83 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "../supabase/server";
-import { getErrorRedirect, getStatusRedirect } from "../utils";
+import { getI18n } from "@locales/server";
+import { signInSchema, signUpSchema } from "@/components/Auth/types";
 
 export async function signIn(formData: FormData) {
+  const t = await getI18n();
   const supabase = await createClient();
 
-  // type-casting here for convenience
-  // in practice, you should validate your inputs
   const data = {
-    email: formData.get("email") as string,
-    password: formData.get("password") as string,
+    email: formData.get("email"),
+    password: formData.get("password"),
   };
 
-  const { error } = await supabase.auth.signInWithPassword(data);
+  const validationResult = signInSchema(t).safeParse(data);
 
-  if (error) {
-    return redirect(
-      getErrorRedirect("/signin", "Sign in failed.", error.message)
-    );
+  if (!validationResult.success) {
+    throw new Error(validationResult.error.errors[0].message);
   }
 
+  const { error } = await supabase.auth.signInWithPassword(
+    validationResult.data
+  );
+
+  if (error) {
+    throw new Error(error.message);
+  }
   revalidatePath("/sites", "layout");
   redirect("/sites");
 }
 
 export async function signUp(formData: FormData) {
+  const t = await getI18n();
   const supabase = await createClient();
 
-  // type-casting here for convenience
-  // in practice, you should validate your inputs
-  const userData = {
-    email: formData.get("email") as string,
-    password: formData.get("password") as string,
+  const data = {
+    email: formData.get("email"),
+    password: formData.get("password"),
+    confirmPassword: formData.get("confirmPassword"),
   };
 
-  const { data, error } = await supabase.auth.signUp(userData);
+  const validationResult = signUpSchema(t).safeParse(data);
 
-  if (error) {
-    return redirect(
-      getErrorRedirect("/signup", "Sign up failed.", error.message)
-    );
+  console.log(validationResult.error?.errors[0].path);
+
+  if (!validationResult.success) {
+    throw new Error(validationResult.error.errors[0].message);
   }
 
-  if (data && data.user) {
+  const { data: signUpData, error } = await supabase.auth.signUp(
+    validationResult.data
+  );
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  if (signUpData && signUpData.user) {
     // Check if the user got created
-    if (data.user.identities && data.user.identities?.length > 0) {
-      redirect(
-        getStatusRedirect(
-          `/signup`,
-          "Success!",
-          "An email has been sent to your address, click on the link to comfirm your account."
-        )
-      );
+    if (signUpData.user.identities && signUpData.user.identities?.length > 0) {
+      return {
+        success: true,
+        message: t("auth.card.successSignUp"),
+      };
     } else {
+      const t = await getI18n();
       // failed, the email address is taken
-      redirect(
-        getStatusRedirect(
-          `/signup`,
-          "Email already taken",
-          "Please try a different email address."
-        )
-      );
+      throw new Error(t("auth.card.errorEmailTaken"));
     }
   }
 }
 
-export async function signOut(formData: FormData) {
-  const pathName = String(formData.get("pathName")).trim();
-
+export async function signOut() {
   const supabase = await createClient();
   const { error } = await supabase.auth.signOut();
 
   if (error) {
-    return getErrorRedirect(
-      pathName,
-      "Hmm... Something went wrong.",
-      "You could not be signed out."
-    );
+    throw new Error(error.message);
   }
 
   redirect("/signin");
-}
-
-export async function handleSignOut(formData: FormData) {
-  await signOut(formData);
 }

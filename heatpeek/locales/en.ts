@@ -1,4 +1,8 @@
 export default {
+  global: {
+    errorTitle: "Error",
+    successTitle: "Success",
+  },
   nav: {
     why: "Why Heatpeek?",
     pricing: "Pricing",
@@ -31,6 +35,11 @@ export default {
         passwordTooShort: "Password must be at least 6 characters",
         passwordsDontMatch: "Passwords don't match",
       },
+      error: "An error occurred. Please try again.",
+      errorEmailTaken: "Email already taken",
+      successSignUp:
+        "An email has been sent to your address, click on the link to comfirm your account.",
+      successSignIn: "You are now signed in.",
     },
   },
   sidebar: {
@@ -217,10 +226,7 @@ export default {
     baseUrlDescription:
       "Enter the root URL of your website (e.g., https://example.com)",
     validate: "Validate",
-    error: {
-      title: "Error",
-      description: "Failed to create site",
-    },
+    error: "Failed to create site",
   },
   projects: {
     title: "Your Projects",

@@ -17,7 +17,7 @@ import { Switch } from "@/components/ui/switch";
 import { useState, useTransition } from "react";
 import { useI18n } from "@locales/client";
 import { addNewUrlAndPageConfigAction } from "./actions";
-import { toast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 
 export default function AddUrlDialog({ projectId }: { projectId: string }) {
   const t = useI18n();
@@ -30,15 +30,9 @@ export default function AddUrlDialog({ projectId }: { projectId: string }) {
         formData.append("projectId", projectId);
         await addNewUrlAndPageConfigAction(formData);
         setIsAddDialogOpen(false);
-        toast({
-          title: t("addUrl.success"),
-        });
+        toast.success(t("addUrl.success"));
       } catch (error) {
-        toast({
-          title: t("addUrl.error"),
-          description:
-            error instanceof Error ? error.message : t("addUrl.error"),
-        });
+        toast.error(error instanceof Error ? error.message : t("addUrl.error"));
       }
     });
   };

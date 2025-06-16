@@ -15,6 +15,7 @@ import { Button } from "../ui/button";
 import { Plus, Settings } from "lucide-react";
 import Link from "next/link";
 import { useI18n } from "@locales/client";
+import { Separator } from "../ui/separator";
 
 export function FiltersUrl({
   urls,
@@ -68,9 +69,10 @@ export function FiltersUrl({
               </Button>
             </Link>
           </div>
-          <div className="px-2 pb-2">
-            <Input placeholder={t("filters.searchPages")} className="mb-2" />
+          <div className="px-2 ">
+            <Input placeholder={t("filters.searchPages")} />
           </div>
+          <Separator className="my-2" />
           <SelectItem value={"all"}>{t("filters.allPages")}</SelectItem>
           {urls?.map((url) => (
             <SelectItem key={url.id} value={url.path}>

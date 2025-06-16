@@ -7,7 +7,6 @@ import { z } from "zod";
 import { WebsiteType } from "./types";
 import { getUser } from "@/lib/supabase/queries";
 import { nanoid } from "nanoid";
-import { getStatusRedirect } from "@/lib/utils";
 
 const siteSchema = z.object({
   siteLabel: z
@@ -48,9 +47,7 @@ export async function addSiteAction(formData: FormData) {
 
   const validationResult = siteSchema.safeParse(data);
   if (!validationResult.success) {
-    return {
-      error: validationResult.error.errors[0].message,
-    };
+    throw new Error(validationResult.error.errors[0].message);
   }
 
   let projectId = null;
@@ -71,31 +68,19 @@ export async function addSiteAction(formData: FormData) {
 
     if (projectError) {
       console.error("Failed to create project:", projectError);
-      return {
-        error: "Failed to create site",
-      };
+      throw new Error("Failed to create site");
     }
 
     if (!projectData) {
-      return {
-        error: "Failed to get site id",
-      };
+      throw new Error("Failed to get site id");
     }
 
     projectId = projectData.id;
   } catch (error) {
     console.error("Unexpected error in addSiteAction:", error);
-    return {
-      error: "An unexpected error occurred",
-    };
+    throw new Error("An unexpected error occurred");
   }
 
   revalidatePath(`/${projectId}/get-started`, "layout");
-  redirect(
-    getStatusRedirect(
-      `/${projectId}/get-started`,
-      "Success!",
-      `${label} has been created!`
-    )
-  );
+  redirect(`/${projectId}/get-started`);
 }

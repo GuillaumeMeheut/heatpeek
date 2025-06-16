@@ -1,6 +1,6 @@
 "use client";
 
-import { useTransition, useMemo } from "react";
+import { useTransition } from "react";
 import { Button } from "../ui/button";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -18,49 +18,29 @@ import { Label } from "../ui/label";
 import Link from "next/link";
 import { Separator } from "@radix-ui/react-dropdown-menu";
 import { useI18n } from "@locales/client";
+import { toast } from "sonner";
+import { signInSchema, signUpSchema } from "./types";
 
 type CardSignProps = {
   isSignIn: boolean;
-  onSubmit: (e: FormData) => void;
+  onSubmit: (
+    e: FormData
+  ) => Promise<{ success: boolean; message: string } | void>;
 };
 
 export default function CardSign({ isSignIn, onSubmit }: CardSignProps) {
   const [isPending, startTransition] = useTransition();
   const t = useI18n();
 
-  const signInSchema = useMemo(
-    () =>
-      z.object({
-        email: z.string().email(t("auth.card.validation.invalidEmail")),
-        password: z.string().min(6, t("auth.card.validation.passwordTooShort")),
-      }),
-    [t]
-  );
-
-  const signUpSchema = useMemo(
-    () =>
-      signInSchema
-        .extend({
-          confirmPassword: z
-            .string()
-            .min(6, t("auth.card.validation.passwordTooShort")),
-        })
-        .refine((data) => data.password === data.confirmPassword, {
-          message: t("auth.card.validation.passwordsDontMatch"),
-          path: ["confirmPassword"],
-        }),
-    [signInSchema, t]
-  );
-
-  type SignInFormData = z.infer<typeof signInSchema>;
-  type SignUpFormData = z.infer<typeof signUpSchema>;
+  type SignInFormData = z.infer<ReturnType<typeof signInSchema>>;
+  type SignUpFormData = z.infer<ReturnType<typeof signUpSchema>>;
 
   const {
     register,
     handleSubmit,
     formState: { errors },
   } = useForm<SignInFormData | SignUpFormData>({
-    resolver: zodResolver(isSignIn ? signInSchema : signUpSchema),
+    resolver: zodResolver(isSignIn ? signInSchema(t) : signUpSchema(t)),
   });
 
   const onFormSubmit = async (data: SignInFormData | SignUpFormData) => {
@@ -68,8 +48,27 @@ export default function CardSign({ isSignIn, onSubmit }: CardSignProps) {
     formData.append("email", data.email);
     formData.append("password", data.password);
 
+    if (!isSignIn && "confirmPassword" in data) {
+      formData.append("confirmPassword", data.confirmPassword);
+    }
+
     startTransition(async () => {
-      await onSubmit(formData);
+      try {
+        const result = await onSubmit(formData);
+        if (result?.success) {
+          toast.success(t("global.successTitle"), {
+            description: result.message,
+          });
+        } else if (result?.message) {
+          toast.error(t("global.errorTitle"), {
+            description: result?.message,
+          });
+        }
+      } catch (error) {
+        toast.error(
+          error instanceof Error ? error.message : t("global.errorTitle")
+        );
+      }
     });
   };
 
@@ -87,7 +86,7 @@ export default function CardSign({ isSignIn, onSubmit }: CardSignProps) {
           id="confirmPassword"
           type="password"
           placeholder={t("auth.card.confirmPasswordPlaceholder")}
-          {...register("confirmPassword" as keyof SignUpFormData)}
+          {...register("confirmPassword")}
         />
         {signUpErrors.confirmPassword && (
           <p className="text-sm text-red-500">

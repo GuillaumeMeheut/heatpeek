@@ -40,7 +40,6 @@ const getToastRedirect = (
   toastType: string,
   toastName: string,
   toastDescription: string = "",
-  disableButton: boolean = false,
   arbitraryParams: string = ""
 ): string => {
   const [nameKey, descriptionKey] = toastKeyMap[toastType];
@@ -51,10 +50,6 @@ const getToastRedirect = (
     redirectPath += `&${descriptionKey}=${encodeURIComponent(
       toastDescription
     )}`;
-  }
-
-  if (disableButton) {
-    redirectPath += `&disable_button=true`;
   }
 
   if (arbitraryParams) {
@@ -68,7 +63,6 @@ export const getStatusRedirect = (
   path: string,
   statusName: string,
   statusDescription: string = "",
-  disableButton: boolean = false,
   arbitraryParams: string = ""
 ) =>
   getToastRedirect(
@@ -76,7 +70,6 @@ export const getStatusRedirect = (
     "status",
     statusName,
     statusDescription,
-    disableButton,
     arbitraryParams
   );
 
@@ -84,7 +77,6 @@ export const getSuccessRedirect = (
   path: string,
   statusName: string,
   statusDescription: string = "",
-  disableButton: boolean = false,
   arbitraryParams: string = ""
 ) =>
   getToastRedirect(
@@ -92,7 +84,6 @@ export const getSuccessRedirect = (
     "success",
     statusName,
     statusDescription,
-    disableButton,
     arbitraryParams
   );
 
@@ -100,17 +91,9 @@ export const getErrorRedirect = (
   path: string,
   errorName: string,
   errorDescription: string = "",
-  disableButton: boolean = false,
   arbitraryParams: string = ""
 ) =>
-  getToastRedirect(
-    path,
-    "error",
-    errorName,
-    errorDescription,
-    disableButton,
-    arbitraryParams
-  );
+  getToastRedirect(path, "error", errorName, errorDescription, arbitraryParams);
 
 export function corsHeaders() {
   return {

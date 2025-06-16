@@ -25,7 +25,7 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { useState, useTransition } from "react";
 import { deleteUrlAction } from "./actions";
-import { toast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 
 export default function UrlsTable({ urls }: { urls: UrlAndConfig[] }) {
   const t = useI18n();
@@ -54,13 +54,13 @@ export default function UrlsTable({ urls }: { urls: UrlAndConfig[] }) {
     startTransition(async () => {
       try {
         await deleteUrlAction(url.id);
-        toast({
-          title: t("urlsTable.deleteUrl.success"),
-        });
-      } catch {
-        toast({
-          title: t("urlsTable.deleteUrl.error"),
-        });
+        toast.success(t("urlsTable.deleteUrl.success"));
+      } catch (error) {
+        toast.error(
+          error instanceof Error
+            ? error.message
+            : t("urlsTable.deleteUrl.error")
+        );
       } finally {
         setDeletingUrlId(null);
       }

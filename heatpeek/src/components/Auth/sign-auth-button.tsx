@@ -1,18 +1,12 @@
 import { Button } from "@/components/ui/button";
 import { LogOut } from "lucide-react";
-import { handleSignOut } from "@/lib/auth-helpers/server";
+import { signOut } from "@/lib/auth-helpers/server";
 import { getI18n } from "@locales/server";
 
 export async function SignOutButton() {
   const t = await getI18n();
-
   return (
-    <form action={handleSignOut}>
-      <input
-        type="hidden"
-        name="pathName"
-        value={typeof window !== "undefined" ? window.location.pathname : "/"}
-      />
+    <form action={signOut}>
       <Button
         variant="ghost"
         size="sm"

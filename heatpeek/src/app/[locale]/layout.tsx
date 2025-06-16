@@ -1,9 +1,10 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "../../styles/globals.css";
-import { Toaster } from "@/components/ui/Toast/toaster";
-import { ReactElement, Suspense } from "react";
+import { ReactElement } from "react";
 import { I18nProviderClient } from "../../../locales/client";
+import { Toaster } from "@/components/ui/Toast/sonner";
+import { ToastListener } from "@/components/ui/Toast/ToastListener";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -40,12 +41,9 @@ export default async function RootLayout({
   return (
     <html lang={locale}>
       <body className={inter.className}>
-        <I18nProviderClient locale={locale}>
-          {children}
-          <Suspense>
-            <Toaster />
-          </Suspense>
-        </I18nProviderClient>
+        <I18nProviderClient locale={locale}>{children}</I18nProviderClient>
+        <Toaster theme="light" position="bottom-center" richColors />
+        <ToastListener />
       </body>
     </html>
   );

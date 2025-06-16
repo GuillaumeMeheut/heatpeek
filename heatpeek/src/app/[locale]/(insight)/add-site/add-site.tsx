@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useI18n } from "@locales/client";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import { useTransition } from "react";
 import { Loader2 } from "lucide-react";
 import {
@@ -21,17 +21,15 @@ import { addSiteAction } from "./actions";
 export function AddSite() {
   const t = useI18n();
   const [isPending, startTransition] = useTransition();
-  const { toast } = useToast();
 
   const handleSubmit = async (formData: FormData) => {
     startTransition(async () => {
-      const result = await addSiteAction(formData);
-      if (result?.error) {
-        toast({
-          title: t("setupSite.error.title"),
-          description: result.error,
-          variant: "destructive",
-        });
+      try {
+        await addSiteAction(formData);
+      } catch (error) {
+        toast.error(
+          error instanceof Error ? error.message : t("setupSite.error")
+        );
       }
     });
   };
