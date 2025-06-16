@@ -1,10 +1,12 @@
+"use client";
+
 import { Button } from "@/components/ui/button";
 import { LogOut } from "lucide-react";
 import { signOut } from "@/lib/auth-helpers/server";
-import { getI18n } from "@locales/server";
+import { useI18n } from "@locales/client";
 
-export async function SignOutButton() {
-  const t = await getI18n();
+export function SignOutButton() {
+  const t = useI18n();
   return (
     <form action={signOut}>
       <Button

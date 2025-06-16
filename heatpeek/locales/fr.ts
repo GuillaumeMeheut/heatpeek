@@ -14,6 +14,7 @@ export default {
     getStarted: "Commencer",
     heatmap: "Heatmap",
     elements: "Éléments",
+    myAccount: "Mon Compte",
   },
   auth: {
     signOut: "Déconnexion",

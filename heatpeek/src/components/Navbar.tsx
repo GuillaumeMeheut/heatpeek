@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { LogIn, LayoutDashboard, UserPlus } from "lucide-react";
 import { getUser } from "@/lib/supabase/queries";
 import { createClient } from "@/lib/supabase/server";
-import { SignOutButton } from "@/components/Auth/sign-auth-button";
+import { SignOutButton } from "@/components/Auth/sign-out-button";
 import { getI18n } from "../../locales/server";
 import { LanguageSwitcher } from "./LanguageSwitcher";
 

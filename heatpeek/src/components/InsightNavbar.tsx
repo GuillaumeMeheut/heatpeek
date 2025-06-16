@@ -8,6 +8,7 @@ import { Project } from "@/lib/supabase/queries";
 import type { User } from "@supabase/supabase-js";
 import { useParams, usePathname, useSearchParams } from "next/navigation";
 import { useI18n } from "@locales/client";
+import { ProfileMenu } from "./ProfileMenu";
 
 interface NavLinkProps {
   href: string;
@@ -110,7 +111,7 @@ export function InsightNavbar({
             currentProject={currentProject}
           />
           <LanguageSwitcher />
-          <p>{user.email}</p>
+          <ProfileMenu user={user} />
         </div>
       </div>
     </header>
