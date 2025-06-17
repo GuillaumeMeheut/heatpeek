@@ -415,6 +415,8 @@ export default {
   urlManagement: {
     title: "URL Management",
     description: "Manage and track URLs for your website project",
+    emptyState:
+      "You don't have any pages to track yet. Add a new page to track data on this one.",
     validation: {
       urlRequired: "URL is required",
       invalidUrl: "Please enter a valid URL",

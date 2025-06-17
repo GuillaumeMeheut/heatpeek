@@ -381,6 +381,8 @@ export default {
   urlManagement: {
     title: "Gestion des URLs",
     description: "Gérez et suivez les URLs de votre projet de site web",
+    emptyState:
+      "Vous n'avez pas encore de pages à suivre. Ajoutez une nouvelle page pour suivre les données sur celle-ci.",
     validation: {
       urlRequired: "URL est requis",
       invalidUrl: "Veuillez entrer une URL valide",

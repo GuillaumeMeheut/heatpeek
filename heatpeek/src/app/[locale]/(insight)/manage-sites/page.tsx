@@ -22,7 +22,7 @@ export default async function PageList() {
       {projects && projects.length > 0 ? (
         <ProjectsList projects={projects} />
       ) : (
-        <div className="flex flex-col items-center justify-center h-full gap-4 mt-[200px]">
+        <div className="flex flex-col items-center justify-center h-full gap-4 mt-[15%]">
           <p className="text-muted-foreground">{t("projects.emptyState")}</p>
           <AddProject />
         </div>

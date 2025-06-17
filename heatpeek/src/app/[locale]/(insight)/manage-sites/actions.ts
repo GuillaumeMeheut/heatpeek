@@ -51,8 +51,8 @@ export async function addProjectAction(
     throw new Error("Failed to add project config.");
   }
 
-  revalidatePath(`/${projectId}/get-started`, "layout");
-  redirect(`/${projectId}/get-started`);
+  revalidatePath(`/${projectId}/manage-urls`, "layout");
+  redirect(`/${projectId}/manage-urls`);
 }
 
 export async function deleteProjectAction(projectId: string) {
