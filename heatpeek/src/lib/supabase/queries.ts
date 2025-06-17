@@ -95,6 +95,9 @@ export const addProject = cache(
 
     if (error) {
       console.log("Error adding project:", error);
+      if (error.code === "23505") {
+        throw new Error("Project with this base URL already exists");
+      }
       throw new Error("Error adding project");
     }
 

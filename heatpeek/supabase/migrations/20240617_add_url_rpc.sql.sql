@@ -6,6 +6,7 @@ create or replace function add_url_with_config_and_snapshots(
 )
 returns uuid
 language plpgsql
+SET search_path = 'public', ''
 as $$
 declare
   _tracking_id text;
