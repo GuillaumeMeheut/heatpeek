@@ -41,6 +41,7 @@ export default {
       successSignUp:
         "Un email a été envoyé à votre adresse, cliquez sur le lien pour confirmer votre compte.",
       successSignIn: "Vous êtes maintenant connecté.",
+      successConfirm: "Votre compte est maintenant confirmé.",
     },
   },
   sidebar: {
