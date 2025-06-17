@@ -3,7 +3,7 @@ import { type NextRequest, NextResponse } from "next/server";
 
 const PUBLIC_ROUTES = ["/signin", "/signup", "/auth/callback", "/auth/confirm"];
 
-const PROTECTED_ROUTES = ["/sites"];
+const PROTECTED_ROUTES = ["/manage-sites"];
 
 export const updateSession = async (request: NextRequest) => {
   // This `try/catch` block is only here for the interactive tutorial.

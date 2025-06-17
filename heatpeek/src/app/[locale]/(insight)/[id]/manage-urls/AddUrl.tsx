@@ -19,6 +19,7 @@ import { useI18n } from "@locales/client";
 import { addNewUrlAndPageConfigAction } from "./actions";
 import { toast } from "sonner";
 import { urlAddSchema } from "./types";
+import { Form } from "@/components/ui/form";
 
 export default function AddUrlDialog({ projectId }: { projectId: string }) {
   const t = useI18n();
@@ -60,7 +61,7 @@ export default function AddUrlDialog({ projectId }: { projectId: string }) {
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[500px]">
-        <form action={handleAddUrl}>
+        <Form action={handleAddUrl} isDisabled={isPending}>
           <DialogHeader>
             <DialogTitle>{t("addUrl.title")}</DialogTitle>
             <DialogDescription>{t("addUrl.description")}</DialogDescription>
@@ -101,7 +102,7 @@ export default function AddUrlDialog({ projectId }: { projectId: string }) {
               {t("addUrl.addButton")}
             </Button>
           </DialogFooter>
-        </form>
+        </Form>
       </DialogContent>
     </Dialog>
   );

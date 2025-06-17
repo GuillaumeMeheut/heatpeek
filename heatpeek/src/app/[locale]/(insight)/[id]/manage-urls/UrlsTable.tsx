@@ -27,12 +27,23 @@ import { useState, useTransition } from "react";
 import { updateUrlAction, deleteUrlAction } from "./actions";
 import { toast } from "sonner";
 import { urlUpdateSchema } from "./types";
+import { Form } from "@/components/ui/form";
+import {
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogCancel,
+  AlertDialogAction,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 export default function UrlsTable({ urls }: { urls: UrlAndConfig[] }) {
   const t = useI18n();
   const [editingUrl, setEditingUrl] = useState<UrlAndConfig | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-  const [deletingUrlId, setDeletingUrlId] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
   const getStatusBadge = (isActive: boolean) => {
@@ -51,7 +62,6 @@ export default function UrlsTable({ urls }: { urls: UrlAndConfig[] }) {
   };
 
   const handleDeleteUrl = async (url: UrlAndConfig) => {
-    setDeletingUrlId(url.id);
     startTransition(async () => {
       try {
         await deleteUrlAction(url.id);
@@ -62,8 +72,6 @@ export default function UrlsTable({ urls }: { urls: UrlAndConfig[] }) {
             ? error.message
             : t("urlsTable.deleteUrl.error")
         );
-      } finally {
-        setDeletingUrlId(null);
       }
     });
   };
@@ -153,20 +161,41 @@ export default function UrlsTable({ urls }: { urls: UrlAndConfig[] }) {
                           {t("urlsTable.buttons.edit")}
                           <Edit className="w-4 h-4 ml-2" />
                         </Button>
-                        <Button
-                          variant="destructive"
-                          size="sm"
-                          onClick={() => handleDeleteUrl(url)}
-                        >
-                          {deletingUrlId === url.id && isPending ? (
-                            <Loader2 className="w-4 h-4 animate-spin" />
-                          ) : (
-                            <>
+
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button variant="destructive" size="sm">
                               {t("urlsTable.buttons.delete")}
                               <Trash2 className="w-4 h-4 ml-2" />
-                            </>
-                          )}
-                        </Button>
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>
+                                {t("urlsTable.deleteUrl.confirmTitle")}
+                              </AlertDialogTitle>
+                              <AlertDialogDescription>
+                                {t("urlsTable.deleteUrl.confirmDescription")}
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>
+                                {t("global.cancel")}
+                              </AlertDialogCancel>
+                              <AlertDialogAction
+                                variant="destructive"
+                                onClick={() => handleDeleteUrl(url)}
+                                disabled={isPending}
+                              >
+                                {isPending ? (
+                                  <Loader2 className="w-4 h-4 animate-spin" />
+                                ) : (
+                                  t("global.delete")
+                                )}
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
                       </div>
                     </td>
                   </tr>
@@ -227,7 +256,7 @@ const EditDialog = ({
   return (
     <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
       <DialogContent className="sm:max-w-[500px]">
-        <form action={handleEditUrl}>
+        <Form action={handleEditUrl} isDisabled={isPending}>
           <DialogHeader>
             <DialogTitle>{t("urlsTable.editDialog.title")}</DialogTitle>
             <DialogDescription>
@@ -259,6 +288,7 @@ const EditDialog = ({
           <DialogFooter>
             <Button
               variant="outline"
+              type="button"
               onClick={() => setIsEditDialogOpen(false)}
               disabled={isPending}
             >
@@ -272,7 +302,7 @@ const EditDialog = ({
               )}
             </Button>
           </DialogFooter>
-        </form>
+        </Form>
       </DialogContent>
     </Dialog>
   );

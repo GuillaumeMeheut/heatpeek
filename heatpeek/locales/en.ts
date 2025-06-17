@@ -2,6 +2,8 @@ export default {
   global: {
     errorTitle: "Error",
     successTitle: "Success",
+    cancel: "Cancel",
+    delete: "Delete",
   },
   nav: {
     why: "Why Heatpeek?",
@@ -231,9 +233,69 @@ export default {
     error: "Failed to create site",
   },
   projects: {
-    title: "Your Projects",
+    title: "Projects management",
+    description: "Manage and track your website projects",
     addNew: "Add New Site",
     delete: "Delete",
+    validation: {
+      labelTooLong: "Label must be less than 40 characters",
+      baseUrlRequired: "Base URL is required",
+      invalidUrl: "Please enter a valid URL",
+    },
+    deleteProject: {
+      success: "Project deleted successfully",
+      error: "Failed to delete project",
+      confirmTitle: "Are you sure?",
+      confirmDescription:
+        "This action cannot be undone. This will permanently delete your project and remove all the data related to it from our servers.",
+    },
+    actions: {
+      edit: "Edit",
+      delete: "Delete",
+    },
+    stats: {
+      urls: "URLs",
+      views: "Views",
+    },
+    buttons: {
+      viewAnalytics: "View Analytics",
+      manageUrls: "Manage URLs",
+    },
+    editDialog: {
+      title: "Edit Project",
+      description: "Update the project settings and configuration.",
+      labels: {
+        projectName: "Project Name *",
+        baseUrl: "Base URL *",
+        category: "Category",
+      },
+      buttons: {
+        cancel: "Cancel",
+        saveChanges: "Save Changes",
+      },
+      success: "Project updated successfully",
+      error: "Failed to update project",
+    },
+    addProject: {
+      title: "Create New Project",
+      description:
+        "Create a new project to track user interactions on your website.",
+      button: "New Project",
+      labels: {
+        projectName: "Project Name",
+        projectNamePlaceholder: "My Website Project",
+        baseUrl: "Base URL *",
+        baseUrlPlaceholder: "https://example.com",
+        category: "Category",
+        categoryPlaceholder: "Select category",
+      },
+      buttons: {
+        cancel: "Cancel",
+        create: "Create Project",
+      },
+      success: "Project created successfully",
+      error: "Failed to create project",
+    },
   },
   why: {
     hero: {
@@ -327,6 +389,9 @@ export default {
     deleteUrl: {
       success: "URL deleted successfully",
       error: "Failed to delete URL",
+      confirmTitle: "Are you sure?",
+      confirmDescription:
+        "This action cannot be undone. This will permanently delete the URL and remove all the data related to it from our servers.",
     },
     buttons: {
       view: "View",
@@ -369,5 +434,8 @@ export default {
     addButton: "Add URL",
     success: "URL added successfully",
     error: "Failed to add URL",
+  },
+  urlList: {
+    manageSites: "Manage sites",
   },
 } as const;

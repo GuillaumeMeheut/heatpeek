@@ -59,19 +59,15 @@ export async function addNewUrlAndPageConfigAction(
     throw new Error("Failed to add page config.");
   }
 
-  revalidatePath(`/[locale]/(insight)/[id]/manage-pages`, "page");
+  revalidatePath(`/[locale]/(insight)/[id]/manage-urls`, "page");
 }
 
 export async function deleteUrlAction(urlId: string) {
   const supabase = await createClient();
 
-  const result = await deleteUrl(supabase, urlId);
+  await deleteUrl(supabase, urlId);
 
-  if (!result) {
-    throw new Error("Failed to delete url.");
-  }
-
-  revalidatePath(`/[locale]/(insight)/[id]/manage-pages`, "page");
+  revalidatePath(`/[locale]/(insight)/[id]/manage-urls`, "page");
 }
 
 export async function updateUrlAction(
@@ -96,5 +92,5 @@ export async function updateUrlAction(
     });
   }
 
-  revalidatePath(`/[locale]/(insight)/[id]/manage-pages`, "page");
+  revalidatePath(`/[locale]/(insight)/[id]/manage-urls`, "page");
 }

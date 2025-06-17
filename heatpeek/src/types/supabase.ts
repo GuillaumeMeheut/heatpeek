@@ -216,7 +216,7 @@ export type Database = {
         Insert: {
           created_at?: string
           id?: string
-          is_active: boolean
+          is_active?: boolean
           project_id: string
           tracking_id: string
           usageExceeded?: boolean

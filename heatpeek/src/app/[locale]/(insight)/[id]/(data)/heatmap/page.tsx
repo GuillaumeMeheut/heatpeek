@@ -42,8 +42,6 @@ export default async function HeatmapPage({
 
   const aggregatedClicks = await getAggregatedClicks(supabase, snapshot.id);
 
-  console.log("snapshot", snapshot);
-
   return (
     <div className="flex">
       <div className="flex-1 p-4">

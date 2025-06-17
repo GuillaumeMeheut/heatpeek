@@ -28,8 +28,8 @@ export async function signIn(formData: FormData) {
   if (error) {
     throw new Error(error.message);
   }
-  revalidatePath("/sites", "layout");
-  redirect("/sites");
+  revalidatePath("/manage-sites", "layout");
+  redirect("/manage-sites");
 }
 
 export async function signUp(formData: FormData) {

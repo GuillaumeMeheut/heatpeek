@@ -13,6 +13,9 @@ import {
   PageConfigInsert,
   PageConfigUpdate,
   UrlsUpdate,
+  ProjectsInsert,
+  ProjectConfigInsert,
+  ProjectsUpdate,
 } from "@/types/database";
 
 export const getUser = cache(async (supabase: SupabaseClient) => {
@@ -76,6 +79,60 @@ export const getClicks = cache(
     }
 
     return clicks;
+  }
+);
+
+export const addProject = cache(
+  async (
+    supabase: SupabaseClient,
+    project: ProjectsInsert
+  ): Promise<string> => {
+    const { data, error } = await supabase
+      .from("projects")
+      .insert(project)
+      .select("id")
+      .single();
+
+    if (error) {
+      console.log("Error adding project:", error);
+      throw new Error("Error adding project");
+    }
+
+    return data.id;
+  }
+);
+
+export const addProjectConfig = cache(
+  async (
+    supabase: SupabaseClient,
+    projectConfig: ProjectConfigInsert
+  ): Promise<void> => {
+    const { error } = await supabase
+      .from("project_config")
+      .insert(projectConfig);
+
+    if (error) {
+      console.log("Error adding page config:", error);
+      throw new Error("Error adding page config");
+    }
+  }
+);
+
+export const updateProject = cache(
+  async (
+    supabase: SupabaseClient,
+    projectId: string,
+    project: ProjectsUpdate
+  ): Promise<void> => {
+    const { error } = await supabase
+      .from("projects")
+      .update(project)
+      .eq("id", projectId);
+
+    if (error) {
+      console.error("Error updating project:", error);
+      throw new Error("Failed to update project");
+    }
   }
 );
 
@@ -509,10 +566,7 @@ export const getProjects = cache(
 );
 
 export const deleteProject = cache(
-  async (
-    supabase: SupabaseClient,
-    projectId: string
-  ): Promise<{ success: boolean } | null> => {
+  async (supabase: SupabaseClient, projectId: string): Promise<void> => {
     const { error } = await supabase
       .from("projects")
       .delete()
@@ -520,26 +574,19 @@ export const deleteProject = cache(
 
     if (error) {
       console.error("Error deleting project:", error);
-      return null;
+      throw new Error("Failed to delete project");
     }
-
-    return { success: true };
   }
 );
 
 export const deleteUrl = cache(
-  async (
-    supabase: SupabaseClient,
-    urlId: string
-  ): Promise<{ success: boolean } | null> => {
+  async (supabase: SupabaseClient, urlId: string): Promise<void> => {
     const { error } = await supabase.from("urls").delete().eq("id", urlId);
 
     if (error) {
       console.error("Error deleting url:", error);
-      return null;
+      throw new Error("Failed to delete url.");
     }
-
-    return { success: true };
   }
 );
 

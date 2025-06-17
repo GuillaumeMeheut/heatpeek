@@ -62,7 +62,7 @@ export function FiltersUrl({
               <Plus className="w-4 h-4 " />
               {t("filters.new")}
             </Button>
-            <Link href={`/${projectId}/manage-pages`}>
+            <Link href={`/${projectId}/manage-urls`}>
               <Button size={"sm"} variant={"outline"}>
                 <Settings className="w-4 h-4 " />
                 {t("filters.manage")}
@@ -74,6 +74,7 @@ export function FiltersUrl({
           </div>
           <Separator className="my-2" />
           <SelectItem value={"all"}>{t("filters.allPages")}</SelectItem>
+          <Separator className="my-2" />
           {urls?.map((url) => (
             <SelectItem key={url.id} value={url.path}>
               {url.label || url.path}

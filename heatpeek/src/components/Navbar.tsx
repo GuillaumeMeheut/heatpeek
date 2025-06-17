@@ -44,7 +44,7 @@ export async function Navbar() {
           {!!user ? (
             <>
               <Button size="sm" asChild>
-                <Link href="/sites" className="flex items-center gap-2">
+                <Link href="/manage-sites" className="flex items-center gap-2">
                   <LayoutDashboard className="h-4 w-4" />
                   {t("nav.dashboard")}
                 </Link>

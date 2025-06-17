@@ -2,6 +2,8 @@ export default {
   global: {
     errorTitle: "Erreur",
     successTitle: "Succès",
+    cancel: "Annuler",
+    delete: "Supprimer",
   },
   nav: {
     why: "Pourquoi Heatpeek ?",
@@ -237,9 +239,70 @@ export default {
     error: "Échec de la création du site",
   },
   projects: {
-    title: "Vos Projets",
+    title: "Gestion des projets",
+    description: "Gérez et suivez vos projets de sites web",
     addNew: "Ajouter un Site",
     delete: "Supprimer",
+    validation: {
+      labelTooLong: "Le label doit faire moins de 40 caractères",
+      baseUrlRequired: "L'URL de base est requise",
+      invalidUrl: "Veuillez entrer une URL valide",
+    },
+    deleteProject: {
+      success: "Projet supprimé avec succès",
+      error: "Échec de la suppression du projet",
+      confirmTitle: "Êtes-vous sûr ?",
+      confirmDescription:
+        "Cette action ne peut pas être annulée. Cela supprimera définitivement votre projet et toutes les données associées de nos serveurs.",
+    },
+    actions: {
+      edit: "Modifier",
+      delete: "Supprimer",
+    },
+    stats: {
+      urls: "URLs",
+      views: "Vues",
+    },
+    buttons: {
+      viewAnalytics: "Voir les analyses",
+      manageUrls: "Gérer les URLs",
+    },
+    editDialog: {
+      title: "Modifier le projet",
+      description:
+        "Mettre à jour les paramètres et la configuration du projet.",
+      labels: {
+        projectName: "Nom du projet *",
+        baseUrl: "URL de base *",
+        category: "Catégorie",
+      },
+      buttons: {
+        cancel: "Annuler",
+        saveChanges: "Enregistrer les modifications",
+      },
+      success: "Projet mis à jour avec succès",
+      error: "Échec de la mise à jour du projet",
+    },
+    addProject: {
+      title: "Créer un Nouveau Projet",
+      description:
+        "Créez un nouveau projet pour suivre les interactions des utilisateurs sur votre site web.",
+      button: "Nouveau Projet",
+      labels: {
+        projectName: "Nom du Projet",
+        projectNamePlaceholder: "Mon Projet de Site Web",
+        baseUrl: "URL de Base *",
+        baseUrlPlaceholder: "https://exemple.com",
+        category: "Catégorie",
+        categoryPlaceholder: "Sélectionner une catégorie",
+      },
+      buttons: {
+        cancel: "Annuler",
+        create: "Créer le Projet",
+      },
+      success: "Projet créé avec succès",
+      error: "Échec de la création du projet",
+    },
   },
   why: {
     hero: {
@@ -343,6 +406,9 @@ export default {
     deleteUrl: {
       success: "URL supprimée avec succès",
       error: "Échec de la suppression de l'URL",
+      confirmTitle: "Êtes-vous sûr ?",
+      confirmDescription:
+        "Cette action ne peut pas être annulée. Cela supprimera définitivement l'URL et toutes les données associées de nos serveurs.",
     },
     buttons: {
       view: "Voir",
@@ -376,5 +442,8 @@ export default {
     addButton: "Ajouter l'URL",
     success: "URL ajoutée avec succès",
     error: "Échec de l'ajout de l'URL",
+  },
+  urlList: {
+    manageSites: "Gérer les sites",
   },
 } as const;

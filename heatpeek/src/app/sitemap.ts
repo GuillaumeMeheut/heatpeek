@@ -70,14 +70,14 @@ export default function sitemap(): MetadataRoute.Sitemap {
   // Add insight routes with alternates for different locales
   const insightRoutes = [
     {
-      url: `${baseUrl}/sites`,
+      url: `${baseUrl}/manage-sites`,
       lastModified: new Date(),
       changeFrequency: "daily" as const,
       priority: 0.9,
       alternates: {
         languages: {
-          en: `${baseUrl}/en/sites`,
-          fr: `${baseUrl}/fr/sites`,
+          en: `${baseUrl}/en/manage-sites`,
+          fr: `${baseUrl}/fr/manage-sites`,
         },
       },
     },

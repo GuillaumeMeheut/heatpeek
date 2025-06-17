@@ -12,6 +12,7 @@ import { ChevronDown, Settings } from "lucide-react";
 import Link from "next/link";
 import { Project } from "@/lib/supabase/queries";
 import { usePathname } from "next/navigation";
+import { useI18n } from "@locales/client";
 
 interface ProjectListProps {
   projects: Project[];
@@ -19,6 +20,7 @@ interface ProjectListProps {
 }
 
 export function ProjectList({ projects, currentProject }: ProjectListProps) {
+  const t = useI18n();
   const pathname = usePathname();
 
   if (!currentProject || projects.length === 0) return null;
@@ -62,9 +64,9 @@ export function ProjectList({ projects, currentProject }: ProjectListProps) {
           })}
         {projects.length > 0 && <DropdownMenuSeparator />}
         <DropdownMenuItem className="cursor-pointer">
-          <Link href="/sites" className="flex items-center w-full">
+          <Link href="/manage-sites" className="flex items-center w-full">
             <Settings className="h-4 w-4 mr-2" />
-            Manage sites
+            {t("urlList.manageSites")}
           </Link>
         </DropdownMenuItem>
       </DropdownMenuContent>
