@@ -240,6 +240,17 @@ const EditDialog = ({
         if (!result.success) {
           throw new Error(result.error.errors[0].message);
         }
+
+        // Check if there are any changes
+        const hasChanges =
+          result.data.label !== editingUrl.label ||
+          result.data.is_active !== editingUrl.page_config.is_active;
+
+        if (!hasChanges) {
+          setIsEditDialogOpen(false);
+          return;
+        }
+
         await updateUrlAction(editingUrl.id, result.data);
         setIsEditDialogOpen(false);
         toast.success(t("urlsTable.editDialog.success"));

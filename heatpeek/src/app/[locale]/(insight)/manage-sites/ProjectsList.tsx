@@ -241,6 +241,18 @@ const EditDialog = ({
         if (!result.success) {
           throw new Error(result.error.errors[0].message);
         }
+
+        // Check if there are any changes
+        const hasChanges =
+          result.data.label !== editingProject.label ||
+          result.data.type !== editingProject.type ||
+          result.data.baseUrl !== editingProject.base_url;
+
+        if (!hasChanges) {
+          setIsEditDialogOpen(false);
+          return;
+        }
+
         await updateProjectAction(editingProject.id, result.data);
         setIsEditDialogOpen(false);
         toast.success(t("projects.editDialog.success"));
@@ -253,7 +265,7 @@ const EditDialog = ({
       }
     });
   };
-  console.log("type", type);
+
   return (
     <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
       <DialogContent
