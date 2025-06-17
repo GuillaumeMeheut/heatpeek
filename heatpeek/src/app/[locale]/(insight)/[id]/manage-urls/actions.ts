@@ -2,15 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
-import {
-  addPageConfig,
-  addUrl,
-  deleteUrl,
-  getTrackingId,
-  getProjectConfigId,
-  updateUrl,
-  updatePageConfig,
-} from "@/lib/supabase/queries";
+import { deleteUrl, updateUrl, updatePageConfig } from "@/lib/supabase/queries";
 import { getI18n } from "@locales/server";
 import { urlAddSchema, urlUpdateSchema } from "./types";
 import { z } from "zod";
@@ -27,36 +19,28 @@ export async function addNewUrlAndPageConfigAction(
     throw new Error(result.error.errors[0].message);
   }
 
-  const trackingId = await getTrackingId(supabase, result.data.projectId);
-  if (!trackingId) throw new Error("Tracking ID not found");
-
-  const projectConfigId = await getProjectConfigId(
-    supabase,
-    result.data.projectId
-  );
-  if (!projectConfigId) throw new Error("Project config ID not found");
-
-  const path = new URL(result.data.url).pathname;
-
-  const urlId = await addUrl(supabase, {
-    path,
-    label: result.data.label || null,
-    project_id: result.data.projectId,
-    tracking_id: trackingId,
+  const { error } = await supabase.rpc("add_url_with_config_and_snapshots", {
+    _path: new URL(result.data.url).pathname,
+    _label: result.data.label || null,
+    _project_id: result.data.projectId,
+    _is_active: result.data.is_active,
   });
 
-  try {
-    await addPageConfig(supabase, {
-      path,
-      is_active: result.data.is_active,
-      project_config_id: projectConfigId,
-      url_id: urlId,
-    });
-  } catch (err) {
-    // Rollback the previous insert if this fails
-    await deleteUrl(supabase, urlId);
-    console.error("Failed to add page config. Rolled back URL creation.", err);
-    throw new Error("Failed to add page config.");
+  if (error) {
+    console.error("error", error);
+    if (error.code === "23505") {
+      throw new Error("This URL already exists in the project.");
+    }
+
+    if (error.code === "P0001") {
+      throw new Error("Missing project configuration.");
+    }
+
+    throw new Error("An unexpected error occurred.");
+  }
+
+  if (!data) {
+    throw new Error("Failed to create URL.");
   }
 
   revalidatePath(`/[locale]/(insight)/[id]/manage-urls`, "page");

@@ -39,8 +39,15 @@ import {
   AlertDialogAction,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import Link from "next/link";
 
-export default function UrlsTable({ urls }: { urls: UrlAndConfig[] }) {
+export default function UrlsTable({
+  urls,
+  projectId,
+}: {
+  urls: UrlAndConfig[];
+  projectId: string;
+}) {
   const t = useI18n();
   const [editingUrl, setEditingUrl] = useState<UrlAndConfig | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
@@ -149,10 +156,12 @@ export default function UrlsTable({ urls }: { urls: UrlAndConfig[] }) {
 
                     <td className="p-4">
                       <div className="flex items-center justify-end gap-2">
-                        <Button variant="ghost" size="sm">
-                          {t("urlsTable.buttons.view")}
-                          <Eye className="w-4 h-4" />
-                        </Button>
+                        <Link href={`/${projectId}/dashboard?url=${url.path}`}>
+                          <Button variant="ghost" size="sm">
+                            {t("urlsTable.buttons.view")}
+                            <Eye className="w-4 h-4" />
+                          </Button>
+                        </Link>
                         <Button
                           variant="outline"
                           size="sm"

@@ -12,7 +12,7 @@ export async function Filters({ projectId }: { projectId: string }) {
   const urls = await getUrls(supabase, projectId);
 
   return (
-    <div className="flex flex-col sm:flex-row gap-4 mb-6">
+    <div className="flex flex-col sm:flex-row gap-4 mb-6 border-b  pb-6">
       <FiltersDate />
       <FiltersUrl urls={urls} projectId={projectId} />
       <div className="ml-auto">

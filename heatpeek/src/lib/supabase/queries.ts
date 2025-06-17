@@ -260,7 +260,31 @@ export const addSnapshot = cache(
     const { error } = await supabase.from("snapshots").insert(snapshot);
 
     if (error) {
-      throw new Error("Error inserting snapshot:", error);
+      console.error("Error inserting snapshot:", error);
+      throw new Error("Error inserting snapshot");
+    }
+  }
+);
+
+export const addSnapshots = cache(
+  async (
+    supabase: SupabaseClient,
+    snapshots: Omit<
+      Snapshot,
+      | "id"
+      | "screenshot_url"
+      | "width"
+      | "height"
+      | "dom_data"
+      | "layout_hash"
+      | "should_update"
+    >[]
+  ): Promise<void> => {
+    const { error } = await supabase.from("snapshots").insert(snapshots);
+
+    if (error) {
+      console.error("Error inserting snapshot:", error);
+      throw new Error("Error inserting snapshot");
     }
   }
 );

@@ -23,7 +23,7 @@ export default async function ManagePages({
     <div className="flex-1 container py-6">
       <Header projectId={id} />
       {urls && urls.length > 0 ? (
-        <UrlsTable urls={urls} />
+        <UrlsTable urls={urls} projectId={id} />
       ) : (
         <div className="flex flex-col items-center justify-center h-full gap-4 mt-[15%]">
           <p className="text-muted-foreground">
