@@ -1,14 +1,16 @@
 import { Button } from "@/components/ui/button";
 
 import { Download } from "lucide-react";
-import { createClient } from "@/lib/supabase/client";
+import { createClient } from "@/lib/supabase/server";
 import { getUrls } from "@/lib/supabase/queries";
 import { FiltersUrl } from "./FiltersUrl";
 import { FiltersDate } from "./FiltersDate";
 
 export async function Filters({ projectId }: { projectId: string }) {
   const supabase = createClient();
+
   const urls = await getUrls(supabase, projectId);
+
   return (
     <div className="flex flex-col sm:flex-row gap-4 mb-6">
       <FiltersDate />
