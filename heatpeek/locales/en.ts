@@ -237,6 +237,8 @@ export default {
     description: "Manage and track your website projects",
     addNew: "Add New Site",
     delete: "Delete",
+    emptyState:
+      "You don't have any projects yet. Add a new project to get started.",
     validation: {
       labelTooLong: "Label must be less than 40 characters",
       baseUrlRequired: "Base URL is required",

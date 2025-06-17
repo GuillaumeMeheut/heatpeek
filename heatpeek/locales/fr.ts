@@ -243,6 +243,8 @@ export default {
     description: "Gérez et suivez vos projets de sites web",
     addNew: "Ajouter un Site",
     delete: "Supprimer",
+    emptyState:
+      "Vous n'avez pas encore de projets. Ajoutez un nouveau projet pour commencer.",
     validation: {
       labelTooLong: "Le label doit faire moins de 40 caractères",
       baseUrlRequired: "L'URL de base est requise",

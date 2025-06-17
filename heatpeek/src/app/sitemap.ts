@@ -81,18 +81,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
         },
       },
     },
-    {
-      url: `${baseUrl}/add-site`,
-      lastModified: new Date(),
-      changeFrequency: "monthly" as const,
-      priority: 0.7,
-      alternates: {
-        languages: {
-          en: `${baseUrl}/en/add-site`,
-          fr: `${baseUrl}/fr/add-site`,
-        },
-      },
-    },
   ];
 
   // Add auth routes
