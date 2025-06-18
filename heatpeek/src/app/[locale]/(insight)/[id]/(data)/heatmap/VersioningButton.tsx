@@ -4,13 +4,14 @@ import { Button } from "@/components/ui/button";
 import { Loader2, RefreshCcw } from "lucide-react";
 import { useTransition } from "react";
 import { createNewVersion } from "./actions";
+import { Device } from "@/types/database";
 
 export default function VersioningButton({
   urlId,
   device,
 }: {
   urlId: string;
-  device: string;
+  device: Device;
 }) {
   const [isPending, startTransition] = useTransition();
 
