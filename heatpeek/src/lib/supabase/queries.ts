@@ -296,13 +296,15 @@ export const updateSnapshot = cache(
   async (
     supabase: SupabaseClient,
     urlId: string,
+    device: string,
     snapshot: Partial<Snapshot>
   ): Promise<string | null> => {
     const { error } = await supabase
       .from("snapshots")
       .update(snapshot)
       .eq("url_id", urlId)
-      .eq("is_outdated", false);
+      .eq("is_outdated", false)
+      .eq("device", device);
 
     if (error) {
       console.log("Error updating snapshot:", error);
@@ -434,7 +436,7 @@ export const getSnapshotInfos = cache(
       .from("snapshots")
       .select(
         `should_update, url_id,
-        urls (
+        urls!inner(
           tracking_id
         )
       `

@@ -52,4 +52,38 @@ router.get("/config", cors(), async (c) => {
   }
 });
 
+const dynamicCors = (origin: string) =>
+  cors({
+    origin,
+  });
+
+router.delete(
+  "/config/purge",
+  async (c, next) => {
+    const origin = c.env.ALLOWED_ORIGIN;
+    const corsMiddleware = dynamicCors(origin);
+    await corsMiddleware(c, next);
+  },
+  async (c) => {
+    const secret = c.env.INTERNAL_API_KEY;
+    const provided = c.req.header("x-api-key");
+
+    if (provided !== secret) {
+      return c.body("Unauthorized", 401);
+    }
+
+    const trackingId = c.req.query("id");
+    const path = c.req.query("p");
+
+    if (!trackingId || !path) {
+      return c.body("Missing id or path", 400);
+    }
+
+    const kvKey = `t-${trackingId}-p-${path}`;
+    await c.env.CONFIG_CACHE.delete(kvKey);
+
+    return c.json({ success: true });
+  }
+);
+
 export default router;

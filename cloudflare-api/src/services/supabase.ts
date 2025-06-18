@@ -7,7 +7,9 @@ export type ProjectConfigResult = {
     path: string;
     ignored_el: string[] | null;
     privacy_el: string[] | null;
-    update_snap: boolean;
+    update_snap_desktop: boolean;
+    update_snap_tablet: boolean;
+    update_snap_mobile: boolean;
   } | null;
 };
 
@@ -29,7 +31,7 @@ export class SupabaseService {
     const apiUrl =
       `${this.supabaseUrl}/rest/v1/project_config` +
       `?tracking_id=eq.${encodeURIComponent(trackingId)}` +
-      `&select=id,usageExceeded,page_config!inner(path,ignored_el,privacy_el,update_snap)` +
+      `&select=id,usageExceeded,page_config!inner(path,ignored_el,privacy_el,update_snap_desktop,update_snap_tablet,update_snap_mobile)` +
       `&page_config.path=eq.${encodeURIComponent(path)}` +
       `&limit=1`;
 
@@ -50,10 +52,15 @@ export class SupabaseService {
       return ProjectConfigError.NOT_FOUND;
     }
 
+    const pageConfig = data[0].page_config?.[0];
+    if (!pageConfig) {
+      return ProjectConfigError.NOT_FOUND;
+    }
+
     return {
       id: data[0].id,
       usageExceeded: data[0].usageExceeded,
-      page_config: data[0].page_config?.[0] ?? null,
+      page_config: pageConfig,
     };
   }
 }

@@ -202,7 +202,7 @@
     function shouldSendSnapshot() {
       if (getBrowserName() !== "Chrome") return;
       const pageConfig = config.get();
-      if (pageConfig.page_config.update_snap) {
+      if (pageConfig.page_config[deviceFieldMap[device]]) {
         sendSnapshot();
       }
     }
@@ -213,8 +213,8 @@
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           trackingId,
-          url: window.location.href,
           device,
+          url: window.location.href,
           snapshot: captureHeatpeekSnapshot(),
         }),
       });
@@ -233,14 +233,14 @@
       };
     }
   }
-})();
 
-function shouldTrack(device) {
-  if (device === "large-desktop") return false;
-  const pageConfig = config.get();
-  if (pageConfig.page_config.is_active === false) return false;
-  return true;
-}
+  function shouldTrack(device) {
+    if (device === "large-desktop") return false;
+    const pageConfig = config.get();
+    if (pageConfig.page_config.is_active === false) return false;
+    return true;
+  }
+})();
 
 function getBrowserName() {
   const userAgent = navigator.userAgent;
@@ -418,3 +418,9 @@ function detectBot() {
   ];
   return botPatterns.some((pattern) => userAgent.includes(pattern));
 }
+
+const deviceFieldMap = {
+  desktop: "update_snap_desktop",
+  tablet: "update_snap_tablet",
+  mobile: "update_snap_mobile",
+};

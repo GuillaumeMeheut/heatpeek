@@ -3,6 +3,7 @@
 ## 🖥️ Dashboard
 
 - [ ] Handle "Snapshot Not Found"
+- [ ] Project & URL creation more details about what is it and what to put
 - [ ] Fix auth error when signin with existing account (it say success)
 - [ ] Review the auth system
 - [ ] Forgot Password flow

@@ -44,7 +44,11 @@ const getToastRedirect = (
 ): string => {
   const [nameKey, descriptionKey] = toastKeyMap[toastType];
 
-  let redirectPath = `${path}?${nameKey}=${encodeURIComponent(toastName)}`;
+  // Use & if path already has ?, otherwise use ?
+  const hasQuery = path.includes("?");
+  let redirectPath = `${path}${
+    hasQuery ? "&" : "?"
+  }${nameKey}=${encodeURIComponent(toastName)}`;
 
   if (toastDescription) {
     redirectPath += `&${descriptionKey}=${encodeURIComponent(

@@ -162,7 +162,9 @@ export type Database = {
           path: string
           privacy_el: string[] | null
           project_config_id: string
-          update_snap: boolean
+          update_snap_desktop: boolean
+          update_snap_mobile: boolean
+          update_snap_tablet: boolean
           url_id: string
         }
         Insert: {
@@ -173,7 +175,9 @@ export type Database = {
           path: string
           privacy_el?: string[] | null
           project_config_id: string
-          update_snap?: boolean
+          update_snap_desktop?: boolean
+          update_snap_mobile?: boolean
+          update_snap_tablet?: boolean
           url_id: string
         }
         Update: {
@@ -184,7 +188,9 @@ export type Database = {
           path?: string
           privacy_el?: string[] | null
           project_config_id?: string
-          update_snap?: boolean
+          update_snap_desktop?: boolean
+          update_snap_mobile?: boolean
+          update_snap_tablet?: boolean
           url_id?: string
         }
         Relationships: [
@@ -279,7 +285,7 @@ export type Database = {
       snapshots: {
         Row: {
           created_at: string
-          device: string
+          device: Database["public"]["Enums"]["device"]
           dom_data: string | null
           height: number | null
           id: string
@@ -296,7 +302,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
-          device: string
+          device: Database["public"]["Enums"]["device"]
           dom_data?: string | null
           height?: number | null
           id?: string
@@ -313,7 +319,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
-          device?: string
+          device?: Database["public"]["Enums"]["device"]
           dom_data?: string | null
           height?: number | null
           id?: string
@@ -394,13 +400,22 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      add_url_with_config_and_snapshots: {
+        Args: {
+          _path: string
+          _label: string
+          _project_id: string
+          _is_active: boolean
+        }
+        Returns: string
+      }
       upsert_aggregated_clicks: {
         Args: { clicks: Json }
         Returns: undefined
       }
     }
     Enums: {
-      [_ in never]: never
+      device: "desktop" | "tablet" | "mobile"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -515,6 +530,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      device: ["desktop", "tablet", "mobile"],
+    },
   },
 } as const

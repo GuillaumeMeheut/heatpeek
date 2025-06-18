@@ -13,7 +13,7 @@
   const config = {
     data: null,
     lastFetch: 0,
-    CACHE_DURATION: 1 * 60 * 1000, // 1 minute cache
+    CACHE_DURATION: 1 * 60 * 1000,
 
     async fetch() {
       // Return cached config if it's still valid
@@ -53,7 +53,7 @@
 
   function initializeTracking() {
     const device = getViewportDeviceCategory();
-    if (device === "large-desktop") return;
+    if (!shouldTrack(device)) return;
 
     const path = window.location.pathname;
 
@@ -196,27 +196,25 @@
     window.addEventListener("load", () => {
       setTimeout(() => {
         shouldSendSnapshot();
-      }, 2000);
+      }, 2500);
     });
 
     function shouldSendSnapshot() {
-      console.log("shouldSendSnapshot");
       if (getBrowserName() !== "Chrome") return;
       const pageConfig = config.get();
-      if (pageConfig.page_config.update_snap) {
+      if (pageConfig.page_config[deviceFieldMap[device]]) {
         sendSnapshot();
       }
     }
 
     function sendSnapshot() {
-      console.log("sendSnapshot");
       fetch(`${endpoint}/api/screenPage`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           trackingId,
-          url: window.location.href,
           device,
+          url: window.location.href,
           snapshot: captureHeatpeekSnapshot(),
         }),
       });
@@ -234,6 +232,13 @@
         viewport,
       };
     }
+  }
+
+  function shouldTrack(device) {
+    if (device === "large-desktop") return false;
+    const pageConfig = config.get();
+    if (pageConfig.page_config.is_active === false) return false;
+    return true;
   }
 })();
 
@@ -413,3 +418,9 @@ function detectBot() {
   ];
   return botPatterns.some((pattern) => userAgent.includes(pattern));
 }
+
+const deviceFieldMap = {
+  desktop: "update_snap_desktop",
+  tablet: "update_snap_tablet",
+  mobile: "update_snap_mobile",
+};

@@ -13,6 +13,21 @@ import {
   uploadScreenshot,
 } from "@/lib/supabase/queries";
 import { createServerSupabaseClientWithServiceRole } from "@/lib/supabase/server";
+import { purgeConfig } from "@/lib/cloudflare/api";
+import { z } from "zod";
+
+const ScreenPageRequestSchema = z.object({
+  trackingId: z.string(),
+  device: z.enum(["desktop", "tablet", "mobile"]),
+  url: z.string().url(),
+  snapshot: z.object({
+    html: z.string(),
+    viewport: z.object({
+      width: z.number(),
+      height: z.number(),
+    }),
+  }),
+});
 
 export async function OPTIONS() {
   return NextResponse.json({}, { headers: corsHeaders() });
@@ -29,16 +44,33 @@ export async function POST(request: NextRequest) {
     lastTiming = now;
   };
 
-  const { trackingId, url, device, snapshot } = await request.json();
-  console.log("snapshot", snapshot);
+  const result = ScreenPageRequestSchema.safeParse(await request.json());
+
+  if (!result.success) {
+    throw new Error("Invalid request body");
+  }
+
+  const { trackingId, device, url, snapshot } = result.data;
   const { html, viewport } = snapshot;
 
   let urlId: string | null = null;
 
+  const referer = request.headers.get("referer");
+
+  if (!referer || referer !== url) {
+    console.error("Invalid referer", referer, url);
+    return new Response("ok", {
+      headers: corsHeaders(),
+    });
+  }
+
+  const originUrl = new URL(referer).origin;
+  const path = new URL(referer).pathname;
+
   const supabase = await createServerSupabaseClientWithServiceRole();
 
   try {
-    const result = await getSnapshotInfos(supabase, trackingId, url, device);
+    const result = await getSnapshotInfos(supabase, trackingId, path, device);
     measure("Get Snapshot Id and should update");
 
     if (!result) {
@@ -76,7 +108,10 @@ export async function POST(request: NextRequest) {
       ""
     );
 
-    const inlinedHtml = await inlineImagesAndBackgrounds(sanitizedHtml, url);
+    const inlinedHtml = await inlineImagesAndBackgrounds(
+      sanitizedHtml,
+      originUrl
+    );
     measure("Image Inlining");
 
     const page = await browser.newPage();
@@ -134,7 +169,7 @@ export async function POST(request: NextRequest) {
       throw new Error("Failed to upload screenshot");
     }
 
-    const resultSnapshot = await updateSnapshot(supabase, urlId, {
+    const resultSnapshot = await updateSnapshot(supabase, urlId, device, {
       dom_data: JSON.stringify(visibleDomElements),
       layout_hash: layoutHash,
       screenshot_url: publicImageUrl,
@@ -149,10 +184,26 @@ export async function POST(request: NextRequest) {
       throw new Error("Failed to update snapshot");
     }
 
+    const deviceFieldMap = {
+      desktop: "update_snap_desktop",
+      tablet: "update_snap_tablet",
+      mobile: "update_snap_mobile",
+    } as const;
+
+    const updateField = deviceFieldMap[device];
+    if (!updateField) {
+      throw new Error("Invalid device type");
+    }
+
     await updatePageConfig(supabase, urlId, {
-      update_snap: false,
+      [updateField]: false,
     });
+
     measure("Page Config Update");
+
+    await purgeConfig(trackingId, path);
+
+    measure("Purge Page Config");
 
     return new Response(JSON.stringify({ success: true }), {
       headers: corsHeaders(),

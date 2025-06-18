@@ -45,3 +45,6 @@ export type ProjectsUpdate = Database["public"]["Tables"]["projects"]["Update"];
 export type SnapshotsUpdate =
   Database["public"]["Tables"]["snapshots"]["Update"];
 export type UrlsUpdate = Database["public"]["Tables"]["urls"]["Update"];
+
+//Enum Types
+export type Device = Database["public"]["Enums"]["device"];
