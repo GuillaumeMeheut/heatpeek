@@ -178,53 +178,6 @@ export default {
       },
     },
   },
-  pricing: {
-    title: "Tarification simple et transparente",
-    subtitle: "Choisissez le forfait qui vous convient",
-    plans: {
-      free: {
-        name: "Gratuit",
-        price: "0€",
-        description:
-          "Parfait pour les projets passion et les sites web simples",
-        features: {
-          clickHeatmap: "Heatmap de clics",
-          rageClicks: "Clics de rage",
-          scrollTracking: "Suivi du défilement",
-          retention: "Rétention",
-          trackedPage: "Page suivie",
-          pageviews: "Pages vues",
-        },
-      },
-      independent: {
-        name: "Indépendant",
-        price: "9€/mois",
-        description:
-          "Pour les applications en production avec la puissance d'évoluer",
-        popular: "Le plus populaire",
-      },
-      pro: {
-        name: "Pro",
-        price: "29€/mois",
-        description:
-          "Pour les entreprises en croissance avec des besoins avancés",
-      },
-      scale: {
-        name: "Scale",
-        price: "79€+",
-        description:
-          "Pour les applications à grande échelle exécutant des charges de travail Internet",
-      },
-    },
-    features: {
-      basic: "Basique",
-      advanced: "Avancé",
-      unlimited: "Illimité",
-      perMonth: "/mois",
-      getStarted: "Commencer",
-      contactUs: "Contactez-nous",
-    },
-  },
   setupSite: {
     title: "Configuration du Site",
     siteLabel: "Nom du Site",

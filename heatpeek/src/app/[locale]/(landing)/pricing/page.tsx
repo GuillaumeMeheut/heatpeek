@@ -1,3 +1,5 @@
+import { getI18n } from "@locales/server";
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -6,251 +8,167 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import {
   Check,
-  MousePointerClick,
-  AlertCircle,
-  Scroll,
-  Calendar,
-  Folder,
-  Eye,
+  Star,
+  LineChart,
+  BarChart3,
+  LayoutDashboard,
 } from "lucide-react";
-import { cn } from "@/lib/utils";
-import { getI18n } from "@locales/server";
 
 export default async function Pricing() {
   const t = await getI18n();
 
   const plans = [
     {
-      name: t("pricing.plans.free.name"),
-      price: t("pricing.plans.free.price"),
-      description: t("pricing.plans.free.description"),
+      name: "Free",
+      price: 0,
+      description: "Perfect for getting started with heatmap analytics",
       features: [
-        {
-          name: t("pricing.plans.free.features.clickHeatmap"),
-          value: t("pricing.features.basic"),
-          icon: MousePointerClick,
-        },
-        {
-          name: t("pricing.plans.free.features.rageClicks"),
-          value: false,
-          icon: AlertCircle,
-        },
-        {
-          name: t("pricing.plans.free.features.scrollTracking"),
-          value: false,
-          icon: Scroll,
-        },
-        {
-          name: t("pricing.plans.free.features.retention"),
-          value: "7 days",
-          icon: Calendar,
-        },
-        {
-          name: t("pricing.plans.free.features.trackedPage"),
-          value: "1",
-          icon: Folder,
-        },
-        {
-          name: t("pricing.plans.free.features.pageviews"),
-          value: "500/month",
-          icon: Eye,
-        },
+        "Click heatmap",
+        "Rage clicks detection",
+        "Scroll depth analysis",
+        "First clicked element tracking",
+        "2000 tracked pageviews/month",
+        "1 tracked website",
+        "2 tracked pages",
+        "3 months retention storage",
+        "Basic analytics dashboard",
+        "Email support",
       ],
+      popular: false,
+      icon: BarChart3,
+      buttonText: "Get Started Free",
+      buttonVariant: "outline" as const,
     },
     {
-      name: t("pricing.plans.independent.name"),
-      price: t("pricing.plans.independent.price"),
-      description: t("pricing.plans.independent.description"),
-      isPopular: true,
+      name: "Starter",
+      price: 15,
+      description: "For indie devs or small projects wanting deeper insights",
       features: [
-        {
-          name: t("pricing.plans.free.features.clickHeatmap"),
-          value: true,
-          icon: MousePointerClick,
-        },
-        {
-          name: t("pricing.plans.free.features.rageClicks"),
-          value: t("pricing.features.basic"),
-          icon: AlertCircle,
-        },
-        {
-          name: t("pricing.plans.free.features.scrollTracking"),
-          value: true,
-          icon: Scroll,
-        },
-        {
-          name: t("pricing.plans.free.features.retention"),
-          value: "30 days",
-          icon: Calendar,
-        },
-        {
-          name: t("pricing.plans.free.features.trackedPage"),
-          value: "10",
-          icon: Folder,
-        },
-        {
-          name: t("pricing.plans.free.features.pageviews"),
-          value: "5k/month",
-          icon: Eye,
-        },
+        "Everything in Free",
+        "10,000 tracked pageviews/month",
+        "3 tracked websites",
+        "5 tracked pages per site",
+        "6 months retention storage",
+        "Custom page targeting (URL includes/excludes)",
+        "Advanced filters (device, viewport)",
+        "Email + priority support",
       ],
+      popular: false,
+      icon: LayoutDashboard,
+      buttonText: "Start with Starter",
+      buttonVariant: "default",
     },
     {
-      name: t("pricing.plans.pro.name"),
-      price: t("pricing.plans.pro.price"),
-      description: t("pricing.plans.pro.description"),
+      name: "Pro",
+      price: 39,
+      description: "For growing products and teams that need scale",
       features: [
-        {
-          name: t("pricing.plans.free.features.clickHeatmap"),
-          value: true,
-          icon: MousePointerClick,
-        },
-        {
-          name: t("pricing.plans.free.features.rageClicks"),
-          value: t("pricing.features.advanced"),
-          icon: AlertCircle,
-        },
-        {
-          name: t("pricing.plans.free.features.scrollTracking"),
-          value: "✅ + Segments",
-          icon: Scroll,
-        },
-        {
-          name: t("pricing.plans.free.features.retention"),
-          value: "90 days",
-          icon: Calendar,
-        },
-        {
-          name: t("pricing.plans.free.features.trackedPage"),
-          value: "10",
-          icon: Folder,
-        },
-        {
-          name: t("pricing.plans.free.features.pageviews"),
-          value: "100k/mo",
-          icon: Eye,
-        },
+        "Everything in Starter",
+        "50,000 tracked pageviews/month",
+        "Unlimited tracked websites",
+        "Unlimited tracked pages",
+        "12 months retention storage",
+        "Daily export of click data (CSV)",
+        "Team access (up to 5 members)",
+        "Slack notifications for rage clicks",
+        "Email + chat support",
       ],
-    },
-    {
-      name: t("pricing.plans.scale.name"),
-      price: t("pricing.plans.scale.price"),
-      description: t("pricing.plans.scale.description"),
-      features: [
-        {
-          name: t("pricing.plans.free.features.clickHeatmap"),
-          value: true,
-          icon: MousePointerClick,
-        },
-        {
-          name: t("pricing.plans.free.features.rageClicks"),
-          value: t("pricing.features.advanced"),
-          icon: AlertCircle,
-        },
-        {
-          name: t("pricing.plans.free.features.scrollTracking"),
-          value: "✅ Full control",
-          icon: Scroll,
-        },
-        {
-          name: t("pricing.plans.free.features.retention"),
-          value: "180+ days",
-          icon: Calendar,
-        },
-        {
-          name: t("pricing.plans.free.features.trackedPage"),
-          value: t("pricing.features.unlimited"),
-          icon: Folder,
-        },
-        {
-          name: t("pricing.plans.free.features.pageviews"),
-          value: "1M+/mo",
-          icon: Eye,
-        },
-      ],
+      popular: true,
+      icon: LineChart,
+      buttonText: "Upgrade to Pro",
+      buttonVariant: "default",
     },
   ];
 
   return (
-    <div className="container mx-auto py-12">
-      <div className="text-center mb-12">
-        <h1 className="text-4xl font-bold mb-4">{t("pricing.title")}</h1>
-        <p className="text-muted-foreground">{t("pricing.subtitle")}</p>
-      </div>
+    <div className="flex flex-col min-h-screen">
+      {/* Hero Section */}
+      <section className="flex flex-col items-center justify-center py-20 px-4 text-center">
+        <Badge variant="secondary" className="mb-4">
+          Pricing Plans
+        </Badge>
+        <h1 className="text-4xl md:text-6xl font-bold mb-6 bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent md:leading-[1.3] leading-[1.4]">
+          Simple, Transparent Pricing
+        </h1>
+        <p className="text-xl text-muted-foreground max-w-2xl mb-8">
+          Choose the perfect plan for your analytics needs. Start free and
+          upgrade as you grow.
+        </p>
+      </section>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {plans.map((plan) => (
-          <Card
-            key={plan.name}
-            className={cn(
-              "flex flex-col transition-all duration-200 hover:shadow-lg relative",
-              plan.isPopular && "border-primary"
-            )}
-          >
-            {plan.isPopular && (
-              <div className="absolute -top-4 left-1/2 -translate-x-1/2">
-                <div className="bg-primary text-primary-foreground px-4 py-1 rounded-full text-sm font-medium shadow-sm">
-                  {t("pricing.plans.independent.popular")}
-                </div>
-              </div>
-            )}
-            <CardHeader className={cn("text-center", plan.isPopular && "pt-8")}>
-              <CardTitle className="text-2xl">{plan.name}</CardTitle>
-              <div className="flex items-baseline justify-center gap-1">
-                <CardDescription className="text-3xl font-bold text-primary">
-                  {plan.price.split("/")[0]}
-                </CardDescription>
-                <span className="text-sm text-muted-foreground">
-                  {t("pricing.features.perMonth")}
-                </span>
-              </div>
-              <p className="text-sm text-muted-foreground mt-2">
-                {plan.description}
-              </p>
-            </CardHeader>
-            <CardContent className="flex-grow">
-              <ul className="space-y-3">
-                {plan.features.map((feature) => {
-                  const Icon = feature.icon;
-                  return (
-                    <li key={feature.name} className="flex items-center gap-2">
-                      <Icon className="h-4 w-4 text-muted-foreground" />
-                      {typeof feature.value === "boolean" ? (
-                        feature.value ? (
-                          <Check className="h-4 w-4 text-green-500" />
-                        ) : (
-                          <span className="h-4 w-4 text-red-500 flex items-center justify-center">
-                            ×
-                          </span>
-                        )
-                      ) : (
-                        <span className="text-sm text-muted-foreground">
-                          {feature.value}
-                        </span>
+      {/* Pricing Cards */}
+      <section className="py-20 px-4">
+        <div className="max-w-7xl mx-auto">
+          <div className="grid md:grid-cols-3 gap-8">
+            {plans.map((plan) => {
+              const IconComponent = plan.icon;
+              return (
+                <Card
+                  key={plan.name}
+                  className={`relative transition-all duration-300 hover:shadow-xl ${
+                    plan.popular
+                      ? "border-primary shadow-lg scale-105"
+                      : "hover:scale-105"
+                  }`}
+                >
+                  {plan.popular && (
+                    <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
+                      <Badge className="bg-primary text-primary-foreground px-4 py-1">
+                        <Star className="h-3 w-3 mr-1" />
+                        Most Popular
+                      </Badge>
+                    </div>
+                  )}
+
+                  <CardHeader className="text-center pb-8">
+                    <div className="flex justify-center mb-4">
+                      <div className="p-3 rounded-full bg-primary/10">
+                        <IconComponent className="h-8 w-8 text-primary" />
+                      </div>
+                    </div>
+                    <CardTitle className="text-2xl font-bold">
+                      {plan.name}
+                    </CardTitle>
+                    <CardDescription className="text-base">
+                      {plan.description}
+                    </CardDescription>
+                    <div className="mt-4">
+                      <span className="text-4xl font-bold">${plan.price}</span>
+                      {plan.price > 0 && (
+                        <span className="text-muted-foreground">/month</span>
                       )}
-                      <span className="text-sm">{feature.name}</span>
-                    </li>
-                  );
-                })}
-              </ul>
-            </CardContent>
-            <CardFooter>
-              <Button
-                className="w-full"
-                variant={plan.isPopular ? "default" : "outline"}
-                size="lg"
-              >
-                {plan.name === t("pricing.plans.scale.name")
-                  ? t("pricing.features.contactUs")
-                  : t("pricing.features.getStarted")}
-              </Button>
-            </CardFooter>
-          </Card>
-        ))}
-      </div>
+                    </div>
+                  </CardHeader>
+
+                  <CardContent className="space-y-4">
+                    <ul className="space-y-3">
+                      {plan.features.map((feature, index) => (
+                        <li key={index} className="flex items-start gap-3">
+                          <Check className="h-5 w-5 text-green-500 mt-0.5 flex-shrink-0" />
+                          <span className="text-sm">{feature}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </CardContent>
+
+                  <CardFooter>
+                    <Button
+                      className="w-full"
+                      variant={plan.buttonVariant}
+                      size="lg"
+                    >
+                      {plan.buttonText}
+                    </Button>
+                  </CardFooter>
+                </Card>
+              );
+            })}
+          </div>
+        </div>
+      </section>
     </div>
   );
 }

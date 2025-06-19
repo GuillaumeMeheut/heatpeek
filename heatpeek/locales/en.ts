@@ -175,50 +175,6 @@ export default {
       },
     },
   },
-  pricing: {
-    title: "Simple, transparent pricing",
-    subtitle: "Choose the plan that's right for you",
-    plans: {
-      free: {
-        name: "Free",
-        price: "$0",
-        description: "Perfect for passion projects & simple websites",
-        features: {
-          clickHeatmap: "Click Heatmap",
-          rageClicks: "Rage Clicks",
-          scrollTracking: "Scroll Tracking",
-          retention: "Retention",
-          trackedPage: "Tracked Page",
-          pageviews: "Pageviews",
-        },
-      },
-      independent: {
-        name: "Independent",
-        price: "$9/mo",
-        description: "For production applications with the power to scale",
-        popular: "Most Popular",
-      },
-      pro: {
-        name: "Pro",
-        price: "$29/mo",
-        description: "For growing businesses with advanced needs",
-      },
-      scale: {
-        name: "Scale",
-        price: "$79+",
-        description:
-          "For large-scale applications running Internet scale workloads",
-      },
-    },
-    features: {
-      basic: "Basic",
-      advanced: "Advanced",
-      unlimited: "Unlimited",
-      perMonth: "/month",
-      getStarted: "Get Started",
-      contactUs: "Contact Us",
-    },
-  },
   setupSite: {
     title: "Setup Your Site",
     siteLabel: "Site Label",
