@@ -238,179 +238,179 @@
     if (pageConfig.page_config.is_active === false) return false;
     return true;
   }
-})();
 
-function getBrowserName() {
-  const userAgent = navigator.userAgent;
-  let browserName = null;
+  function getBrowserName() {
+    const userAgent = navigator.userAgent;
+    let browserName = null;
 
-  // Chrome
-  if (
-    /Chrome/.test(userAgent) &&
-    !/Edge/.test(userAgent) &&
-    !/OPR/.test(userAgent)
-  ) {
-    browserName = "Chrome";
-  }
-  // Safari
-  else if (/Safari/.test(userAgent) && !/Chrome/.test(userAgent)) {
-    browserName = "Safari";
-  }
-  // Firefox
-  else if (/Firefox/.test(userAgent)) {
-    browserName = "Firefox";
-  }
-  // Edge
-  else if (/Edg/.test(userAgent)) {
-    browserName = "Edge";
+    // Chrome
+    if (
+      /Chrome/.test(userAgent) &&
+      !/Edge/.test(userAgent) &&
+      !/OPR/.test(userAgent)
+    ) {
+      browserName = "Chrome";
+    }
+    // Safari
+    else if (/Safari/.test(userAgent) && !/Chrome/.test(userAgent)) {
+      browserName = "Safari";
+    }
+    // Firefox
+    else if (/Firefox/.test(userAgent)) {
+      browserName = "Firefox";
+    }
+    // Edge
+    else if (/Edg/.test(userAgent)) {
+      browserName = "Edge";
+    }
+
+    return browserName;
   }
 
-  return browserName;
-}
-
-async function verifyTracking(endpoint, trackingId) {
-  const urlParams = new URLSearchParams(window.location.search);
-  if (urlParams.get("verifyHp") === trackingId) {
-    fetch(`${endpoint}/api/verify/${trackingId}`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ verified: true }),
-    })
-      .then(() => {
-        window.close();
+  async function verifyTracking(endpoint, trackingId) {
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get("verifyHp") === trackingId) {
+      fetch(`${endpoint}/api/verify/${trackingId}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ verified: true }),
       })
-      .catch((error) => {
-        console.error(error);
-      });
-  }
-}
-
-function getViewportDeviceCategory() {
-  const viewportWidth = window.innerWidth;
-
-  // Device breakpoints in pixels
-  const BREAKPOINTS = {
-    MOBILE: 768,
-    TABLET: 1024,
-    DESKTOP: 1920,
-  };
-
-  if (viewportWidth <= BREAKPOINTS.MOBILE) {
-    return "mobile";
-  } else if (viewportWidth <= BREAKPOINTS.TABLET) {
-    return "tablet";
-  } else if (viewportWidth <= BREAKPOINTS.DESKTOP) {
-    return "desktop";
+        .then(() => {
+          window.close();
+        })
+        .catch((error) => {
+          console.error(error);
+        });
+    }
   }
 
-  return "large-desktop";
-}
+  function getViewportDeviceCategory() {
+    const viewportWidth = window.innerWidth;
 
-function getUniqueSelector(el) {
-  if (el.id) {
-    return `#${CSS.escape(el.id)}`;
-  }
+    // Device breakpoints in pixels
+    const BREAKPOINTS = {
+      MOBILE: 768,
+      TABLET: 1024,
+      DESKTOP: 1920,
+    };
 
-  const parts = [];
-
-  while (el && el.nodeType === Node.ELEMENT_NODE) {
-    let part = el.nodeName.toLowerCase();
-
-    if (el.className) {
-      const classList = Array.from(el.classList)
-        .map((cls) => `.${CSS.escape(cls)}`)
-        .join("");
-      part += classList;
+    if (viewportWidth <= BREAKPOINTS.MOBILE) {
+      return "mobile";
+    } else if (viewportWidth <= BREAKPOINTS.TABLET) {
+      return "tablet";
+    } else if (viewportWidth <= BREAKPOINTS.DESKTOP) {
+      return "desktop";
     }
 
-    const parent = el.parentElement;
-    if (parent) {
-      const siblings = Array.from(parent.children).filter(
-        (child) => child.tagName === el.tagName
-      );
+    return "large-desktop";
+  }
 
-      if (siblings.length > 1) {
-        const index = siblings.indexOf(el) + 1;
-        part += `:nth-of-type(${index})`;
+  function getUniqueSelector(el) {
+    if (el.id) {
+      return `#${CSS.escape(el.id)}`;
+    }
+
+    const parts = [];
+
+    while (el && el.nodeType === Node.ELEMENT_NODE) {
+      let part = el.nodeName.toLowerCase();
+
+      if (el.className) {
+        const classList = Array.from(el.classList)
+          .map((cls) => `.${CSS.escape(cls)}`)
+          .join("");
+        part += classList;
       }
+
+      const parent = el.parentElement;
+      if (parent) {
+        const siblings = Array.from(parent.children).filter(
+          (child) => child.tagName === el.tagName
+        );
+
+        if (siblings.length > 1) {
+          const index = siblings.indexOf(el) + 1;
+          part += `:nth-of-type(${index})`;
+        }
+      }
+
+      parts.unshift(part);
+      el = el.parentElement;
     }
 
-    parts.unshift(part);
-    el = el.parentElement;
+    const fullSelector = parts.join(" > ");
+    return generateShortHash(fullSelector);
   }
 
-  const fullSelector = parts.join(" > ");
-  return generateShortHash(fullSelector);
-}
-
-function generateShortHash(str) {
-  let hash = 0;
-  for (let i = 0; i < str.length; i++) {
-    const char = str.charCodeAt(i);
-    hash = (hash << 5) - hash + char;
-    hash = hash & hash; // Convert to 32bit integer
+  function generateShortHash(str) {
+    let hash = 0;
+    for (let i = 0; i < str.length; i++) {
+      const char = str.charCodeAt(i);
+      hash = (hash << 5) - hash + char;
+      hash = hash & hash; // Convert to 32bit integer
+    }
+    // Convert to base36 (alphanumeric) and take first 8 characters
+    return Math.abs(hash).toString(36).substring(0, 8);
   }
-  // Convert to base36 (alphanumeric) and take first 8 characters
-  return Math.abs(hash).toString(36).substring(0, 8);
-}
 
-function detectBot() {
-  const userAgent = navigator.userAgent.toLowerCase();
-  const botPatterns = [
-    // Common bot identifiers
-    "bot",
-    "crawler",
-    "spider",
-    "headless",
-    "selenium",
-    // Search engine bots
-    "googlebot",
-    "bingbot",
-    "yandexbot",
-    "duckduckbot",
-    "baiduspider",
-    // Monitoring and testing tools
-    "lighthouse",
-    "webdriver",
-    "phantomjs",
-    "puppeteer",
-    "playwright",
-    // Security scanners
-    "nmap",
-    "nikto",
-    "acunetix",
-    "nessus",
-    "burp",
-    "zap",
-    // Automation tools
-    "curl",
-    "wget",
-    "python-requests",
-    "java-http-client",
-    // Analytics and monitoring
-    "pingdom",
-    "uptimerobot",
-    "newrelic",
-    "datadog",
-    // Social media bots
-    "facebookexternalhit",
-    "twitterbot",
-    "linkedinbot",
-    // Other common patterns
-    "apache-httpclient",
-    "python-urllib",
-    "java-http-client",
-    "mozilla/5.0 (compatible;)",
-    "mozilla/5.0 (bot;)",
-    "mozilla/5.0 (crawler;)",
-    "mozilla/5.0 (spider;)",
-    "mozilla/5.0 (monitoring;)",
-  ];
-  return botPatterns.some((pattern) => userAgent.includes(pattern));
-}
+  function detectBot() {
+    const userAgent = navigator.userAgent.toLowerCase();
+    const botPatterns = [
+      // Common bot identifiers
+      "bot",
+      "crawler",
+      "spider",
+      "headless",
+      "selenium",
+      // Search engine bots
+      "googlebot",
+      "bingbot",
+      "yandexbot",
+      "duckduckbot",
+      "baiduspider",
+      // Monitoring and testing tools
+      "lighthouse",
+      "webdriver",
+      "phantomjs",
+      "puppeteer",
+      "playwright",
+      // Security scanners
+      "nmap",
+      "nikto",
+      "acunetix",
+      "nessus",
+      "burp",
+      "zap",
+      // Automation tools
+      "curl",
+      "wget",
+      "python-requests",
+      "java-http-client",
+      // Analytics and monitoring
+      "pingdom",
+      "uptimerobot",
+      "newrelic",
+      "datadog",
+      // Social media bots
+      "facebookexternalhit",
+      "twitterbot",
+      "linkedinbot",
+      // Other common patterns
+      "apache-httpclient",
+      "python-urllib",
+      "java-http-client",
+      "mozilla/5.0 (compatible;)",
+      "mozilla/5.0 (bot;)",
+      "mozilla/5.0 (crawler;)",
+      "mozilla/5.0 (spider;)",
+      "mozilla/5.0 (monitoring;)",
+    ];
+    return botPatterns.some((pattern) => userAgent.includes(pattern));
+  }
 
-const deviceFieldMap = {
-  desktop: "update_snap_desktop",
-  tablet: "update_snap_tablet",
-  mobile: "update_snap_mobile",
-};
+  const deviceFieldMap = {
+    desktop: "update_snap_desktop",
+    tablet: "update_snap_tablet",
+    mobile: "update_snap_mobile",
+  };
+})();
