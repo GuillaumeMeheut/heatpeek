@@ -14,17 +14,24 @@ interface NavLinkProps {
   href: string;
   isActive: boolean;
   children: React.ReactNode;
-  queryUrl: string | null;
+  hasFilter?: boolean;
 }
 
-function NavLink({ href, isActive, children, queryUrl }: NavLinkProps) {
+function NavLink({
+  href,
+  isActive,
+  hasFilter = false,
+  children,
+}: NavLinkProps) {
+  const searchParams = useSearchParams();
+
   return (
     <Link
       href={{
         pathname: href,
-        query: {
-          url: queryUrl,
-        },
+        query: hasFilter
+          ? Object.fromEntries(searchParams.entries())
+          : undefined,
       }}
       className={`text-sm text-gray-500 ${
         isActive ? "text-primary border-b-2 border-primary" : ""
@@ -48,9 +55,6 @@ export function InsightNavbar({
   const params = useParams();
   const currentId = params.id as string;
   const currentProject = projects.find((project) => project.id === currentId);
-
-  const searchParams = useSearchParams();
-  const queryUrl = searchParams.get("url");
 
   const isDashboard = pathname.includes("/dashboard");
   const isHeatmap = pathname.includes("/heatmap");
@@ -76,28 +80,27 @@ export function InsightNavbar({
               <NavLink
                 href={`/${currentId}/get-started`}
                 isActive={isGetStarted}
-                queryUrl={queryUrl}
               >
                 {t("nav.getStarted")}
               </NavLink>
               <NavLink
                 href={`/${currentId}/dashboard`}
                 isActive={isDashboard}
-                queryUrl={queryUrl}
+                hasFilter
               >
                 {t("nav.dashboard")}
               </NavLink>
               <NavLink
                 href={`/${currentId}/heatmap`}
                 isActive={isHeatmap}
-                queryUrl={queryUrl}
+                hasFilter
               >
                 {t("nav.heatmap")}
               </NavLink>
               <NavLink
                 href={`/${currentId}/elements`}
                 isActive={isElements}
-                queryUrl={queryUrl}
+                hasFilter
               >
                 {t("nav.elements")}
               </NavLink>

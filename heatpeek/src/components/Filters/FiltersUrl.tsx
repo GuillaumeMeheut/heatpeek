@@ -9,7 +9,7 @@ import {
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Url } from "@/lib/supabase/queries";
-import { useRouter, useSearchParams } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useState, useEffect } from "react";
 import { Button } from "../ui/button";
 import { Plus, Settings } from "lucide-react";
@@ -25,14 +25,28 @@ export function FiltersUrl({
   projectId: string;
 }) {
   const router = useRouter();
+  const pathname = usePathname();
   const searchParams = useSearchParams();
   const urlParam = searchParams.get("url");
   const [selectedUrl, setSelectedUrl] = useState(urlParam || "all");
   const t = useI18n();
 
+  const isDashboard = pathname.includes("/dashboard");
+
   useEffect(() => {
-    setSelectedUrl(urlParam || "all");
-  }, [urlParam]);
+    if (!urlParam && urls && urls.length > 0) {
+      // If no URL is set and we have URLs, set the first one
+      const firstUrl = urls[0];
+      setSelectedUrl(firstUrl.path);
+
+      // Update the query param
+      const params = new URLSearchParams(searchParams.toString());
+      params.set("url", firstUrl.path);
+      router.replace(`?${params.toString()}`);
+    } else {
+      setSelectedUrl(urlParam || "all");
+    }
+  }, [urlParam, urls, searchParams, router]);
 
   const handleUrlChange = (value: string) => {
     setSelectedUrl(value);
@@ -81,7 +95,9 @@ export function FiltersUrl({
             <Input placeholder={t("filters.searchPages")} />
           </div>
           <Separator className="my-2" />
-          <SelectItem value={"all"}>{t("filters.allPages")}</SelectItem>
+          {isDashboard && (
+            <SelectItem value="all">{t("filters.allPages")}</SelectItem>
+          )}
           <Separator className="my-2" />
           {urls?.map((url) => (
             <SelectItem key={url.id} value={url.path}>

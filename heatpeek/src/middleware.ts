@@ -1,6 +1,7 @@
 import { updateSession } from "@/lib/supabase/middleware";
 import { type NextRequest } from "next/server";
 import { createI18nMiddleware } from "next-international/middleware";
+import { handleUrlFilters } from "@/lib/filter-middleware";
 
 const I18nMiddleware = createI18nMiddleware({
   locales: ["en", "fr"],
@@ -17,6 +18,13 @@ export async function middleware(request: NextRequest) {
     return sessionResponse;
   }
 
+  // Handle URL filter rewriting
+  const urlFilterResponse = handleUrlFilters(request);
+  if (urlFilterResponse) {
+    return urlFilterResponse;
+  }
+
+  // Handle i18n middleware for unmodified requests
   return I18nMiddleware(request);
 }
 
