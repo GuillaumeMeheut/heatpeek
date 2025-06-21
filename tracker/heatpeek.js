@@ -2,7 +2,7 @@
   "use strict";
 
   const trackingId = document.currentScript.getAttribute("id");
-  const endpoint = "https://www.heatpeek.com";
+  const endpoint = "https://heatpeek.com";
   const endpointAPI = "https://api.heatpeek.com";
 
   if (!trackingId) return;
@@ -56,6 +56,7 @@
     if (!shouldTrack(device)) return;
 
     const path = window.location.pathname;
+    const browser = getBrowserName();
 
     let lastClickTime = 0;
     const THROTTLE_MS = 500;
@@ -121,14 +122,15 @@
       if (clickBuffer.length === 0) return;
       const data = JSON.stringify({
         trackingId,
-        url: path,
+        path,
         device,
+        browser,
         events: clickBuffer.splice(0, clickBuffer.length),
       });
       if (navigator.sendBeacon) {
-        navigator.sendBeacon(`${endpoint}/api/e`, data);
+        navigator.sendBeacon(`${endpointAPI}/api/event/click`, data);
       } else {
-        fetch(`${endpoint}/api/e`, {
+        fetch(`${endpointAPI}/api/event/click`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: data,
@@ -178,10 +180,6 @@
         erx,
         ery,
         s: selector,
-        l: left,
-        t: top,
-        w: width,
-        h: height,
         firstClickRank:
           firstThreeClicks < MAX_FIRST_CLICKS ? firstThreeClicks + 1 : null,
       };
@@ -200,7 +198,7 @@
     });
 
     function shouldSendSnapshot() {
-      if (getBrowserName() !== "Chrome") return;
+      if (browser !== "Chrome") return;
       const pageConfig = config.get();
       if (pageConfig.page_config[deviceFieldMap[device]]) {
         sendSnapshot();
@@ -244,35 +242,27 @@
 
 function getBrowserName() {
   const userAgent = navigator.userAgent;
-  let browserName = "Unknown";
+  let browserName = null;
 
-  // Arc
-  if (/Arc/.test(userAgent)) {
-    browserName = "Arc";
-  }
   // Chrome
-  else if (
+  if (
     /Chrome/.test(userAgent) &&
     !/Edge/.test(userAgent) &&
     !/OPR/.test(userAgent)
   ) {
     browserName = "Chrome";
   }
-  // Firefox
-  else if (/Firefox/.test(userAgent)) {
-    browserName = "Firefox";
-  }
   // Safari
   else if (/Safari/.test(userAgent) && !/Chrome/.test(userAgent)) {
     browserName = "Safari";
   }
+  // Firefox
+  else if (/Firefox/.test(userAgent)) {
+    browserName = "Firefox";
+  }
   // Edge
   else if (/Edg/.test(userAgent)) {
     browserName = "Edge";
-  }
-  // Opera
-  else if (/OPR/.test(userAgent)) {
-    browserName = "Opera";
   }
 
   return browserName;

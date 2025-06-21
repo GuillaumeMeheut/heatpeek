@@ -1,4 +1,4 @@
-import type { SupabaseProjectConfigResponse } from "../types/supabase";
+import { createClient } from "@supabase/supabase-js";
 
 export type ProjectConfigResult = {
   id: string;
@@ -19,48 +19,91 @@ export enum ProjectConfigError {
 }
 
 export class SupabaseService {
+  private supabase;
+
   constructor(
     private readonly supabaseUrl: string,
-    private readonly supabaseAnonKey: string
-  ) {}
+    private readonly supabaseAnonKey: string,
+    private readonly supabaseServiceRoleKey?: string
+  ) {
+    // Use service role key if provided, otherwise use anonymous key
+    const key = this.supabaseServiceRoleKey || this.supabaseAnonKey;
+    this.supabase = createClient(this.supabaseUrl, key);
+  }
 
   async getProjectConfig(
     trackingId: string,
     path: string
   ): Promise<ProjectConfigResult | ProjectConfigError> {
-    const apiUrl =
-      `${this.supabaseUrl}/rest/v1/project_config` +
-      `?tracking_id=eq.${encodeURIComponent(trackingId)}` +
-      `&select=id,usageExceeded,page_config!inner(path,ignored_el,privacy_el,update_snap_desktop,update_snap_tablet,update_snap_mobile)` +
-      `&page_config.path=eq.${encodeURIComponent(path)}` +
-      `&limit=1`;
+    try {
+      const { data, error } = await this.supabase
+        .from("project_config")
+        .select(
+          `
+          id,
+          usageExceeded,
+          page_config!inner(
+            path,
+            ignored_el,
+            privacy_el,
+            update_snap_desktop,
+            update_snap_tablet,
+            update_snap_mobile
+          )
+        `
+        )
+        .eq("tracking_id", trackingId)
+        .eq("page_config.path", path)
+        .single();
 
-    const response = await fetch(apiUrl, {
-      headers: {
-        apikey: this.supabaseAnonKey,
-        Authorization: `Bearer ${this.supabaseAnonKey}`,
-      },
-    });
+      if (error) {
+        console.error("Supabase error:", error);
+        return ProjectConfigError.FETCH_ERROR;
+      }
 
-    if (!response.ok) {
+      if (!data) {
+        return ProjectConfigError.NOT_FOUND;
+      }
+
+      const pageConfig = data.page_config?.[0];
+      if (!pageConfig) {
+        return ProjectConfigError.NOT_FOUND;
+      }
+
+      return {
+        id: data.id,
+        usageExceeded: data.usageExceeded,
+        page_config: pageConfig,
+      };
+    } catch (error) {
+      console.error("Unexpected error:", error);
+      return ProjectConfigError.FETCH_ERROR;
+    }
+  }
+
+  async getSnapshotId(
+    trackingId: string,
+    path: string,
+    device: string
+  ): Promise<string | ProjectConfigError> {
+    const { data, error } = await this.supabase
+      .from("snapshots")
+      .select("id, urls!inner(tracking_id, path)")
+      .eq("is_outdated", false)
+      .eq("device", device)
+      .eq("urls.tracking_id", trackingId)
+      .eq("urls.path", path)
+      .single();
+
+    if (error) {
+      console.error("Supabase error:", error);
       return ProjectConfigError.FETCH_ERROR;
     }
 
-    const data = (await response.json()) as SupabaseProjectConfigResponse;
-
-    if (!data.length) {
+    if (!data?.id) {
       return ProjectConfigError.NOT_FOUND;
     }
 
-    const pageConfig = data[0].page_config?.[0];
-    if (!pageConfig) {
-      return ProjectConfigError.NOT_FOUND;
-    }
-
-    return {
-      id: data[0].id,
-      usageExceeded: data[0].usageExceeded,
-      page_config: pageConfig,
-    };
+    return data.id;
   }
 }

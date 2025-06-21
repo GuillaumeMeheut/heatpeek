@@ -2,6 +2,7 @@ import { Hono } from "hono";
 import { cors } from "hono/cors";
 import type { Env } from "../env";
 import { SupabaseService, ProjectConfigError } from "../services/supabase";
+import { configKey } from "../KV/key";
 
 const router = new Hono<{ Bindings: Env }>();
 
@@ -9,7 +10,7 @@ const CACHE_HEADERS = {
   "Cache-Control": "public, max-age=60",
   "X-Source": "supabase",
 };
-const EXPIRATION_TTL = 300;
+const EXPIRATION_TTL = 3600;
 
 router.get("/config", cors(), async (c) => {
   const trackingId = c.req.query("id");
@@ -19,14 +20,14 @@ router.get("/config", cors(), async (c) => {
     return c.body(null, 204);
   }
 
-  const { SUPABASE_URL, SUPABASE_ANON_KEY, CONFIG_CACHE } = c.env;
+  const { SUPABASE_URL, SUPABASE_ANON_KEY, CACHE_HEATPEEK } = c.env;
   const supabaseService = new SupabaseService(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-  const kvKey = `t-${trackingId}-p-${path}`;
+  const kvKey = configKey(trackingId, path);
 
   try {
     // 1. Try reading from KV
-    const cached = await CONFIG_CACHE.get(kvKey, { type: "json" });
+    const cached = await CACHE_HEATPEEK.get(kvKey, { type: "json" });
 
     if (cached) {
       return c.json(cached, 200, CACHE_HEADERS);
@@ -38,7 +39,7 @@ router.get("/config", cors(), async (c) => {
       return c.body(null, 204);
     }
 
-    await CONFIG_CACHE.put(kvKey, JSON.stringify(config), {
+    await CACHE_HEATPEEK.put(kvKey, JSON.stringify(config), {
       expirationTtl: EXPIRATION_TTL,
     });
 
@@ -79,8 +80,7 @@ router.delete(
       return c.body("Missing id or path", 400);
     }
 
-    const kvKey = `t-${trackingId}-p-${path}`;
-    await c.env.CONFIG_CACHE.delete(kvKey);
+    await c.env.CACHE_HEATPEEK.delete(configKey(trackingId, path));
 
     return c.json({ success: true });
   }

@@ -2,9 +2,13 @@ import type { KVNamespace } from "@cloudflare/workers-types";
 interface Env {
   SUPABASE_URL: string;
   SUPABASE_ANON_KEY: string;
-  CONFIG_CACHE: KVNamespace;
+  SUPABASE_SERVICE_ROLE_KEY: string;
+  CACHE_HEATPEEK: KVNamespace;
   INTERNAL_API_KEY: string;
   ALLOWED_ORIGIN: string;
+  CLICKHOUSE_URL: string;
+  CLICKHOUSE_USERNAME: string;
+  CLICKHOUSE_PASSWORD: string;
 }
 
 export { Env };

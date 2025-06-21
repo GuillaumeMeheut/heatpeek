@@ -46,6 +46,14 @@ export function FiltersUrl({
     }
     router.replace(`?${params.toString()}`);
   };
+
+  const getUrlLabel = (url: Url) => {
+    if (url.label) {
+      return `${url.label} (${url.path})`;
+    }
+    return url.path;
+  };
+
   return (
     <div className="flex items-center gap-2">
       <Select
@@ -77,7 +85,7 @@ export function FiltersUrl({
           <Separator className="my-2" />
           {urls?.map((url) => (
             <SelectItem key={url.id} value={url.path}>
-              {url.label || url.path}
+              {getUrlLabel(url)}
             </SelectItem>
           ))}
         </SelectContent>

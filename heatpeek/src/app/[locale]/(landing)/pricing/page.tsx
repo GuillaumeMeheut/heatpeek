@@ -59,7 +59,7 @@ export default async function Pricing() {
       popular: false,
       icon: LayoutDashboard,
       buttonText: "Start with Starter",
-      buttonVariant: "default",
+      buttonVariant: "default" as const,
     },
     {
       name: "Pro",
@@ -79,7 +79,7 @@ export default async function Pricing() {
       popular: true,
       icon: LineChart,
       buttonText: "Upgrade to Pro",
-      buttonVariant: "default",
+      buttonVariant: "default" as const,
     },
   ];
 

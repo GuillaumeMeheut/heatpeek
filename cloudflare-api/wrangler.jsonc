@@ -5,8 +5,8 @@
   "compatibility_date": "2025-06-14",
   "kv_namespaces": [
     {
-      "binding": "CONFIG_CACHE",
-      "id": "72935171a7ec43cab5caec10331b1476"
+      "binding": "CACHE_HEATPEEK",
+      "id": "c2b35274acc941cda0d360a700007173"
     }
   ]
   // "compatibility_flags": [
