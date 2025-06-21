@@ -24,9 +24,13 @@ export default async function HeatmapPage({
   if (!user) redirect("/signin");
   const { id: projectId } = await params;
   const url = searchParams.url;
-  const device = searchParams.device || "desktop";
+  const device = searchParams.device;
 
-  if (!url) {
+  if (
+    !url ||
+    !device ||
+    (device !== "desktop" && device !== "mobile" && device !== "tablet")
+  ) {
     return <div>No url found</div>;
   }
 
