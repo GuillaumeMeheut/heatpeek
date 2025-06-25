@@ -317,7 +317,7 @@ export const updateSnapshot = cache(
 
 export type HeatmapSnapshot = Pick<
   SnapshotsRow,
-  "id" | "label" | "screenshot_url" | "width" | "height" | "url_id"
+  "id" | "label" | "screenshot_url" | "width" | "height" | "url_id" | "dom_data"
 > & {
   urls: Pick<UrlsRow, "path" | "project_id">;
 };
@@ -338,6 +338,7 @@ export const getSnapshot = cache(
        width, 
        height, 
        url_id,
+       dom_data,
        urls!inner (
          path, 
          project_id

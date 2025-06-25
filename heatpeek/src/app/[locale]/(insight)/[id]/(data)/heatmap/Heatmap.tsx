@@ -4,10 +4,12 @@ import { useEffect, useRef, useMemo, useState } from "react";
 import Image from "next/image";
 import simpleheat from "simpleheat";
 import { AggregatedClick, HeatmapSnapshot } from "@/lib/supabase/queries";
+import { RawClick } from "@/lib/clickhouse/queries";
 
 type HeatmapProps = {
-  aggregatedClicks: AggregatedClick[];
+  clicks: AggregatedClick[] | RawClick[];
   pageData: HeatmapSnapshot;
+  clickType?: "aggregated" | "raw";
 };
 
 const HEATMAP_CONFIG = {
@@ -20,7 +22,11 @@ const HEATMAP_CONFIG = {
   OVERLAY_OPACITY: 0.4,
 } as const;
 
-export default function Heatmap({ aggregatedClicks, pageData }: HeatmapProps) {
+export default function Heatmap({
+  clicks,
+  pageData,
+  clickType = "aggregated",
+}: HeatmapProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const heatmapRef = useRef<ReturnType<typeof simpleheat> | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -55,10 +61,10 @@ export default function Heatmap({ aggregatedClicks, pageData }: HeatmapProps) {
     return () => window.removeEventListener("resize", updateDimensions);
   }, [pageData]);
 
-  // Calculate points with intensity based on aggregated clicks
+  // Calculate points with intensity based on aggregated clicks or raw clicks
   const points = useMemo(() => {
     if (
-      aggregatedClicks.length === 0 ||
+      clicks.length === 0 ||
       !pageData ||
       !containerDimensions ||
       !pageData.width ||
@@ -70,13 +76,83 @@ export default function Heatmap({ aggregatedClicks, pageData }: HeatmapProps) {
     const scaleX = containerDimensions.width / pageData.width;
     const scaleY = containerDimensions.height / pageData.height;
 
-    return aggregatedClicks.map((click) => {
-      const x = click.grid_x * scaleX;
-      const y = click.grid_y * scaleY;
-      const intensity = Math.log2(click.count + 1) * 2;
-      return [x, y, intensity] as [number, number, number];
-    });
-  }, [aggregatedClicks, containerDimensions, pageData]);
+    if (clickType === "aggregated") {
+      // Handle aggregated clicks (existing logic)
+      const aggregatedClicks = clicks as AggregatedClick[];
+      return aggregatedClicks.map((click) => {
+        const x = click.grid_x * scaleX;
+        const y = click.grid_y * scaleY;
+        const intensity = Math.log2(click.count + 1) * 2;
+        return [x, y, intensity] as [number, number, number];
+      });
+    } else {
+      // Handle raw clicks
+      const rawClicks = clicks as RawClick[];
+
+      // Parse DOM data to get element positions
+      let domElements: Map<
+        string,
+        { l: number; t: number; w: number; h: number }
+      > | null = null;
+
+      try {
+        if (pageData.dom_data) {
+          const parsedDomData = JSON.parse(pageData.dom_data) as Array<{
+            s: string;
+            l: number;
+            t: number;
+            w: number;
+            h: number;
+          }>;
+          domElements = new Map(parsedDomData.map((el) => [el.s, el]));
+        }
+      } catch (error) {
+        console.error("Error parsing DOM data:", error);
+        return [];
+      }
+
+      if (!domElements) {
+        console.warn("No DOM data available for raw clicks");
+        return [];
+      }
+
+      // Group clicks by position to calculate intensity
+      const clickGroups = new Map<
+        string,
+        { x: number; y: number; count: number }
+      >();
+
+      for (const click of rawClicks) {
+        const element = domElements.get(click.selector);
+        if (!element) continue;
+
+        // Calculate absolute position
+        const x = element.l + click.erx * element.w;
+        const y = element.t + click.ery * element.h;
+
+        // Round to grid for grouping
+        const gridX =
+          Math.round(x / HEATMAP_CONFIG.GRID_SIZE) * HEATMAP_CONFIG.GRID_SIZE;
+        const gridY =
+          Math.round(y / HEATMAP_CONFIG.GRID_SIZE) * HEATMAP_CONFIG.GRID_SIZE;
+        const key = `${gridX},${gridY}`;
+
+        const existing = clickGroups.get(key);
+        if (existing) {
+          existing.count += 1;
+        } else {
+          clickGroups.set(key, { x, y, count: 1 });
+        }
+      }
+
+      return Array.from(clickGroups.values()).map(({ x, y, count }) => {
+        const scaledX = x * scaleX;
+        const scaledY = y * scaleY;
+        const intensity = Math.log2(count + 1) * 2;
+        return [scaledX, scaledY, intensity] as [number, number, number];
+      });
+    }
+  }, [clicks, containerDimensions, pageData, clickType]);
 
   useEffect(() => {
     if (canvasRef.current && points.length > 0 && containerDimensions) {

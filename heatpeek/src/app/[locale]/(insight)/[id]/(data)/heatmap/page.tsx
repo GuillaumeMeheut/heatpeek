@@ -1,9 +1,5 @@
 import Heatmap from "./Heatmap";
-import {
-  getSnapshot,
-  getUser,
-  getAggregatedClicks,
-} from "@/lib/supabase/queries";
+import { getSnapshot, getUser } from "@/lib/supabase/queries";
 import { createClient } from "@/lib/supabase/server";
 import { OptionsBar } from "./OptionsBar";
 import { redirect } from "next/navigation";
@@ -11,6 +7,7 @@ import { Card } from "@/components/ui/card";
 import { Suspense } from "react";
 import { Loader2 } from "lucide-react";
 import VersioningButton from "./VersioningButton";
+import { getClicks } from "@/lib/clickhouse/queries";
 
 export default async function HeatmapPage({
   params,
@@ -44,7 +41,11 @@ export default async function HeatmapPage({
     return <div>The data is still being processed</div>;
   }
 
-  const aggregatedClicks = await getAggregatedClicks(supabase, snapshot.id);
+  const clicks = await getClicks({
+    snapshotId: snapshot.id,
+    device: device,
+    browser: "Chrome",
+  });
 
   return (
     <div className="flex">
@@ -64,8 +65,9 @@ export default async function HeatmapPage({
                   <OptionsBar />
 
                   <Heatmap
-                    aggregatedClicks={aggregatedClicks || []}
+                    clicks={clicks || []}
                     pageData={snapshot}
+                    clickType="raw"
                   />
                 </div>
               </div>
