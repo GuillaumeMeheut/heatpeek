@@ -4,14 +4,22 @@
   "description": "Heatpeek click tracking script",
   "main": "heatpeek.js",
   "scripts": {
-    "build": "uglifyjs heatpeek.js -c -m -o heatpeek.min.js && javascript-obfuscator heatpeek.min.js --output e/h.js",
-    "prepare": "husky"
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "copy-tracker": "cp dist/index.iife.js ../heatpeek/public/heatpeek-tracker.js"
   },
   "devDependencies": {
-    "javascript-obfuscator": "^4.1.0",
-    "husky": "^9.0.11"
+    "husky": "^9.0.11",
+    "rollup-plugin-obfuscator": "^1.1.0",
+    "terser": "^5.43.1",
+    "vite": "^7.0.0"
   },
   "dependencies": {
     "uglify-js": "^3.19.3"
-  }
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs"
 }
