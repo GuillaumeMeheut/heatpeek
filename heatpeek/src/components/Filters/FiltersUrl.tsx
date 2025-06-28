@@ -10,7 +10,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Url } from "@/lib/supabase/queries";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Button } from "../ui/button";
 import { Plus, Settings } from "lucide-react";
 import Link from "next/link";
@@ -33,20 +33,34 @@ export function FiltersUrl({
 
   const isDashboard = pathname.includes("/dashboard");
 
-  useEffect(() => {
-    if (!urlParam && urls && urls.length > 0) {
-      // If no URL is set and we have URLs, set the first one
-      const firstUrl = urls[0];
-      setSelectedUrl(firstUrl.path);
-
-      // Update the query param
+  const setUrl = useCallback(
+    (url: string) => {
+      setSelectedUrl(url);
       const params = new URLSearchParams(searchParams.toString());
-      params.set("url", firstUrl.path);
+      params.set("url", url);
       router.replace(`?${params.toString()}`);
+    },
+    [searchParams, router]
+  );
+
+  useEffect(() => {
+    if (
+      !isDashboard &&
+      urls &&
+      urls.length > 0 &&
+      (!urlParam || urlParam === "all")
+    ) {
+      // If not on dashboard and we have URLs, but no URL param or "all", set to first URL
+      const firstUrl = urls[0];
+      setUrl(firstUrl.path);
+    } else if (!urlParam && urls && urls.length > 0) {
+      // If no URL is set and we have URLs, set the first one (for dashboard)
+      const firstUrl = urls[0];
+      setUrl(firstUrl.path);
     } else {
-      setSelectedUrl(urlParam || "all");
+      setUrl(urlParam || "all");
     }
-  }, [urlParam, urls, searchParams, router]);
+  }, [urlParam, urls, isDashboard, setUrl]);
 
   const handleUrlChange = (value: string) => {
     setSelectedUrl(value);

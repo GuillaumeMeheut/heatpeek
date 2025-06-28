@@ -28,16 +28,12 @@ const filterRules: FilterRule[] = [
       "/dashboard": "all", // Dashboard defaults to "all"
     },
   },
+  //For url filter check component FiltersUrl.tsx the default value doesnt apply for url
   {
     parameter: "url",
     defaultValue: "",
-    routeSpecificTransformations: {
-      "/heatmap": {
-        all: "", // Convert "all" to "desktop" only for heatmap routes
-      },
-    },
     routes: {
-      include: ["/(data)", "/dashboard"], // Include dashboard routes
+      include: ["/(data)", "/heatmap", "/dashboard"], // Include dashboard routes
     },
     routeSpecificDefaults: {
       "/dashboard": "all", // Dashboard defaults to "all" for url too

@@ -10,8 +10,6 @@ const I18nMiddleware = createI18nMiddleware({
 });
 
 export async function middleware(request: NextRequest) {
-  console.log("request middleware", request.nextUrl.pathname);
-
   // First handle the session update
   const sessionResponse = await updateSession(request);
 

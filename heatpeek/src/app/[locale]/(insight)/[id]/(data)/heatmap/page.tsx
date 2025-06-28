@@ -25,10 +25,11 @@ export default async function HeatmapPage({
 
   if (
     !url ||
+    url === "all" ||
     !device ||
     (device !== "desktop" && device !== "mobile" && device !== "tablet")
   ) {
-    return <div>No url found</div>;
+    return <div>No heatmap found</div>;
   }
 
   const snapshot = await getSnapshot(supabase, projectId, url, device);
