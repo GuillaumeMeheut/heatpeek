@@ -16,3 +16,74 @@ export type ClickHouseEvent = {
   browser: string;
   inserted_at: string;
 };
+
+export type RageClickEvent = {
+  snapshot_id: string;
+  tracking_id: string;
+  path: string;
+  device: string;
+  selector: string;
+  erx: number;
+  ery: number;
+  browser: string;
+  inserted_at: string;
+};
+
+export type ScrollDepthEvent = {
+  snapshot_id: string;
+  tracking_id: string;
+  path: string;
+  device: string;
+  browser: string;
+  inserted_at: string;
+  scroll_depth_percentage: number;
+};
+
+export type PageViewEvent = {
+  snapshot_id: string;
+  tracking_id: string;
+  path: string;
+  device: string;
+  browser: string;
+  inserted_at: string;
+  view_duration_ms: number;
+  is_bounce: boolean;
+};
+
+export type EventType = "click" | "rage_click" | "scroll_depth" | "page_view";
+
+export type BaseEvent = {
+  type: EventType;
+  timestamp: string;
+};
+
+export type ClickEvent = BaseEvent & {
+  type: "click";
+  selector: string;
+  erx: number;
+  ery: number;
+};
+
+export type RageClickEventData = BaseEvent & {
+  type: "rage_click";
+  selector: string;
+  erx: number;
+  ery: number;
+};
+
+export type ScrollDepthEventData = BaseEvent & {
+  type: "scroll_depth";
+  scroll_depth_percentage: number;
+};
+
+export type PageViewEventData = BaseEvent & {
+  type: "page_view";
+  view_duration_ms: number;
+  is_bounce: boolean;
+};
+
+export type MultiEvent =
+  | ClickEvent
+  | RageClickEventData
+  | ScrollDepthEventData
+  | PageViewEventData;

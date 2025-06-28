@@ -10,6 +10,7 @@ type HeatmapProps = {
   clicks: AggregatedClick[] | RawClick[];
   pageData: HeatmapSnapshot;
   clickType?: "aggregated" | "raw";
+  overlayOpacity?: number;
 };
 
 const HEATMAP_CONFIG = {
@@ -19,13 +20,13 @@ const HEATMAP_CONFIG = {
     MAX: 25,
   },
   MAX_INTENSITY: 10,
-  OVERLAY_OPACITY: 0.4,
 } as const;
 
 export default function Heatmap({
   clicks,
   pageData,
   clickType = "aggregated",
+  overlayOpacity,
 }: HeatmapProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const heatmapRef = useRef<ReturnType<typeof simpleheat> | null>(null);
@@ -186,6 +187,8 @@ export default function Heatmap({
     }
   }, [points, containerDimensions]);
 
+  console.log("render");
+
   return (
     <div
       ref={containerRef}
@@ -218,7 +221,7 @@ export default function Heatmap({
           <div
             className="absolute inset-0 pointer-events-none z-10"
             style={{
-              background: `rgba(0,0,0,${HEATMAP_CONFIG.OVERLAY_OPACITY})`,
+              background: `rgba(0,0,0,${overlayOpacity})`,
               width: containerDimensions.width,
               height: containerDimensions.height,
             }}

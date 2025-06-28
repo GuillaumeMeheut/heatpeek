@@ -11,12 +11,79 @@ import {
   finalizeMetrics,
   logPerformance,
 } from "../lib/utils";
+import type {
+  ClickEvent,
+  RageClickEventData,
+  ClickHouseEvent,
+  RageClickEvent,
+} from "../types/clickhouse";
 
 const router = new Hono<{ Bindings: Env }>();
 
 const EXPIRATION_TTL = 360;
 
-router.post("/click", cors(), async (c) => {
+// Helper function to process click events
+async function processClickEvents(
+  events: ClickEvent[],
+  snapshotId: string,
+  trackingId: string,
+  path: string,
+  device: string,
+  browser: string,
+  clickhouseService: ClickHouseService,
+  metrics: any
+): Promise<boolean> {
+  const clickhouseEvents: ClickHouseEvent[] = events.map((event) => ({
+    snapshot_id: snapshotId,
+    tracking_id: trackingId,
+    path,
+    device,
+    browser,
+    selector: event.selector,
+    erx: event.erx,
+    ery: event.ery,
+    inserted_at: event.timestamp,
+  }));
+
+  const result = await measureStep(metrics, "insert_clicks", () =>
+    clickhouseService.insertClicks(clickhouseEvents)
+  );
+
+  return result !== ClickHouseError.QUERY_ERROR;
+}
+
+// Helper function to process rage click events
+async function processRageClickEvents(
+  events: RageClickEventData[],
+  snapshotId: string,
+  trackingId: string,
+  path: string,
+  device: string,
+  browser: string,
+  clickhouseService: ClickHouseService,
+  metrics: any
+): Promise<boolean> {
+  const rageClickEvents: RageClickEvent[] = events.map((event) => ({
+    snapshot_id: snapshotId,
+    tracking_id: trackingId,
+    path,
+    device,
+    browser,
+    selector: event.selector,
+    erx: event.erx,
+    ery: event.ery,
+    inserted_at: event.timestamp,
+  }));
+
+  const result = await measureStep(metrics, "insert_rage_raw_clicks", () =>
+    clickhouseService.insertRageClicks(rageClickEvents)
+  );
+
+  return result !== ClickHouseError.QUERY_ERROR;
+}
+
+// New multi-event route
+router.post("/events", cors(), async (c) => {
   const metrics = createPerformanceTracker();
 
   try {
@@ -91,38 +158,96 @@ router.post("/click", cors(), async (c) => {
         return c.json({ success: false, error: "Snapshot not found" }, 404);
       }
     } catch (error) {
-      console.error("Error closing ClickHouse connection:", error);
+      console.error("Error getting snapshot ID:", error);
       return c.json({ success: false, error: "Internal error" }, 500);
     }
 
     try {
-      const clickhouseEvents = await measureStep(
-        metrics,
-        "prepare_events",
-        () =>
-          events.map((event) => ({
-            snapshot_id: snapshotId,
-            tracking_id: trackingId,
+      // Group events by type
+      const clickEvents: ClickEvent[] = [];
+      const rageClickEvents: RageClickEventData[] = [];
+
+      for (const event of events) {
+        if (!event.type || !event.timestamp) {
+          console.warn("Invalid event format:", event);
+          continue;
+        }
+
+        switch (event.type) {
+          case "click":
+            if (
+              event.selector &&
+              event.erx !== undefined &&
+              event.ery !== undefined
+            ) {
+              clickEvents.push(event as ClickEvent);
+            }
+            break;
+          case "rage_click":
+            if (
+              event.selector &&
+              event.erx !== undefined &&
+              event.ery !== undefined
+            ) {
+              rageClickEvents.push(event as RageClickEventData);
+            }
+            break;
+          default:
+            console.warn("Unsupported event type:", event.type);
+        }
+      }
+
+      // Process each event type
+      const results = await measureStep(metrics, "process_events", async () => {
+        const results = {
+          clicks: true,
+          rageClicks: true,
+        };
+
+        if (clickEvents.length > 0) {
+          results.clicks = await processClickEvents(
+            clickEvents,
+            snapshotId!,
+            trackingId,
             path,
             device,
             browser,
-            selector: event.s,
-            erx: event.erx,
-            ery: event.ery,
-            inserted_at: new Date().toISOString(),
-          }))
-      );
+            clickhouseService,
+            metrics
+          );
+        }
 
-      const result = await measureStep(metrics, "insert_clicks", () =>
-        clickhouseService.insertClicks(clickhouseEvents)
-      );
+        if (rageClickEvents.length > 0) {
+          results.rageClicks = await processRageClickEvents(
+            rageClickEvents,
+            snapshotId!,
+            trackingId,
+            path,
+            device,
+            browser,
+            clickhouseService,
+            metrics
+          );
+        }
 
-      if (result === ClickHouseError.QUERY_ERROR) {
-        console.error("Failed to insert events into ClickHouse");
+        return results;
+      });
+
+      if (!results.clicks || !results.rageClicks) {
+        console.error("Failed to insert some events into ClickHouse");
         return c.json({ success: false, error: "Database error" }, 500);
       }
 
-      return c.json({ success: true }, 200);
+      return c.json(
+        {
+          success: true,
+          processed: {
+            clicks: clickEvents.length,
+            rageClicks: rageClickEvents.length,
+          },
+        },
+        200
+      );
     } catch (error) {
       console.error("Error processing events:", error);
       return c.json({ success: false, error: "Internal error" }, 500);
@@ -133,7 +258,7 @@ router.post("/click", cors(), async (c) => {
     }
   } finally {
     const finalMetrics = finalizeMetrics(metrics);
-    logPerformance(finalMetrics, "POST /click");
+    logPerformance(finalMetrics, "POST /events");
   }
 });
 

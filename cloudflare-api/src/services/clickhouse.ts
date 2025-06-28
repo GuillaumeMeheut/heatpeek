@@ -1,5 +1,5 @@
 import { createClient } from "@clickhouse/client-web";
-import type { ClickHouseEvent } from "../types/clickhouse";
+import type { ClickHouseEvent, RageClickEvent } from "../types/clickhouse";
 import { ClickHouseError } from "../types/clickhouse";
 
 export class ClickHouseService {
@@ -28,28 +28,22 @@ export class ClickHouseService {
     });
   }
 
-  async insertClicks(
-    clicks: ClickHouseEvent[],
+  private async executeWithRetry<T>(
+    operation: () => Promise<T>,
+    operationName: string,
+    dataLength: number,
     maxRetries: number = 3,
     initialDelayMs: number = 200
   ): Promise<boolean | ClickHouseError> {
-    if (clicks.length === 0) {
-      return true;
-    }
-
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
       try {
         const start = Date.now();
 
-        await this.client.insert({
-          table: "raw_clicks",
-          values: clicks,
-          format: "JSONEachRow",
-        });
+        await operation();
 
         const elapsed = Date.now() - start;
         console.log(
-          ` Inserted ${clicks.length} clicks in ${elapsed}ms (attempt ${attempt})`
+          ` Inserted ${dataLength} ${operationName} in ${elapsed}ms (attempt ${attempt})`
         );
 
         return true;
@@ -72,6 +66,52 @@ export class ClickHouseService {
     }
 
     return ClickHouseError.QUERY_ERROR;
+  }
+
+  async insertClicks(
+    clicks: ClickHouseEvent[],
+    maxRetries: number = 3,
+    initialDelayMs: number = 200
+  ): Promise<boolean | ClickHouseError> {
+    if (clicks.length === 0) {
+      return true;
+    }
+
+    return this.executeWithRetry(
+      () =>
+        this.client.insert({
+          table: "raw_clicks",
+          values: clicks,
+          format: "JSONEachRow",
+        }),
+      "clicks",
+      clicks.length,
+      maxRetries,
+      initialDelayMs
+    );
+  }
+
+  async insertRageClicks(
+    rageClicks: RageClickEvent[],
+    maxRetries: number = 3,
+    initialDelayMs: number = 200
+  ): Promise<boolean | ClickHouseError> {
+    if (rageClicks.length === 0) {
+      return true;
+    }
+
+    return this.executeWithRetry(
+      () =>
+        this.client.insert({
+          table: "rage_raw_clicks",
+          values: rageClicks,
+          format: "JSONEachRow",
+        }),
+      "rage clicks",
+      rageClicks.length,
+      maxRetries,
+      initialDelayMs
+    );
   }
 
   async close(): Promise<void> {

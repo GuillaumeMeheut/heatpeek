@@ -55,6 +55,7 @@ export default {
   },
   optionsBar: {
     clickPatterns: "Analyser les modèles de clics",
+    rageClicks: "Détecter les clics de rage (indicateurs de frustration)",
     scroll: "Suivre le défilement",
     mobileView: "Vue mobile",
     tabletView: "Vue tablette",

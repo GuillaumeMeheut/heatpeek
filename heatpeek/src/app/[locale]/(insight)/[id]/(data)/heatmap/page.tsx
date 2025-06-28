@@ -1,7 +1,6 @@
-import Heatmap from "./Heatmap";
+import HeatmapWithOptions from "./HeatmapWithOptions";
 import { getSnapshot, getUser } from "@/lib/supabase/queries";
 import { createClient } from "@/lib/supabase/server";
-import { OptionsBar } from "./OptionsBar";
 import { redirect } from "next/navigation";
 import { Card } from "@/components/ui/card";
 import { Suspense } from "react";
@@ -63,9 +62,7 @@ export default async function HeatmapPage({
             <div className="container mx-auto p-4 relative">
               <div className="w-full">
                 <div className="relative min-w-full">
-                  <OptionsBar />
-
-                  <Heatmap
+                  <HeatmapWithOptions
                     clicks={clicks || []}
                     pageData={snapshot}
                     clickType="raw"

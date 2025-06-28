@@ -63,7 +63,12 @@
     let firstThreeClicks = 0;
     const MAX_FIRST_CLICKS = 3;
 
-    const clickBuffer = [];
+    // Track clicks per selector for rage click detection
+    const clickCounts = new Map();
+    const RAGE_CLICK_THRESHOLD = 3;
+    const RAGE_CLICK_WINDOW_MS = 1500;
+
+    const eventBuffer = [];
     const MAX_BUFFER_SIZE = 10;
     const MAX_INTERVAL_MS = 5000;
 
@@ -74,7 +79,9 @@
       if (isSPANavigation && lastPage === currentPath) return;
 
       lastPage = currentPath;
-      firstThreeClicks = 0;
+      firstThreeClicks = 0; // Reset first three clicks counter on page change
+      // Reset click counts on page change
+      clickCounts.clear();
     }
 
     // Handle hash-based routing
@@ -119,23 +126,23 @@
     });
 
     function flushBuffer() {
-      if (clickBuffer.length === 0) return;
+      if (eventBuffer.length === 0) return;
       const data = JSON.stringify({
         trackingId,
         path,
         device,
         browser,
-        events: clickBuffer.splice(0, clickBuffer.length),
+        events: eventBuffer.splice(0, eventBuffer.length),
       });
       if (navigator.sendBeacon) {
-        navigator.sendBeacon(`${endpointAPI}/api/event/click`, data);
+        navigator.sendBeacon(`${endpointAPI}/api/event/events`, data);
       } else {
-        fetch(`${endpointAPI}/api/event/click`, {
+        fetch(`${endpointAPI}/api/event/events`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: data,
         }).catch((error) => {
-          console.error("Heatpeek: Error sending click data:", error);
+          console.error("Heatpeek: Error sending event data:", error);
         });
       }
     }
@@ -161,11 +168,6 @@
       const top = Math.round(rect.top + window.scrollY);
       const width = Math.round(rect.width);
       const height = Math.round(rect.height);
-      const visible = !!(
-        el.offsetWidth ||
-        el.offsetHeight ||
-        el.getClientRects().length
-      );
 
       // Generate selector using the same method as route.ts
       const selector = getUniqueSelector(el);
@@ -174,19 +176,57 @@
       const erx = (e.pageX - left) / width;
       const ery = (e.pageY - top) / height;
 
-      const payload = {
+      // Track clicks for rage click detection
+      if (!clickCounts.has(selector)) {
+        clickCounts.set(selector, []);
+      }
+      const selectorClicks = clickCounts.get(selector);
+      selectorClicks.push(now);
+
+      // Remove old clicks outside the window
+      const cutoffTime = now - RAGE_CLICK_WINDOW_MS;
+      while (selectorClicks.length > 0 && selectorClicks[0] < cutoffTime) {
+        selectorClicks.shift();
+      }
+
+      // Determine if this is a rage click
+      // A rage click occurs when this click makes the total count reach or exceed the threshold
+      const isRageClick = selectorClicks.length >= RAGE_CLICK_THRESHOLD;
+
+      // Debug logging
+      console.log(
+        `Heatpeek: Click on ${selector}, count: ${selectorClicks.length}, isRageClick: ${isRageClick}`
+      );
+
+      // Create base event payload
+      const basePayload = {
         timestamp: new Date().toISOString(),
-        visible,
+        selector,
         erx,
         ery,
-        s: selector,
-        firstClickRank:
-          firstThreeClicks < MAX_FIRST_CLICKS ? firstThreeClicks + 1 : null,
       };
 
-      clickBuffer.push(payload);
+      // Add to buffer based on event type
+      if (isRageClick) {
+        // Send rage click event
+        const rageClickPayload = {
+          ...basePayload,
+          type: "rage_click",
+        };
+        eventBuffer.push(rageClickPayload);
+      } else {
+        // Regular click event
+        const clickPayload = {
+          ...basePayload,
+          type: "click",
+          firstClickRank:
+            firstThreeClicks < MAX_FIRST_CLICKS ? firstThreeClicks + 1 : null,
+        };
+        eventBuffer.push(clickPayload);
+      }
+
       firstThreeClicks++;
-      if (clickBuffer.length >= MAX_BUFFER_SIZE) {
+      if (eventBuffer.length >= MAX_BUFFER_SIZE) {
         flushBuffer();
       }
     });
@@ -238,179 +278,179 @@
     if (pageConfig.page_config.is_active === false) return false;
     return true;
   }
-})();
 
-function getBrowserName() {
-  const userAgent = navigator.userAgent;
-  let browserName = null;
+  function getBrowserName() {
+    const userAgent = navigator.userAgent;
+    let browserName = null;
 
-  // Chrome
-  if (
-    /Chrome/.test(userAgent) &&
-    !/Edge/.test(userAgent) &&
-    !/OPR/.test(userAgent)
-  ) {
-    browserName = "Chrome";
-  }
-  // Safari
-  else if (/Safari/.test(userAgent) && !/Chrome/.test(userAgent)) {
-    browserName = "Safari";
-  }
-  // Firefox
-  else if (/Firefox/.test(userAgent)) {
-    browserName = "Firefox";
-  }
-  // Edge
-  else if (/Edg/.test(userAgent)) {
-    browserName = "Edge";
+    // Chrome
+    if (
+      /Chrome/.test(userAgent) &&
+      !/Edge/.test(userAgent) &&
+      !/OPR/.test(userAgent)
+    ) {
+      browserName = "Chrome";
+    }
+    // Safari
+    else if (/Safari/.test(userAgent) && !/Chrome/.test(userAgent)) {
+      browserName = "Safari";
+    }
+    // Firefox
+    else if (/Firefox/.test(userAgent)) {
+      browserName = "Firefox";
+    }
+    // Edge
+    else if (/Edg/.test(userAgent)) {
+      browserName = "Edge";
+    }
+
+    return browserName;
   }
 
-  return browserName;
-}
-
-async function verifyTracking(endpoint, trackingId) {
-  const urlParams = new URLSearchParams(window.location.search);
-  if (urlParams.get("verifyHp") === trackingId) {
-    fetch(`${endpoint}/api/verify/${trackingId}`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ verified: true }),
-    })
-      .then(() => {
-        window.close();
+  async function verifyTracking(endpoint, trackingId) {
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get("verifyHp") === trackingId) {
+      fetch(`${endpoint}/api/verify/${trackingId}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ verified: true }),
       })
-      .catch((error) => {
-        console.error(error);
-      });
-  }
-}
-
-function getViewportDeviceCategory() {
-  const viewportWidth = window.innerWidth;
-
-  // Device breakpoints in pixels
-  const BREAKPOINTS = {
-    MOBILE: 768,
-    TABLET: 1024,
-    DESKTOP: 1920,
-  };
-
-  if (viewportWidth <= BREAKPOINTS.MOBILE) {
-    return "mobile";
-  } else if (viewportWidth <= BREAKPOINTS.TABLET) {
-    return "tablet";
-  } else if (viewportWidth <= BREAKPOINTS.DESKTOP) {
-    return "desktop";
+        .then(() => {
+          window.close();
+        })
+        .catch((error) => {
+          console.error(error);
+        });
+    }
   }
 
-  return "large-desktop";
-}
+  function getViewportDeviceCategory() {
+    const viewportWidth = window.innerWidth;
 
-function getUniqueSelector(el) {
-  if (el.id) {
-    return `#${CSS.escape(el.id)}`;
-  }
+    // Device breakpoints in pixels
+    const BREAKPOINTS = {
+      MOBILE: 768,
+      TABLET: 1024,
+      DESKTOP: 1920,
+    };
 
-  const parts = [];
-
-  while (el && el.nodeType === Node.ELEMENT_NODE) {
-    let part = el.nodeName.toLowerCase();
-
-    if (el.className) {
-      const classList = Array.from(el.classList)
-        .map((cls) => `.${CSS.escape(cls)}`)
-        .join("");
-      part += classList;
+    if (viewportWidth <= BREAKPOINTS.MOBILE) {
+      return "mobile";
+    } else if (viewportWidth <= BREAKPOINTS.TABLET) {
+      return "tablet";
+    } else if (viewportWidth <= BREAKPOINTS.DESKTOP) {
+      return "desktop";
     }
 
-    const parent = el.parentElement;
-    if (parent) {
-      const siblings = Array.from(parent.children).filter(
-        (child) => child.tagName === el.tagName
-      );
+    return "large-desktop";
+  }
 
-      if (siblings.length > 1) {
-        const index = siblings.indexOf(el) + 1;
-        part += `:nth-of-type(${index})`;
+  function getUniqueSelector(el) {
+    if (el.id) {
+      return `#${CSS.escape(el.id)}`;
+    }
+
+    const parts = [];
+
+    while (el && el.nodeType === Node.ELEMENT_NODE) {
+      let part = el.nodeName.toLowerCase();
+
+      if (el.className) {
+        const classList = Array.from(el.classList)
+          .map((cls) => `.${CSS.escape(cls)}`)
+          .join("");
+        part += classList;
       }
+
+      const parent = el.parentElement;
+      if (parent) {
+        const siblings = Array.from(parent.children).filter(
+          (child) => child.tagName === el.tagName
+        );
+
+        if (siblings.length > 1) {
+          const index = siblings.indexOf(el) + 1;
+          part += `:nth-of-type(${index})`;
+        }
+      }
+
+      parts.unshift(part);
+      el = el.parentElement;
     }
 
-    parts.unshift(part);
-    el = el.parentElement;
+    const fullSelector = parts.join(" > ");
+    return generateShortHash(fullSelector);
   }
 
-  const fullSelector = parts.join(" > ");
-  return generateShortHash(fullSelector);
-}
-
-function generateShortHash(str) {
-  let hash = 0;
-  for (let i = 0; i < str.length; i++) {
-    const char = str.charCodeAt(i);
-    hash = (hash << 5) - hash + char;
-    hash = hash & hash; // Convert to 32bit integer
+  function generateShortHash(str) {
+    let hash = 0;
+    for (let i = 0; i < str.length; i++) {
+      const char = str.charCodeAt(i);
+      hash = (hash << 5) - hash + char;
+      hash = hash & hash; // Convert to 32bit integer
+    }
+    // Convert to base36 (alphanumeric) and take first 8 characters
+    return Math.abs(hash).toString(36).substring(0, 8);
   }
-  // Convert to base36 (alphanumeric) and take first 8 characters
-  return Math.abs(hash).toString(36).substring(0, 8);
-}
 
-function detectBot() {
-  const userAgent = navigator.userAgent.toLowerCase();
-  const botPatterns = [
-    // Common bot identifiers
-    "bot",
-    "crawler",
-    "spider",
-    "headless",
-    "selenium",
-    // Search engine bots
-    "googlebot",
-    "bingbot",
-    "yandexbot",
-    "duckduckbot",
-    "baiduspider",
-    // Monitoring and testing tools
-    "lighthouse",
-    "webdriver",
-    "phantomjs",
-    "puppeteer",
-    "playwright",
-    // Security scanners
-    "nmap",
-    "nikto",
-    "acunetix",
-    "nessus",
-    "burp",
-    "zap",
-    // Automation tools
-    "curl",
-    "wget",
-    "python-requests",
-    "java-http-client",
-    // Analytics and monitoring
-    "pingdom",
-    "uptimerobot",
-    "newrelic",
-    "datadog",
-    // Social media bots
-    "facebookexternalhit",
-    "twitterbot",
-    "linkedinbot",
-    // Other common patterns
-    "apache-httpclient",
-    "python-urllib",
-    "java-http-client",
-    "mozilla/5.0 (compatible;)",
-    "mozilla/5.0 (bot;)",
-    "mozilla/5.0 (crawler;)",
-    "mozilla/5.0 (spider;)",
-    "mozilla/5.0 (monitoring;)",
-  ];
-  return botPatterns.some((pattern) => userAgent.includes(pattern));
-}
+  function detectBot() {
+    const userAgent = navigator.userAgent.toLowerCase();
+    const botPatterns = [
+      // Common bot identifiers
+      "bot",
+      "crawler",
+      "spider",
+      "headless",
+      "selenium",
+      // Search engine bots
+      "googlebot",
+      "bingbot",
+      "yandexbot",
+      "duckduckbot",
+      "baiduspider",
+      // Monitoring and testing tools
+      "lighthouse",
+      "webdriver",
+      "phantomjs",
+      "puppeteer",
+      "playwright",
+      // Security scanners
+      "nmap",
+      "nikto",
+      "acunetix",
+      "nessus",
+      "burp",
+      "zap",
+      // Automation tools
+      "curl",
+      "wget",
+      "python-requests",
+      "java-http-client",
+      // Analytics and monitoring
+      "pingdom",
+      "uptimerobot",
+      "newrelic",
+      "datadog",
+      // Social media bots
+      "facebookexternalhit",
+      "twitterbot",
+      "linkedinbot",
+      // Other common patterns
+      "apache-httpclient",
+      "python-urllib",
+      "java-http-client",
+      "mozilla/5.0 (compatible;)",
+      "mozilla/5.0 (bot;)",
+      "mozilla/5.0 (crawler;)",
+      "mozilla/5.0 (spider;)",
+      "mozilla/5.0 (monitoring;)",
+    ];
+    return botPatterns.some((pattern) => userAgent.includes(pattern));
+  }
 
-const deviceFieldMap = {
-  desktop: "update_snap_desktop",
-  tablet: "update_snap_tablet",
-  mobile: "update_snap_mobile",
-};
+  const deviceFieldMap = {
+    desktop: "update_snap_desktop",
+    tablet: "update_snap_tablet",
+    mobile: "update_snap_mobile",
+  };
+})();
