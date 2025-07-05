@@ -59,15 +59,6 @@ export function OptionsBar({ opacity, onOpacityChange }: OptionsBarProps) {
           <TooltipButton icon={Zap} tooltip={t("optionsBar.rageClicks")} />
           <TooltipButton icon={Mouse} tooltip={t("optionsBar.scroll")} />
         </div>
-        <Separator orientation="vertical" className="h-6" />
-        <div className="flex gap-2">
-          <TooltipButton icon={Monitor} tooltip={t("optionsBar.desktopView")} />
-          <TooltipButton icon={Tablet} tooltip={t("optionsBar.tabletView")} />
-          <TooltipButton
-            icon={Smartphone}
-            tooltip={t("optionsBar.mobileView")}
-          />
-        </div>
 
         <Separator orientation="vertical" className="h-6" />
 

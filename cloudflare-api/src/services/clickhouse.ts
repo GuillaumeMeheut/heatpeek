@@ -1,5 +1,9 @@
 import { createClient } from "@clickhouse/client-web";
-import type { ClickHouseEvent, RageClickEvent } from "../types/clickhouse";
+import type {
+  ClickHouseEvent,
+  PageViewEvent,
+  RageClickEvent,
+} from "../types/clickhouse";
 import { ClickHouseError } from "../types/clickhouse";
 
 export class ClickHouseService {
@@ -30,21 +34,12 @@ export class ClickHouseService {
 
   private async executeWithRetry<T>(
     operation: () => Promise<T>,
-    operationName: string,
-    dataLength: number,
     maxRetries: number = 3,
     initialDelayMs: number = 200
   ): Promise<boolean | ClickHouseError> {
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
       try {
-        const start = Date.now();
-
         await operation();
-
-        const elapsed = Date.now() - start;
-        console.log(
-          ` Inserted ${dataLength} ${operationName} in ${elapsed}ms (attempt ${attempt})`
-        );
 
         return true;
       } catch (error: any) {
@@ -84,8 +79,6 @@ export class ClickHouseService {
           values: clicks,
           format: "JSONEachRow",
         }),
-      "clicks",
-      clicks.length,
       maxRetries,
       initialDelayMs
     );
@@ -107,11 +100,28 @@ export class ClickHouseService {
           values: rageClicks,
           format: "JSONEachRow",
         }),
-      "rage clicks",
-      rageClicks.length,
       maxRetries,
       initialDelayMs
     );
+  }
+
+  async insertPageView(
+    pageViews: PageViewEvent[]
+  ): Promise<boolean | ClickHouseError> {
+    try {
+      if (pageViews.length === 0) {
+        return true;
+      }
+      await this.client.insert({
+        table: "raw_pageviews",
+        values: [pageViews],
+        format: "JSONEachRow",
+      });
+      return true;
+    } catch (error) {
+      console.error("ClickHouse error insertPageView:", error);
+      return ClickHouseError.QUERY_ERROR;
+    }
   }
 
   async close(): Promise<void> {

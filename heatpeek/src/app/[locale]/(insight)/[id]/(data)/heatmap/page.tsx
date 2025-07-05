@@ -44,7 +44,7 @@ export default async function HeatmapPage({
   const clicks = await getClicks({
     snapshotId: snapshot.id,
     device: device,
-    browser: "Chrome",
+    browser: "chrome",
   });
 
   return (

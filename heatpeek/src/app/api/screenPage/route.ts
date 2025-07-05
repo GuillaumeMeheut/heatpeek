@@ -13,7 +13,7 @@ import {
   uploadScreenshot,
 } from "@/lib/supabase/queries";
 import { createServerSupabaseClientWithServiceRole } from "@/lib/supabase/server";
-import { purgeConfig } from "@/lib/cloudflare/api";
+import { purgeConfig, purgeSnapshot } from "@/lib/cloudflare/api";
 import { z } from "zod";
 
 const ScreenPageRequestSchema = z.object({
@@ -57,15 +57,25 @@ export async function POST(request: NextRequest) {
 
   const referer = request.headers.get("referer");
 
-  if (!referer || referer !== url) {
-    console.error("Invalid referer", referer, url);
+  if (!referer) {
+    console.error("Missing referer header");
     return new Response("ok", {
       headers: corsHeaders(),
     });
   }
 
+  const baseUrl = new URL(url).origin;
+
   const originUrl = new URL(referer).origin;
-  const path = new URL(referer).pathname;
+
+  if (originUrl !== baseUrl) {
+    console.error("Invalid referer", originUrl, baseUrl);
+    return new Response("ok", {
+      headers: corsHeaders(),
+    });
+  }
+
+  const path = new URL(url).pathname;
 
   const supabase = await createServerSupabaseClientWithServiceRole();
 
@@ -94,7 +104,7 @@ export async function POST(request: NextRequest) {
 
   let browser;
   if (process.env.NODE_ENV === "development") {
-    browser = await pw.chromium.launch({ headless: false });
+    browser = await pw.chromium.launch({ headless: true });
   } else {
     browser = await pw.chromium.connect(`wss://api.browsercat.com/connect`, {
       headers: { "Api-Key": process.env.BROWSERCAT_API_KEY! },
@@ -202,6 +212,7 @@ export async function POST(request: NextRequest) {
     measure("Page Config Update");
 
     await purgeConfig(trackingId, path);
+    await purgeSnapshot(trackingId, path, device);
 
     measure("Purge Page Config");
 

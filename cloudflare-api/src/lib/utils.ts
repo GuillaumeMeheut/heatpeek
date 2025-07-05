@@ -54,3 +54,10 @@ export function logPerformance(
     }, {} as Record<string, string>),
   });
 }
+
+export const getDayStart = () => {
+  const now = new Date();
+  return new Date(
+    Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate())
+  );
+};

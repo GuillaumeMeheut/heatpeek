@@ -71,7 +71,7 @@ export default function UrlsTable({
   const handleDeleteUrl = async (url: UrlAndConfig) => {
     startTransition(async () => {
       try {
-        await deleteUrlAction(url.id);
+        await deleteUrlAction(url.id, url.tracking_id, url.path);
         toast.success(t("urlsTable.deleteUrl.success"));
       } catch (error) {
         toast.error(

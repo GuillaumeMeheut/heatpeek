@@ -1,14 +1,19 @@
 import { getUniqueSelector } from "../../utils/getUniqueSelector";
 
-export function setupClickTracking({
-  trackingId,
-  endpointAPI,
-  device,
-  browser,
-}) {
+let handleClick;
+let handleNavigation;
+let handleBeforeUnload;
+let handleVisibilityChange;
+let handleBeforeNavigation;
+let intervalId;
+
+export function setupClickTracking({ config }) {
+  teardownClickTracking();
+
   let lastClick = 0;
   const clickCounts = new Map();
   const eventBuffer = [];
+  let firstClickCount = 0;
 
   const MAX_BUFFER = 10;
   const THROTTLE = 500;
@@ -16,22 +21,21 @@ export function setupClickTracking({
   const RAGE_THRESHOLD = 3;
   const MAX_INTERVAL = 5000;
 
-  let firstClickCount = 0;
-
   const flushBuffer = () => {
     if (!eventBuffer.length) return;
     const data = JSON.stringify({
-      trackingId,
-      path: window.location.pathname,
-      device,
-      browser,
+      trackingId: config.trackingId,
+      path: config.path,
+      device: config.device,
+      browser: config.browser,
+      os: config.os,
       events: eventBuffer.splice(0),
     });
 
     if (navigator.sendBeacon) {
-      navigator.sendBeacon(`${endpointAPI}/api/event/events`, data);
+      navigator.sendBeacon(`${config.endpointAPI}/api/event/events`, data);
     } else {
-      fetch(`${endpointAPI}/api/event/events`, {
+      fetch(`${config.endpointAPI}/api/event/events`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: data,
@@ -39,13 +43,26 @@ export function setupClickTracking({
     }
   };
 
-  setInterval(flushBuffer, MAX_INTERVAL);
-  window.addEventListener("beforeunload", flushBuffer);
-  document.addEventListener("visibilitychange", () => {
-    if (document.visibilityState === "hidden") flushBuffer();
-  });
+  // Set interval flush
+  intervalId = setInterval(flushBuffer, MAX_INTERVAL);
 
-  document.addEventListener("click", (e) => {
+  // Pre-navigation and unload flushes
+  handleBeforeUnload = flushBuffer;
+  window.addEventListener("beforeunload", handleBeforeUnload);
+
+  handleVisibilityChange = () => {
+    if (document.visibilityState === "hidden") flushBuffer();
+  };
+  document.addEventListener("visibilitychange", handleVisibilityChange);
+
+  handleBeforeNavigation = flushBuffer;
+  document.addEventListener(
+    "heatpeek:before-navigation",
+    handleBeforeNavigation
+  );
+
+  // Click logic
+  handleClick = (e) => {
     const now = Date.now();
     if (now - lastClick < THROTTLE) return;
     lastClick = now;
@@ -81,10 +98,49 @@ export function setupClickTracking({
     );
 
     if (eventBuffer.length >= MAX_BUFFER) flushBuffer();
-  });
+  };
+  document.addEventListener("click", handleClick);
 
-  document.addEventListener("heatpeek:navigation", () => {
+  // Reset state on navigation
+  handleNavigation = () => {
+    flushBuffer();
     firstClickCount = 0;
     clickCounts.clear();
-  });
+  };
+  document.addEventListener("heatpeek:navigation", handleNavigation);
+}
+
+export function teardownClickTracking() {
+  if (handleClick) {
+    document.removeEventListener("click", handleClick);
+    handleClick = null;
+  }
+
+  if (handleNavigation) {
+    document.removeEventListener("heatpeek:navigation", handleNavigation);
+    handleNavigation = null;
+  }
+
+  if (handleBeforeUnload) {
+    window.removeEventListener("beforeunload", handleBeforeUnload);
+    handleBeforeUnload = null;
+  }
+
+  if (handleVisibilityChange) {
+    document.removeEventListener("visibilitychange", handleVisibilityChange);
+    handleVisibilityChange = null;
+  }
+
+  if (handleBeforeNavigation) {
+    document.removeEventListener(
+      "heatpeek:before-navigation",
+      handleBeforeNavigation
+    );
+    handleBeforeNavigation = null;
+  }
+
+  if (intervalId) {
+    clearInterval(intervalId);
+    intervalId = null;
+  }
 }

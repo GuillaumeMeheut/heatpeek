@@ -1,34 +1,37 @@
 export const config = {
   data: null,
-  lastFetch: 0,
-  CACHE_DURATION: 60 * 1000,
   endpointAPI: null,
+  endpoint: null,
   trackingId: null,
+  path: null,
+  device: null,
+  browser: null,
+  os: null,
 
-  init(endpointAPI, trackingId) {
+  init(endpointAPI, endpoint, trackingId, path, device, browser, os) {
     this.endpointAPI = endpointAPI;
+    this.endpoint = endpoint;
     this.trackingId = trackingId;
+    this.path = path;
+    this.device = device;
+    this.browser = browser;
+    this.os = os;
   },
 
   async fetch() {
-    const now = Date.now();
-    if (this.data && now - this.lastFetch < this.CACHE_DURATION) {
-      return this.data;
-    }
-
     try {
       const response = await fetch(
         `${this.endpointAPI}/api/project/config?id=${
           this.trackingId
-        }&p=${encodeURIComponent(window.location.pathname)}`
+        }&p=${encodeURIComponent(this.path)}&d=${this.device}&b=${
+          this.browser
+        }&o=${this.os}`
       );
       if (!response.ok) throw new Error("Failed to fetch config");
 
       this.data = await response.json();
-      this.lastFetch = now;
       return this.data;
     } catch (error) {
-      console.error("Heatpeek: Error fetching config:", error);
       return null;
     }
   },

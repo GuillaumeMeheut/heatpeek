@@ -57,7 +57,10 @@ export class SupabaseService {
         .single();
 
       if (error) {
-        console.error("Supabase error:", error);
+        if (error.code === "PGRST116") {
+          return ProjectConfigError.NOT_FOUND;
+        }
+        console.error("Supabase error getProjectConfig:", error);
         return ProjectConfigError.FETCH_ERROR;
       }
 
@@ -76,7 +79,7 @@ export class SupabaseService {
         page_config: pageConfig,
       };
     } catch (error) {
-      console.error("Unexpected error:", error);
+      console.error("Unexpected error getProjectConfig:", error);
       return ProjectConfigError.FETCH_ERROR;
     }
   }
@@ -88,7 +91,13 @@ export class SupabaseService {
   ): Promise<string | ProjectConfigError> {
     const { data, error } = await this.supabase
       .from("snapshots")
-      .select("id, urls!inner(tracking_id, path)")
+      .select(
+        `id, 
+        urls!inner(
+          tracking_id, 
+          path
+        )`
+      )
       .eq("is_outdated", false)
       .eq("device", device)
       .eq("urls.tracking_id", trackingId)
@@ -96,7 +105,10 @@ export class SupabaseService {
       .single();
 
     if (error) {
-      console.error("Supabase error:", error);
+      if (error.code === "PGRST116") {
+        return ProjectConfigError.NOT_FOUND;
+      }
+      console.error("Supabase error getSnapshotId:", error);
       return ProjectConfigError.FETCH_ERROR;
     }
 

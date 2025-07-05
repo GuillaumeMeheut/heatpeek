@@ -6,6 +6,7 @@ import { deleteUrl, updateUrl, updatePageConfig } from "@/lib/supabase/queries";
 import { getI18n } from "@locales/server";
 import { urlAddSchema, urlUpdateSchema } from "./types";
 import { z } from "zod";
+import { purgeConfig, purgeSnapshot } from "@/lib/cloudflare/api";
 
 export async function addNewUrlAndPageConfigAction(
   data: z.infer<ReturnType<typeof urlAddSchema>>
@@ -46,10 +47,18 @@ export async function addNewUrlAndPageConfigAction(
   revalidatePath(`/[locale]/(insight)/[id]/manage-urls`, "page");
 }
 
-export async function deleteUrlAction(urlId: string) {
+export async function deleteUrlAction(
+  urlId: string,
+  trackingId: string,
+  path: string
+) {
   const supabase = await createClient();
 
   await deleteUrl(supabase, urlId);
+
+  await purgeConfig(trackingId, path);
+
+  await purgeSnapshot(trackingId, path, "all");
 
   revalidatePath(`/[locale]/(insight)/[id]/manage-urls`, "page");
 }

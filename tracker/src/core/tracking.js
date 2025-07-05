@@ -1,28 +1,20 @@
-import { getBrowserName } from "../utils/getBrowserName";
-import { getViewportDeviceCategory } from "../utils/getDevice";
-import { setupNavigationTracking } from "./tracking/navigation";
-import { setupClickTracking } from "./tracking/clicks";
-import { setupSnapshotLogic } from "./tracking/snapshot";
+import { setupClickTracking, teardownClickTracking } from "./tracking/clicks";
+import { setupSnapshotLogic, teardownSnapshotLogic } from "./tracking/snapshot";
+import { sendPageview } from "./tracking/pageviews";
 
-export function initializeTracking({
-  trackingId,
-  endpoint,
-  endpointAPI,
-  config,
-}) {
-  const device = getViewportDeviceCategory();
-  const browser = getBrowserName();
+export function initializeTracking({ config }) {
+  if (!shouldTrack(config)) return;
 
-  if (!shouldTrack(device, config)) return;
+  sendPageview(config);
 
-  setupNavigationTracking();
-  setupClickTracking({ trackingId, endpointAPI, device, browser });
-  setupSnapshotLogic({ trackingId, endpoint, device, config, browser });
+  setupClickTracking({ config });
+  setupSnapshotLogic({ config });
 }
 
-function shouldTrack(device, config) {
+function shouldTrack(config) {
   const pageConfig = config.get();
-  if (device === "large-desktop") return false;
+  console.log("shouldTrack", config);
+  if (config.device === "large-desktop") return false;
   if (pageConfig?.page_config?.is_active === false) return false;
   return true;
 }

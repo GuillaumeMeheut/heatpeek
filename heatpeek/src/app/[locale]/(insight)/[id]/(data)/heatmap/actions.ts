@@ -1,6 +1,6 @@
 "use server";
 
-import { purgeConfig } from "@/lib/cloudflare/api";
+import { purgeConfig, purgeSnapshot } from "@/lib/cloudflare/api";
 import { addSnapshot, updatePageConfig } from "@/lib/supabase/queries";
 import { createClient } from "@/lib/supabase/server";
 import { getSuccessRedirect } from "@/lib/utils";
@@ -70,6 +70,12 @@ export async function createNewVersion(
   await purgeConfig(
     currentSnapshot.urls.tracking_id,
     currentSnapshot.urls.path
+  );
+
+  await purgeSnapshot(
+    currentSnapshot.urls.tracking_id,
+    currentSnapshot.urls.path,
+    device
   );
 
   redirect(getSuccessRedirect(referer, "Success!", "New version created."));

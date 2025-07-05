@@ -14,6 +14,7 @@ export type ClickHouseEvent = {
   erx: number;
   ery: number;
   browser: string;
+  os: string;
   inserted_at: string;
 };
 
@@ -26,6 +27,7 @@ export type RageClickEvent = {
   erx: number;
   ery: number;
   browser: string;
+  os: string;
   inserted_at: string;
 };
 
@@ -45,8 +47,8 @@ export type PageViewEvent = {
   path: string;
   device: string;
   browser: string;
-  inserted_at: string;
-  view_duration_ms: number;
+  os: string;
+  timestamp: string; // DateTime in ISO format
   is_bounce: boolean;
 };
 
@@ -78,7 +80,6 @@ export type ScrollDepthEventData = BaseEvent & {
 
 export type PageViewEventData = BaseEvent & {
   type: "page_view";
-  view_duration_ms: number;
   is_bounce: boolean;
 };
 

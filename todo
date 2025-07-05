@@ -7,13 +7,17 @@
 - [ ] Fix auth error when signin with existing account (it say success)
 - [ ] Review the auth system
 - [ ] Forgot Password flow
-- [ ] On Capture page: check if the script is present
+
+---
+
+## 🖥️ Backend
 
 ---
 
 ## 📈 Tracker
 
 - [ ] Build DOM tree
+- [ ] Implement is bounce (have to set in the backend too)
 
 ---
 

@@ -2,7 +2,12 @@ import { Hono } from "hono";
 import { cors } from "hono/cors";
 import type { Env } from "../env";
 import { SupabaseService, ProjectConfigError } from "../services/supabase";
-import { configKey } from "../KV/key";
+import {
+  getConfigCache,
+  setConfigCache,
+  configKey,
+  snapshotKey,
+} from "../KV/key";
 
 const router = new Hono<{ Bindings: Env }>();
 
@@ -10,7 +15,6 @@ const CACHE_HEADERS = {
   "Cache-Control": "public, max-age=60",
   "X-Source": "supabase",
 };
-const EXPIRATION_TTL = 3600;
 
 router.get("/config", cors(), async (c) => {
   const trackingId = c.req.query("id");
@@ -20,17 +24,17 @@ router.get("/config", cors(), async (c) => {
     return c.body(null, 204);
   }
 
-  const { SUPABASE_URL, SUPABASE_ANON_KEY, CACHE_HEATPEEK } = c.env;
-  const supabaseService = new SupabaseService(SUPABASE_URL, SUPABASE_ANON_KEY);
+  const { SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, CACHE_HEATPEEK } = c.env;
 
-  const kvKey = configKey(trackingId, path);
+  const supabaseService = new SupabaseService(
+    SUPABASE_URL,
+    SUPABASE_SERVICE_ROLE_KEY
+  );
 
   try {
-    // 1. Try reading from KV
-    const cached = await CACHE_HEATPEEK.get(kvKey, { type: "json" });
-
-    if (cached) {
-      return c.json(cached, 200, CACHE_HEADERS);
+    const cachedConfig = await getConfigCache(trackingId, path, CACHE_HEATPEEK);
+    if (cachedConfig) {
+      return c.json(cachedConfig, 200, CACHE_HEADERS);
     }
 
     const config = await supabaseService.getProjectConfig(trackingId, path);
@@ -39,16 +43,16 @@ router.get("/config", cors(), async (c) => {
       return c.body(null, 204);
     }
 
-    await CACHE_HEATPEEK.put(kvKey, JSON.stringify(config), {
-      expirationTtl: EXPIRATION_TTL,
-    });
-
     if (config === ProjectConfigError.NOT_FOUND) {
+      await setConfigCache(trackingId, path, null, CACHE_HEATPEEK);
       return c.body(null, 204);
     }
 
+    await setConfigCache(trackingId, path, config, CACHE_HEATPEEK);
+
     return c.json(config, 200, CACHE_HEADERS);
   } catch (err) {
+    console.error(err);
     return c.body(null, 204);
   }
 });
@@ -73,14 +77,54 @@ router.delete(
       return c.body("Unauthorized", 401);
     }
 
-    const trackingId = c.req.query("id");
-    const path = c.req.query("p");
+    const body = await c.req.json();
+    const { id: trackingId, p: path } = body;
 
     if (!trackingId || !path) {
       return c.body("Missing id or path", 400);
     }
 
     await c.env.CACHE_HEATPEEK.delete(configKey(trackingId, path));
+
+    return c.json({ success: true });
+  }
+);
+
+router.delete(
+  "/snapshot/purge",
+  async (c, next) => {
+    const origin = c.env.ALLOWED_ORIGIN;
+    const corsMiddleware = dynamicCors(origin);
+    await corsMiddleware(c, next);
+  },
+  async (c) => {
+    const secret = c.env.INTERNAL_API_KEY;
+    const provided = c.req.header("x-api-key");
+
+    if (provided !== secret) {
+      return c.body("Unauthorized", 401);
+    }
+
+    const body = await c.req.json();
+    const { id: trackingId, p: path, d: device } = body;
+
+    if (!trackingId || !path || !device) {
+      return c.body("Missing id, path or device", 400);
+    }
+
+    if (device === "all") {
+      await c.env.CACHE_HEATPEEK.delete(
+        snapshotKey(trackingId, path, "desktop")
+      );
+      await c.env.CACHE_HEATPEEK.delete(
+        snapshotKey(trackingId, path, "mobile")
+      );
+      await c.env.CACHE_HEATPEEK.delete(
+        snapshotKey(trackingId, path, "tablet")
+      );
+    } else {
+      await c.env.CACHE_HEATPEEK.delete(snapshotKey(trackingId, path, device));
+    }
 
     return c.json({ success: true });
   }

@@ -196,7 +196,7 @@ export const getUrls = cache(
 
 export type UrlAndConfig = Pick<
   UrlsRow,
-  "id" | "path" | "label" | "views" | "clicks"
+  "id" | "path" | "label" | "views" | "clicks" | "tracking_id"
 > & {
   page_config: Pick<PageConfigRow, "id" | "is_active">;
 };
@@ -215,6 +215,7 @@ export const getUrlsAndConfig = cache(
         label,
         views,
         clicks,
+        tracking_id,
         page_config (
           id,
           is_active

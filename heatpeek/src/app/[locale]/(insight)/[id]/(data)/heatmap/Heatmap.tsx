@@ -187,8 +187,6 @@ export default function Heatmap({
     }
   }, [points, containerDimensions]);
 
-  console.log("render");
-
   return (
     <div
       ref={containerRef}

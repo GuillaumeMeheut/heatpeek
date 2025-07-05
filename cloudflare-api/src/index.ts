@@ -6,7 +6,6 @@ import projectRouter from "./routes/project";
 
 const app = new Hono<{ Bindings: Env }>();
 
-// Mount routes
 app.route("/api/project", projectRouter);
 app.route("/api/event", eventRouter);
 

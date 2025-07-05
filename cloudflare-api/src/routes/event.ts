@@ -3,7 +3,7 @@ import { cors } from "hono/cors";
 import type { Env } from "../env";
 import { ClickHouseService } from "../services/clickhouse";
 import { ClickHouseError } from "../types/clickhouse";
-import { snapshotKey } from "../KV/key";
+import { getSnapshotCache, setSnapshotCache } from "../KV/key";
 import { ProjectConfigError, SupabaseService } from "../services/supabase";
 import {
   createPerformanceTracker,
@@ -16,11 +16,11 @@ import type {
   RageClickEventData,
   ClickHouseEvent,
   RageClickEvent,
+  PageViewEvent,
+  PageViewEventData,
 } from "../types/clickhouse";
 
 const router = new Hono<{ Bindings: Env }>();
-
-const EXPIRATION_TTL = 360;
 
 // Helper function to process click events
 async function processClickEvents(
@@ -30,6 +30,7 @@ async function processClickEvents(
   path: string,
   device: string,
   browser: string,
+  os: string,
   clickhouseService: ClickHouseService,
   metrics: any
 ): Promise<boolean> {
@@ -39,6 +40,7 @@ async function processClickEvents(
     path,
     device,
     browser,
+    os,
     selector: event.selector,
     erx: event.erx,
     ery: event.ery,
@@ -60,6 +62,7 @@ async function processRageClickEvents(
   path: string,
   device: string,
   browser: string,
+  os: string,
   clickhouseService: ClickHouseService,
   metrics: any
 ): Promise<boolean> {
@@ -69,6 +72,7 @@ async function processRageClickEvents(
     path,
     device,
     browser,
+    os,
     selector: event.selector,
     erx: event.erx,
     ery: event.ery,
@@ -82,12 +86,168 @@ async function processRageClickEvents(
   return result !== ClickHouseError.QUERY_ERROR;
 }
 
-// New multi-event route
+async function processPageViewEvent(
+  event: PageViewEventData,
+  snapshotId: string,
+  trackingId: string,
+  path: string,
+  device: string,
+  browser: string,
+  os: string,
+  clickhouseService: ClickHouseService,
+  metrics: any
+): Promise<boolean> {
+  const pageViewEvent: PageViewEvent = {
+    snapshot_id: snapshotId,
+    tracking_id: trackingId,
+    path,
+    device,
+    browser,
+    os,
+    timestamp: event.timestamp,
+    is_bounce: event.is_bounce,
+  };
+
+  const result = await measureStep(metrics, "insert_page_view", () =>
+    clickhouseService.insertPageView([pageViewEvent])
+  );
+
+  return result !== ClickHouseError.QUERY_ERROR;
+}
+
+router.post("/pageview", cors(), async (c) => {
+  const metrics = createPerformanceTracker();
+
+  try {
+    const { trackingId, path, browser, device, os, timestamp, is_bounce } =
+      await measureStep(metrics, "parse_request", () => c.req.json());
+
+    if (!trackingId || !path || !browser || !device || !os || !timestamp) {
+      return c.body(null, 204);
+    }
+
+    const {
+      CLICKHOUSE_URL,
+      CLICKHOUSE_USERNAME,
+      CLICKHOUSE_PASSWORD,
+      CACHE_HEATPEEK,
+      SUPABASE_URL,
+      SUPABASE_SERVICE_ROLE_KEY,
+    } = c.env;
+
+    const supabaseService = new SupabaseService(
+      SUPABASE_URL,
+      SUPABASE_SERVICE_ROLE_KEY
+    );
+    const clickhouseService = new ClickHouseService(
+      CLICKHOUSE_URL,
+      CLICKHOUSE_USERNAME,
+      CLICKHOUSE_PASSWORD
+    );
+
+    let snapshotId: string | null = null;
+
+    const cached = await getSnapshotCache(
+      trackingId,
+      path,
+      device,
+      CACHE_HEATPEEK
+    );
+
+    if (cached) {
+      snapshotId = cached;
+    }
+
+    try {
+      if (!snapshotId) {
+        snapshotId = await measureStep(metrics, "get_snapshot_id", () =>
+          supabaseService.getSnapshotId(trackingId, path, device)
+        );
+
+        await measureStep(metrics, "cache_store", () => {
+          if (snapshotId) {
+            return setSnapshotCache(
+              trackingId,
+              path,
+              device,
+              snapshotId,
+              CACHE_HEATPEEK
+            );
+          }
+          return Promise.resolve();
+        });
+      }
+
+      if (snapshotId === ProjectConfigError.FETCH_ERROR) {
+        return c.json({ success: false, error: "Database error" }, 500);
+      }
+
+      if (snapshotId === ProjectConfigError.NOT_FOUND) {
+        return c.json({ success: false, error: "Snapshot not found" }, 404);
+      }
+    } catch (error) {
+      console.error("Error getting snapshot ID:", error);
+      return c.json({ success: false, error: "Internal error" }, 500);
+    }
+
+    try {
+      const pageviewEvent: PageViewEventData = {
+        type: "page_view",
+        timestamp,
+        is_bounce: is_bounce || false,
+      };
+
+      const success = await measureStep(
+        metrics,
+        "process_pageview",
+        async () => {
+          return await processPageViewEvent(
+            pageviewEvent,
+            snapshotId,
+            trackingId,
+            path,
+            device,
+            browser,
+            os,
+            clickhouseService,
+            metrics
+          );
+        }
+      );
+
+      if (!success) {
+        console.error("Failed to insert pageview into ClickHouse");
+        return c.json({ success: false, error: "Database error" }, 500);
+      }
+
+      return c.json(
+        {
+          success: true,
+          processed: {
+            pageViews: 1,
+          },
+        },
+        200
+      );
+    } catch (error) {
+      console.error("Error processing pageview:", error);
+      return c.json({ success: false, error: "Internal error" }, 500);
+    } finally {
+      await measureStep(metrics, "close_connection", () =>
+        clickhouseService.close()
+      );
+    }
+  } finally {
+    const finalMetrics = finalizeMetrics(metrics);
+    logPerformance(finalMetrics, "POST /pageview");
+  }
+});
+
 router.post("/events", cors(), async (c) => {
   const metrics = createPerformanceTracker();
 
   try {
-    const { trackingId, path, browser, device, events } = await measureStep(
+    const { trackingId, path, browser, device, os, events } = await measureStep(
       metrics,
       "parse_request",
       () => c.req.json()
@@ -98,6 +258,7 @@ router.post("/events", cors(), async (c) => {
       !path ||
       !browser ||
       !device ||
+      !os ||
       !events ||
       !Array.isArray(events)
     ) {
@@ -123,11 +284,13 @@ router.post("/events", cors(), async (c) => {
       CLICKHOUSE_PASSWORD
     );
 
-    const kvKey = snapshotKey(trackingId, path);
-    let snapshotId: string | ProjectConfigError | null = null;
+    let snapshotId: string | null = null;
 
-    const cached = await measureStep(metrics, "cache_lookup", () =>
-      CACHE_HEATPEEK.get(kvKey, { type: "text" })
+    const cached = await getSnapshotCache(
+      trackingId,
+      path,
+      device,
+      CACHE_HEATPEEK
     );
 
     if (cached) {
@@ -142,9 +305,13 @@ router.post("/events", cors(), async (c) => {
 
         await measureStep(metrics, "cache_store", () => {
           if (snapshotId) {
-            return CACHE_HEATPEEK.put(kvKey, snapshotId, {
-              expirationTtl: EXPIRATION_TTL,
-            });
+            return setSnapshotCache(
+              trackingId,
+              path,
+              device,
+              snapshotId,
+              CACHE_HEATPEEK
+            );
           }
           return Promise.resolve();
         });
@@ -166,7 +333,6 @@ router.post("/events", cors(), async (c) => {
       // Group events by type
       const clickEvents: ClickEvent[] = [];
       const rageClickEvents: RageClickEventData[] = [];
-
       for (const event of events) {
         if (!event.type || !event.timestamp) {
           console.warn("Invalid event format:", event);
@@ -207,11 +373,12 @@ router.post("/events", cors(), async (c) => {
         if (clickEvents.length > 0) {
           results.clicks = await processClickEvents(
             clickEvents,
-            snapshotId!,
+            snapshotId,
             trackingId,
             path,
             device,
             browser,
+            os,
             clickhouseService,
             metrics
           );
@@ -220,11 +387,12 @@ router.post("/events", cors(), async (c) => {
         if (rageClickEvents.length > 0) {
           results.rageClicks = await processRageClickEvents(
             rageClickEvents,
-            snapshotId!,
+            snapshotId,
             trackingId,
             path,
             device,
             browser,
+            os,
             clickhouseService,
             metrics
           );
