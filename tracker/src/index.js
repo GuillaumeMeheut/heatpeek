@@ -10,10 +10,10 @@ import { cleanupTracking } from "./core/tracking";
 
 (function () {
   const trackingId = document.currentScript.getAttribute("id");
-  const endpoint = "http://localhost:3000";
-  const endpointAPI = "http://localhost:8787";
-  // const endpoint = "https://heatpeek.com";
-  // const endpointAPI = "https://api.heatpeek.com";
+  // const endpoint = "http://localhost:3000";
+  // const endpointAPI = "http://localhost:8787";
+  const endpoint = "https://heatpeek.com";
+  const endpointAPI = "https://api.heatpeek.com";
 
   if (!trackingId || detectBot()) return;
 
