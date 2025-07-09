@@ -24,7 +24,7 @@ export default defineConfig(({ command }) => {
       outDir: "dist",
       rollupOptions: {
         output: {
-          entryFileNames: "index.iife.js",
+          entryFileNames: "hp.js",
         },
         plugins: [
           // Only use obfuscator in production builds
