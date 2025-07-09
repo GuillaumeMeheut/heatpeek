@@ -12,12 +12,15 @@
 
 ## 🖥️ Backend
 
+- [ ] Add rate limit
+
 ---
 
 ## 📈 Tracker
 
 - [ ] Build DOM tree
-- [ ] Implement is bounce (have to set in the backend too)
+- [ ] Implement is bounce
+- [ ] Implement new stats: time/page,
 
 ---
 

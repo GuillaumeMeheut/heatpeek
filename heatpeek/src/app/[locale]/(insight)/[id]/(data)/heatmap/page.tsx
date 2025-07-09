@@ -1,4 +1,3 @@
-import HeatmapWithOptions from "./HeatmapWithOptions";
 import { getSnapshot, getUser } from "@/lib/supabase/queries";
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
@@ -6,14 +5,23 @@ import { Card } from "@/components/ui/card";
 import { Suspense } from "react";
 import { Loader2 } from "lucide-react";
 import VersioningButton from "./VersioningButton";
-import { getClicks } from "@/lib/clickhouse/queries";
+import HeatmapWithOptions from "./HeatmapWithOptions";
+import {
+  getScrollDepth,
+  RawClick,
+  getRageClicks,
+  getClicks,
+  ScrollDepth,
+  AggregatedClick,
+} from "@/lib/clickhouse/queries";
+import { DeviceEnum, HeatmapType } from "./types";
 
 export default async function HeatmapPage({
   params,
   searchParams,
 }: {
   params: Promise<{ id: string }>;
-  searchParams: { url?: string; device?: string };
+  searchParams: { url?: string; device?: DeviceEnum; type?: HeatmapType };
 }) {
   const supabase = await createClient();
   const { user } = await getUser(supabase);
@@ -22,13 +30,26 @@ export default async function HeatmapPage({
   const url = searchParams.url;
   const device = searchParams.device;
 
+  let type = searchParams.type;
+
+  if (
+    !type ||
+    (type !== HeatmapType.Clicks &&
+      type !== HeatmapType.RageClicks &&
+      type !== HeatmapType.ScrollDepth)
+  ) {
+    type = HeatmapType.Clicks;
+  }
+
   if (
     !url ||
     url === "all" ||
     !device ||
-    (device !== "desktop" && device !== "mobile" && device !== "tablet")
+    (device !== DeviceEnum.Desktop &&
+      device !== DeviceEnum.Mobile &&
+      device !== DeviceEnum.Tablet)
   ) {
-    return <div>No heatmap found</div>;
+    return <div>Query params are not valid</div>;
   }
 
   const snapshot = await getSnapshot(supabase, projectId, url, device);
@@ -41,11 +62,25 @@ export default async function HeatmapPage({
     return <div>The data is still being processed</div>;
   }
 
-  const clicks = await getClicks({
+  let data: AggregatedClick[] | RawClick[] | ScrollDepth[] | null = null;
+
+  const fetchers = {
+    [HeatmapType.Clicks]: getClicks,
+    [HeatmapType.RageClicks]: getRageClicks,
+    [HeatmapType.ScrollDepth]: getScrollDepth,
+  };
+
+  const fetcher = fetchers[type];
+
+  data = await fetcher({
     snapshotId: snapshot.id,
-    device: device,
+    device,
     browser: "chrome",
   });
+
+  if (!data) {
+    return <div>No data found</div>;
+  }
 
   return (
     <div className="flex">
@@ -63,7 +98,8 @@ export default async function HeatmapPage({
               <div className="w-full">
                 <div className="relative min-w-full">
                   <HeatmapWithOptions
-                    clicks={clicks || []}
+                    data={data}
+                    type={type}
                     pageData={snapshot}
                     clickType="raw"
                   />

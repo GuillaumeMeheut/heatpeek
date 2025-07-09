@@ -1,64 +1,71 @@
 export function setupNavigationTracking() {
-  let lastUrl = location.pathname;
+  const originalPushState = history.pushState;
+  const originalReplaceState = history.replaceState;
 
-  function handlePageChange(isSPA = false) {
+  let lastUrl = location.pathname;
+  let navigationTimeout = null;
+  let isNavigating = false;
+
+  const handlePageChange = (isSPA = false) => {
     const newUrl = location.pathname;
     if (isSPA && newUrl === lastUrl) return;
     lastUrl = newUrl;
     document.dispatchEvent(
       new CustomEvent("heatpeek:navigation", { detail: newUrl })
     );
-  }
+  };
 
   const notifyBeforeNavigation = () => {
+    if (isNavigating) return; // Prevent duplicate events
+
+    isNavigating = true;
     document.dispatchEvent(new Event("heatpeek:before-navigation"));
-  };
 
-  window.addEventListener("hashchange", () => handlePageChange(true));
-  window.addEventListener("popstate", () => {
-    notifyBeforeNavigation();
-    handlePageChange(true);
-  });
-
-  const originalPushState = history.pushState;
-  history.pushState = function () {
-    notifyBeforeNavigation();
-    originalPushState.apply(this, arguments);
-    handlePageChange(true);
-  };
-
-  const originalReplaceState = history.replaceState;
-  history.replaceState = function () {
-    notifyBeforeNavigation();
-    originalReplaceState.apply(this, arguments);
-    handlePageChange(true);
-  };
-
-  if (
-    document.visibilityState === "hidden" ||
-    document.visibilityState === "prerender"
-  ) {
-    document.addEventListener("visibilitychange", () => {
-      if (document.visibilityState === "visible") {
-        handlePageChange(false);
-      }
-    });
-  } else {
-    handlePageChange(false);
-  }
-
-  window.addEventListener("pageshow", (e) => {
-    if (e.persisted) {
-      handlePageChange(false);
+    // Reset the flag after a short delay to allow for the navigation sequence to complete
+    if (navigationTimeout) {
+      clearTimeout(navigationTimeout);
     }
-  });
+    navigationTimeout = setTimeout(() => {
+      isNavigating = false;
+    }, 100);
+  };
 
-  // Optional cleanup return
+  const onHashChange = () => handlePageChange(true);
+  const onPopState = () => {
+    notifyBeforeNavigation();
+    handlePageChange(true);
+  };
+  const onPushState = (...args) => {
+    notifyBeforeNavigation();
+    originalPushState.apply(history, args);
+    handlePageChange(true);
+  };
+  const onReplaceState = (...args) => {
+    notifyBeforeNavigation();
+    originalReplaceState.apply(history, args);
+    handlePageChange(true);
+  };
+  const onPageshow = (e) => {
+    if (e.persisted) handlePageChange(false);
+  };
+
+  window.addEventListener("hashchange", onHashChange);
+  window.addEventListener("popstate", onPopState);
+  window.addEventListener("pageshow", onPageshow);
+
+  history.pushState = onPushState;
+  history.replaceState = onReplaceState;
+
   return () => {
-    window.removeEventListener("hashchange", handlePageChange);
-    window.removeEventListener("popstate", handlePageChange);
-    window.removeEventListener("pageshow", handlePageChange);
+    window.removeEventListener("hashchange", onHashChange);
+    window.removeEventListener("popstate", onPopState);
+    window.removeEventListener("pageshow", onPageshow);
+
     history.pushState = originalPushState;
     history.replaceState = originalReplaceState;
+
+    if (navigationTimeout) {
+      clearTimeout(navigationTimeout);
+    }
   };
 }

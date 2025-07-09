@@ -1,13 +1,9 @@
 import { cache } from "react";
-import { SupabaseClient } from "@supabase/supabase-js";
-import { Database } from "@/types/supabase";
 import {
-  ClicksRow,
   UrlsRow,
   PageConfigRow,
   SnapshotsRow,
   ClickedElementsRow,
-  AggregatedClicksRow,
   ProjectsRow,
   UrlsInsert,
   PageConfigInsert,
@@ -17,6 +13,9 @@ import {
   ProjectConfigInsert,
   ProjectsUpdate,
 } from "@/types/database";
+import { createClient } from "./server";
+
+type SupabaseClient = ReturnType<typeof createClient>;
 
 export const getUser = cache(async (supabase: SupabaseClient) => {
   const {
@@ -25,62 +24,6 @@ export const getUser = cache(async (supabase: SupabaseClient) => {
   } = await supabase.auth.getUser();
   return { user, error };
 });
-
-export type ClickInfos = Pick<
-  ClicksRow,
-  | "tracking_id"
-  | "url"
-  | "timestamp"
-  | "device"
-  | "visible"
-  | "erx"
-  | "ery"
-  | "s"
-  | "l"
-  | "t"
-  | "w"
-  | "h"
-  | "first_click_rank"
->;
-
-export const addClicks = cache(
-  async (supabase: SupabaseClient, clickInfos: ClickInfos[]): Promise<void> => {
-    const { error } = await supabase.from("clicks").insert(clickInfos);
-    if (error) {
-      throw new Error("Error inserting click : ", error);
-    }
-  }
-);
-
-export type Click = Pick<
-  ClicksRow,
-  "erx" | "ery" | "s" | "l" | "t" | "w" | "h"
->;
-
-export const getClicks = cache(
-  async (
-    supabase: SupabaseClient,
-    trackingId: string,
-    url: string,
-    device: string,
-    timestamp: string
-  ): Promise<Click[] | null> => {
-    const { data: clicks, error } = await supabase
-      .from("clicks")
-      .select("erx, ery, s, l, t, w, h")
-      .eq("tracking_id", trackingId)
-      .eq("url", url)
-      .eq("device", device)
-      .gte("timestamp", timestamp);
-
-    if (error) {
-      console.log("Error fetching clicks:", error);
-      return null;
-    }
-
-    return clicks;
-  }
-);
 
 export const addProject = cache(
   async (
@@ -203,7 +146,7 @@ export type UrlAndConfig = Pick<
 
 export const getUrlsAndConfig = cache(
   async (
-    supabase: SupabaseClient<Database>,
+    supabase: SupabaseClient,
     projectId: string
   ): Promise<UrlAndConfig[] | null> => {
     const { data, error } = await supabase
@@ -229,7 +172,7 @@ export const getUrlsAndConfig = cache(
       return null;
     }
 
-    return data as UrlAndConfig[];
+    return data as unknown as UrlAndConfig[];
   }
 );
 
@@ -534,43 +477,6 @@ export const addClickedElements = async (
     throw new Error("Error inserting clicked elements:", error);
   }
 };
-
-export type AggregatedClick = Pick<
-  AggregatedClicksRow,
-  "snapshot_id" | "grid_x" | "grid_y" | "count" | "last_updated_at"
->;
-
-export const addAggregatedClicks = async (
-  supabase: SupabaseClient,
-  aggregatedClicks: AggregatedClick[]
-) => {
-  const { error } = await supabase.rpc("upsert_aggregated_clicks", {
-    clicks: aggregatedClicks,
-  });
-
-  if (error) {
-    console.log("Error in upsert_aggregated_clicks RPC:", error);
-  }
-};
-
-export const getAggregatedClicks = cache(
-  async (
-    supabase: SupabaseClient,
-    snapshotId: string
-  ): Promise<AggregatedClick[] | null> => {
-    const { data, error } = await supabase
-      .from("aggregated_clicks")
-      .select("*")
-      .eq("snapshot_id", snapshotId);
-
-    if (error) {
-      console.log("Error fetching aggregated clicks:", error);
-      return null;
-    }
-
-    return data;
-  }
-);
 
 export type Project = Pick<
   ProjectsRow,

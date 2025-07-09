@@ -37,8 +37,9 @@ export type ScrollDepthEvent = {
   path: string;
   device: string;
   browser: string;
-  inserted_at: string;
-  scroll_depth_percentage: number;
+  os: string;
+  timestamp: string;
+  scroll_depth: number;
 };
 
 export type PageViewEvent = {
@@ -48,7 +49,7 @@ export type PageViewEvent = {
   device: string;
   browser: string;
   os: string;
-  timestamp: string; // DateTime in ISO format
+  timestamp: string;
   is_bounce: boolean;
 };
 
@@ -75,7 +76,7 @@ export type RageClickEventData = BaseEvent & {
 
 export type ScrollDepthEventData = BaseEvent & {
   type: "scroll_depth";
-  scroll_depth_percentage: number;
+  sd: number;
 };
 
 export type PageViewEventData = BaseEvent & {

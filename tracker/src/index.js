@@ -1,20 +1,19 @@
 import { detectBot } from "./utils/detectBot";
 import { verifyTracking } from "./utils/verifyTracking";
 import { config } from "./services/config";
-import { initializeTracking } from "./core/tracking";
+import { initializeTracking, stopBufferFlush } from "./core/tracking";
 import { getViewportDeviceCategory } from "./utils/getDevice";
 import { getBrowserName } from "./utils/getBrowserName";
 import { getOsName } from "./utils/getOsName";
 import { setupNavigationTracking } from "./core/tracking/navigation";
-import { teardownClickTracking } from "./core/tracking/clicks";
-import { teardownSnapshotLogic } from "./core/tracking/snapshot";
+import { cleanupTracking } from "./core/tracking";
 
 (function () {
   const trackingId = document.currentScript.getAttribute("id");
-  // const endpoint = "http://localhost:3000";
-  // const endpointAPI = "http://localhost:8787";
-  const endpoint = "https://heatpeek.com";
-  const endpointAPI = "https://api.heatpeek.com";
+  const endpoint = "http://localhost:3000";
+  const endpointAPI = "http://localhost:8787";
+  // const endpoint = "https://heatpeek.com";
+  // const endpointAPI = "https://api.heatpeek.com";
 
   if (!trackingId || detectBot()) return;
 
@@ -25,8 +24,7 @@ import { teardownSnapshotLogic } from "./core/tracking/snapshot";
   const os = getOsName();
 
   const runTracking = (path) => {
-    teardownClickTracking();
-    teardownSnapshotLogic();
+    cleanupTracking();
 
     config.init(endpointAPI, endpoint, trackingId, path, device, browser, os);
     config.fetch().then((configData) => {

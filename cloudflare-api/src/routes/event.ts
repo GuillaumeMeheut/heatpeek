@@ -18,6 +18,8 @@ import type {
   RageClickEvent,
   PageViewEvent,
   PageViewEventData,
+  ScrollDepthEventData,
+  ScrollDepthEvent,
 } from "../types/clickhouse";
 
 const router = new Hono<{ Bindings: Env }>();
@@ -81,6 +83,35 @@ async function processRageClickEvents(
 
   const result = await measureStep(metrics, "insert_rage_raw_clicks", () =>
     clickhouseService.insertRageClicks(rageClickEvents)
+  );
+
+  return result !== ClickHouseError.QUERY_ERROR;
+}
+
+async function processScrollDepthEvents(
+  events: ScrollDepthEventData[],
+  snapshotId: string,
+  trackingId: string,
+  path: string,
+  device: string,
+  browser: string,
+  os: string,
+  clickhouseService: ClickHouseService,
+  metrics: any
+): Promise<boolean> {
+  const scrollDepthEvents: ScrollDepthEvent[] = events.map((event) => ({
+    snapshot_id: snapshotId,
+    tracking_id: trackingId,
+    path,
+    device,
+    browser,
+    os,
+    scroll_depth: event.sd,
+    timestamp: event.timestamp,
+  }));
+
+  const result = await measureStep(metrics, "insert_scroll_depth", () =>
+    clickhouseService.insertScrollDepth(scrollDepthEvents)
   );
 
   return result !== ClickHouseError.QUERY_ERROR;
@@ -333,6 +364,7 @@ router.post("/events", cors(), async (c) => {
       // Group events by type
       const clickEvents: ClickEvent[] = [];
       const rageClickEvents: RageClickEventData[] = [];
+      const scrollDepthEvents: ScrollDepthEventData[] = [];
       for (const event of events) {
         if (!event.type || !event.timestamp) {
           console.warn("Invalid event format:", event);
@@ -358,6 +390,11 @@ router.post("/events", cors(), async (c) => {
               rageClickEvents.push(event as RageClickEventData);
             }
             break;
+          case "scroll_depth":
+            if (event.sd !== undefined && event.sd >= 0 && event.sd <= 100) {
+              scrollDepthEvents.push(event as ScrollDepthEventData);
+            }
+            break;
           default:
             console.warn("Unsupported event type:", event.type);
         }
@@ -368,6 +405,7 @@ router.post("/events", cors(), async (c) => {
         const results = {
           clicks: true,
           rageClicks: true,
+          scrollDepth: true,
         };
 
         if (clickEvents.length > 0) {
@@ -398,10 +436,24 @@ router.post("/events", cors(), async (c) => {
           );
         }
 
+        if (scrollDepthEvents.length > 0) {
+          results.scrollDepth = await processScrollDepthEvents(
+            scrollDepthEvents,
+            snapshotId,
+            trackingId,
+            path,
+            device,
+            browser,
+            os,
+            clickhouseService,
+            metrics
+          );
+        }
+
         return results;
       });
 
-      if (!results.clicks || !results.rageClicks) {
+      if (!results.clicks || !results.rageClicks || !results.scrollDepth) {
         console.error("Failed to insert some events into ClickHouse");
         return c.json({ success: false, error: "Database error" }, 500);
       }
@@ -412,6 +464,7 @@ router.post("/events", cors(), async (c) => {
           processed: {
             clicks: clickEvents.length,
             rageClicks: rageClickEvents.length,
+            scrollDepth: scrollDepthEvents.length,
           },
         },
         200

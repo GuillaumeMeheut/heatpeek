@@ -1,33 +1,51 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Heatmap from "./Heatmap";
 import { OptionsBar } from "./OptionsBar";
-import { AggregatedClick, HeatmapSnapshot } from "@/lib/supabase/queries";
-import { RawClick } from "@/lib/clickhouse/queries";
+import { HeatmapSnapshot } from "@/lib/supabase/queries";
+import {
+  AggregatedClick,
+  RawClick,
+  ScrollDepth,
+} from "@/lib/clickhouse/queries";
+import { HeatmapType } from "./types";
 
 type HeatmapWithOptionsProps = {
-  clicks: AggregatedClick[] | RawClick[];
+  data: AggregatedClick[] | RawClick[] | ScrollDepth[];
+  type: HeatmapType;
   pageData: HeatmapSnapshot;
   clickType?: "aggregated" | "raw";
 };
 
 export default function HeatmapWithOptions({
-  clicks,
+  data,
+  type,
   pageData,
   clickType = "aggregated",
 }: HeatmapWithOptionsProps) {
-  const [opacity, setOpacity] = useState(40);
+  const [opacity, setOpacity] = useState(type === "scroll_depth" ? 90 : 40);
+
+  useEffect(() => {
+    if (type === HeatmapType.ScrollDepth) {
+      setOpacity(90);
+    }
+  }, [type]);
 
   return (
     <div className="relative">
       <Heatmap
-        clicks={clicks}
+        data={data}
         pageData={pageData}
+        dataType={type}
         clickType={clickType}
-        overlayOpacity={opacity / 100} // Convert percentage to decimal
+        overlayOpacity={opacity / 100}
       />
-      <OptionsBar opacity={opacity} onOpacityChange={setOpacity} />
+      <OptionsBar
+        opacity={opacity}
+        onOpacityChange={setOpacity}
+        activeType={type}
+      />
     </div>
   );
 }

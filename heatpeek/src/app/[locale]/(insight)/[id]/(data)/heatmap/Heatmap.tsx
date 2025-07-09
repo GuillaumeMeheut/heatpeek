@@ -1,35 +1,36 @@
 "use client";
 
-import { useEffect, useRef, useMemo, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
-import simpleheat from "simpleheat";
-import { AggregatedClick, HeatmapSnapshot } from "@/lib/supabase/queries";
-import { RawClick } from "@/lib/clickhouse/queries";
+import { HeatmapSnapshot } from "@/lib/supabase/queries";
+import {
+  AggregatedClick,
+  RawClick,
+  ScrollDepth,
+} from "@/lib/clickhouse/queries";
+import useClickHeatmap from "./useClickHeatmap";
+import useScrollHeatmap from "./useScrollDepthHeatmap";
+import React from "react";
+import ScrollDepthOverlay from "./ScrollDepthOverlay";
+import { isClickData, isScrollData } from "./utils";
+import { HeatmapType } from "./types";
 
 type HeatmapProps = {
-  clicks: AggregatedClick[] | RawClick[];
+  data: AggregatedClick[] | RawClick[] | ScrollDepth[];
   pageData: HeatmapSnapshot;
+  dataType: HeatmapType;
   clickType?: "aggregated" | "raw";
-  overlayOpacity?: number;
+  overlayOpacity: number;
 };
 
-const HEATMAP_CONFIG = {
-  GRID_SIZE: 20,
-  RADIUS: {
-    MIN: 20,
-    MAX: 25,
-  },
-  MAX_INTENSITY: 10,
-} as const;
-
 export default function Heatmap({
-  clicks,
+  data,
   pageData,
+  dataType,
   clickType = "aggregated",
   overlayOpacity,
 }: HeatmapProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const heatmapRef = useRef<ReturnType<typeof simpleheat> | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
   const [containerDimensions, setContainerDimensions] = useState<{
@@ -62,130 +63,20 @@ export default function Heatmap({
     return () => window.removeEventListener("resize", updateDimensions);
   }, [pageData]);
 
-  // Calculate points with intensity based on aggregated clicks or raw clicks
-  const points = useMemo(() => {
-    if (
-      clicks.length === 0 ||
-      !pageData ||
-      !containerDimensions ||
-      !pageData.width ||
-      !pageData.height
-    )
-      return [];
+  useClickHeatmap(
+    isClickData(data, dataType) ? data : [],
+    containerDimensions,
+    pageData,
+    clickType,
+    canvasRef
+  );
 
-    // Calculate scaling factors
-    const scaleX = containerDimensions.width / pageData.width;
-    const scaleY = containerDimensions.height / pageData.height;
-
-    if (clickType === "aggregated") {
-      // Handle aggregated clicks (existing logic)
-      const aggregatedClicks = clicks as AggregatedClick[];
-      return aggregatedClicks.map((click) => {
-        const x = click.grid_x * scaleX;
-        const y = click.grid_y * scaleY;
-        const intensity = Math.log2(click.count + 1) * 2;
-        return [x, y, intensity] as [number, number, number];
-      });
-    } else {
-      // Handle raw clicks
-      const rawClicks = clicks as RawClick[];
-
-      // Parse DOM data to get element positions
-      let domElements: Map<
-        string,
-        { l: number; t: number; w: number; h: number }
-      > | null = null;
-
-      try {
-        if (pageData.dom_data) {
-          const parsedDomData = JSON.parse(pageData.dom_data) as Array<{
-            s: string;
-            l: number;
-            t: number;
-            w: number;
-            h: number;
-          }>;
-          domElements = new Map(parsedDomData.map((el) => [el.s, el]));
-        }
-      } catch (error) {
-        console.error("Error parsing DOM data:", error);
-        return [];
-      }
-
-      if (!domElements) {
-        console.warn("No DOM data available for raw clicks");
-        return [];
-      }
-
-      // Group clicks by position to calculate intensity
-      const clickGroups = new Map<
-        string,
-        { x: number; y: number; count: number }
-      >();
-
-      for (const click of rawClicks) {
-        const element = domElements.get(click.selector);
-        if (!element) continue;
-
-        // Calculate absolute position
-        const x = element.l + click.erx * element.w;
-        const y = element.t + click.ery * element.h;
-
-        // Round to grid for grouping
-        const gridX =
-          Math.round(x / HEATMAP_CONFIG.GRID_SIZE) * HEATMAP_CONFIG.GRID_SIZE;
-        const gridY =
-          Math.round(y / HEATMAP_CONFIG.GRID_SIZE) * HEATMAP_CONFIG.GRID_SIZE;
-        const key = `${gridX},${gridY}`;
-
-        const existing = clickGroups.get(key);
-        if (existing) {
-          existing.count += 1;
-        } else {
-          clickGroups.set(key, { x, y, count: 1 });
-        }
-      }
-
-      return Array.from(clickGroups.values()).map(({ x, y, count }) => {
-        const scaledX = x * scaleX;
-        const scaledY = y * scaleY;
-        const intensity = Math.log2(count + 1) * 2;
-        return [scaledX, scaledY, intensity] as [number, number, number];
-      });
-    }
-  }, [clicks, containerDimensions, pageData, clickType]);
-
-  useEffect(() => {
-    if (canvasRef.current && points.length > 0 && containerDimensions) {
-      const canvas = canvasRef.current;
-      const ctx = canvas.getContext("2d", { willReadFrequently: true });
-
-      if (ctx) {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        heatmapRef.current = simpleheat(canvas);
-
-        heatmapRef.current.data(points);
-
-        heatmapRef.current.radius(
-          HEATMAP_CONFIG.RADIUS.MIN,
-          HEATMAP_CONFIG.RADIUS.MAX
-        );
-        heatmapRef.current.max(HEATMAP_CONFIG.MAX_INTENSITY);
-
-        heatmapRef.current.draw();
-      }
-    } else if (
-      canvasRef.current &&
-      points.length === 0 &&
-      containerDimensions
-    ) {
-      const canvas = canvasRef.current;
-      const ctx = canvas.getContext("2d");
-      if (ctx) {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-      }
-    }
-  }, [points, containerDimensions]);
+  const { cumulativeViews, maxCumulative } = useScrollHeatmap(
+    isScrollData(data, dataType) ? data : [],
+    containerDimensions,
+    canvasRef,
+    overlayOpacity
+  );
 
   return (
     <div
@@ -216,20 +107,31 @@ export default function Heatmap({
             />
           )}
 
-          <div
-            className="absolute inset-0 pointer-events-none z-10"
-            style={{
-              background: `rgba(0,0,0,${overlayOpacity})`,
-              width: containerDimensions.width,
-              height: containerDimensions.height,
-            }}
-          />
+          {dataType !== HeatmapType.ScrollDepth && (
+            <div
+              className="absolute inset-0 pointer-events-none z-10"
+              style={{
+                background: `rgba(0,0,0,${overlayOpacity})`,
+                width: containerDimensions.width,
+                height: containerDimensions.height,
+              }}
+            />
+          )}
+
+          {/* Overlay for scroll depth hover */}
+          {dataType === HeatmapType.ScrollDepth && (
+            <ScrollDepthOverlay
+              containerDimensions={containerDimensions}
+              cumulativeViews={cumulativeViews}
+              maxCumulative={maxCumulative}
+            />
+          )}
+
           <canvas
             ref={canvasRef}
             width={containerDimensions.width}
             height={containerDimensions.height}
-            className="absolute inset-0 z-30"
-            style={{ pointerEvents: "none" }}
+            className="absolute inset-0 z-30 pointer-events-none"
             aria-hidden="true"
           />
         </div>

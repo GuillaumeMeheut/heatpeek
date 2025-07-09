@@ -1,10 +1,11 @@
+import { Database } from "@/types/supabase";
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 
 export const createClient = () => {
   const cookieStore = cookies();
 
-  return createServerClient(
+  return createServerClient<Database>(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
@@ -32,7 +33,7 @@ export function createServerSupabaseClientWithServiceRole() {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
   const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
 
-  return createServerClient(supabaseUrl, serviceRoleKey, {
+  return createServerClient<Database>(supabaseUrl, serviceRoleKey, {
     cookies: {
       getAll: () => [],
       setAll: () => {},

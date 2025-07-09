@@ -3,7 +3,7 @@ import { deviceFieldMap } from "../../utils/getDevice";
 let navigationHandler;
 let timeoutId;
 
-export function setupSnapshotLogic({ config }) {
+export function setupSnapshotLogic(config) {
   teardownSnapshotLogic();
 
   // Initial snapshot after load or idle
