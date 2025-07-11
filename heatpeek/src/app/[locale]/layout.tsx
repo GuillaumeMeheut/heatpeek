@@ -43,7 +43,7 @@ export default async function RootLayout({
     <html lang={locale}>
       <Script
         id="_3bQl0XF"
-        src="https://cdn.heatpeek.com/h.js"
+        src="https://cdn.heatpeek.com/hp.js"
         defer
         strategy="afterInteractive"
       />
