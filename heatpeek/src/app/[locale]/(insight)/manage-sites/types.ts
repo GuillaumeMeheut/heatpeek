@@ -1,3 +1,4 @@
+import { normalizeOrigin } from "@/lib/utils";
 import { TranslationFunction } from "@/types/translate";
 import z from "zod";
 
@@ -29,7 +30,8 @@ export const projectAddSchema = (t: TranslationFunction) =>
     baseUrl: z
       .string()
       .min(1, t("projects.validation.baseUrlRequired"))
-      .url(t("projects.validation.invalidUrl")),
+      .url(t("projects.validation.invalidUrl"))
+      .transform((url) => normalizeOrigin(url)),
   });
 
 export const projectUpdateSchema = (t: TranslationFunction) =>

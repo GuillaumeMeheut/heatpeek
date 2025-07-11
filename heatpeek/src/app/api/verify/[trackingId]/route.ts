@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { createServerSupabaseClientWithServiceRole } from "@/lib/supabase/server";
-import { corsHeaders } from "@/lib/utils";
+import { corsHeaders, normalizeOrigin } from "@/lib/utils";
 
 // Store verification status in memory (will be cleared on server restart)
 interface VerificationData {
@@ -43,7 +43,7 @@ export async function POST(
       );
     }
 
-    if (origin + "/" !== project.base_url) {
+    if (normalizeOrigin(origin) !== normalizeOrigin(project.base_url)) {
       return NextResponse.json(
         { error: "Invalid origin" },
         { status: 403, headers: corsHeaders() }
