@@ -5,6 +5,7 @@ import { ReactElement } from "react";
 import { I18nProviderClient } from "../../../locales/client";
 import { Toaster } from "@/components/ui/Toast/sonner";
 import { ToastListener } from "@/components/ui/Toast/ToastListener";
+import Script from "next/script";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -40,6 +41,12 @@ export default async function RootLayout({
 
   return (
     <html lang={locale}>
+      <Script
+        id="_3bQl0XF"
+        src="https://cdn.heatpeek.com/h.js"
+        defer
+        strategy="afterInteractive"
+      />
       <body className={inter.className}>
         <I18nProviderClient locale={locale}>{children}</I18nProviderClient>
         <Toaster theme="light" position="bottom-center" richColors />
