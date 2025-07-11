@@ -2,7 +2,7 @@ export function getViewportDeviceCategory() {
   const width = window.innerWidth;
   if (width <= 768) return "mobile";
   if (width <= 1024) return "tablet";
-  if (width <= 1920) return "desktop";
+  if (width <= 2000) return "desktop";
   return "large-desktop";
 }
 

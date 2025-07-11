@@ -33,7 +33,7 @@ const server = http.createServer((req, res) => {
 
   // Serve the tracker file
   if (req.url === "/heatpeek-tracker.js" || req.url === "/") {
-    const filePath = path.join(DIST_DIR, "index.iife.js");
+    const filePath = path.join(DIST_DIR, "hp.js");
 
     if (fs.existsSync(filePath)) {
       res.setHeader("Content-Type", "application/javascript");

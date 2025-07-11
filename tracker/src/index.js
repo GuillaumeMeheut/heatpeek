@@ -10,10 +10,15 @@ import { cleanupTracking } from "./core/tracking";
 
 (function () {
   const trackingId = document.currentScript.getAttribute("id");
-  // const endpoint = "http://localhost:3000";
-  // const endpointAPI = "http://localhost:8787";
-  const endpoint = "https://heatpeek.com";
-  const endpointAPI = "https://api.heatpeek.com";
+  let endpoint, endpointAPI;
+
+  if (location.hostname === "localhost" || location.hostname === "127.0.0.1") {
+    endpoint = "http://localhost:3000";
+    endpointAPI = "http://localhost:8787";
+  } else {
+    endpoint = "https://heatpeek.com";
+    endpointAPI = "https://api.heatpeek.com";
+  }
 
   if (!trackingId || detectBot()) return;
 
@@ -25,8 +30,18 @@ import { cleanupTracking } from "./core/tracking";
 
   const runTracking = (path) => {
     cleanupTracking();
+    console.log(document.referrer);
 
-    config.init(endpointAPI, endpoint, trackingId, path, device, browser, os);
+    config.init(
+      endpointAPI,
+      endpoint,
+      trackingId,
+      path,
+      device,
+      browser,
+      os,
+      document.referrer
+    );
     config.fetch().then((configData) => {
       if (!configData) return;
       initializeTracking({ config });

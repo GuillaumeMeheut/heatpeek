@@ -48,6 +48,8 @@ export function setupScrollTracking() {
 
   resetScrollTracking();
 
+  recordScrollDepth();
+
   handleScroll = () => {
     recordScrollDepth();
   };
