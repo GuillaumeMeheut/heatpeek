@@ -44,8 +44,8 @@ async function processClickEvents(
     browser,
     os,
     selector: event.selector,
-    erx: event.erx,
-    ery: event.ery,
+    erx: parseFloat(event.erx.toFixed(4)),
+    ery: parseFloat(event.ery.toFixed(4)),
     timestamp: event.timestamp,
   }));
 
