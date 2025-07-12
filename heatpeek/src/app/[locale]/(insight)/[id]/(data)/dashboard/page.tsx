@@ -11,6 +11,7 @@ import {
 } from "@/lib/clickhouse/queries";
 import { ChartPieLabelCustom } from "@/components/ui/chart-pie-label-custom";
 import { ChartLineDefault } from "@/components/ui/chart-line";
+import { ChartBarLabelCustom } from "@/components/ui/char-bar-label-custom";
 
 export default async function PageDashboard({
   searchParams,
@@ -78,6 +79,7 @@ export default async function PageDashboard({
       />
       <ChartLineDefault />
       <ChartPieLabelCustom />
+      <ChartBarLabelCustom />
       <TopPage />
     </div>
   );

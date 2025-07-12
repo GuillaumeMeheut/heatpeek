@@ -18,7 +18,7 @@ export function TopPage() {
     { page: "/contact", views: 2891, clicks: 87, rate: "3.0%" },
   ];
   return (
-    <Card className="md:col-span-2 lg:col-span-3">
+    <Card className="md:col-span-6 lg:col-span-6">
       <CardHeader className="bg-muted/50">
         <div className="flex items-center justify-between">
           <div>
