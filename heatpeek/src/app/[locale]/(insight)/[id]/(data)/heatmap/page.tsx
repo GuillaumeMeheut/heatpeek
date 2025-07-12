@@ -1,4 +1,8 @@
-import { getSnapshot, getUser } from "@/lib/supabase/queries";
+import {
+  getSnapshot,
+  getTrackingIdAndBaseUrl,
+  getUser,
+} from "@/lib/supabase/queries";
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import { Card } from "@/components/ui/card";
@@ -62,6 +66,11 @@ export default async function HeatmapPage({
     return <div>The data is still being processed</div>;
   }
 
+  const result = await getTrackingIdAndBaseUrl(supabase, projectId);
+  if (!result) {
+    return <div>Error</div>;
+  }
+
   let data: AggregatedClick[] | RawClick[] | ScrollDepth[] | null = null;
 
   const fetchers = {
@@ -73,6 +82,8 @@ export default async function HeatmapPage({
   const fetcher = fetchers[type];
 
   data = await fetcher({
+    trackingId: result.tracking_id,
+    path: url,
     snapshotId: snapshot.id,
     device,
     browser: "chrome",

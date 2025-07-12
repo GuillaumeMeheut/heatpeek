@@ -36,7 +36,7 @@ export function Metrics({
     },
     {
       title: "Scroll Depth",
-      value: `${scrollDepth.toFixed(2)}%`,
+      value: `${scrollDepth}%`,
       change: "+5.5%",
       trend: "up" as const,
       icon: Mouse,

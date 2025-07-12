@@ -29,8 +29,8 @@ export function setupClickTracking() {
     const height = Math.round(rect.height);
 
     const selector = getUniqueSelector(el);
-    const erx = (e.pageX - left) / width;
-    const ery = (e.pageY - top) / height;
+    const erx = Math.round((e.pageX - left) / width);
+    const ery = Math.round((e.pageY - top) / height);
 
     if (!clickCounts.has(selector)) clickCounts.set(selector, []);
     const arr = clickCounts.get(selector);

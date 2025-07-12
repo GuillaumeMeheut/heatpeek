@@ -44,7 +44,7 @@ export default async function PageDashboard({
     return <div>Error</div>;
   }
 
-  const [pageViews, clicks] = await Promise.all([
+  const [pageViews, clicks, scrollDepth] = await Promise.all([
     getPageViews({
       trackingId: result.tracking_id,
       path: url,
@@ -57,15 +57,13 @@ export default async function PageDashboard({
       device,
       browser: "chrome",
     }),
-    // getAverageScrollDepth({
-    //   trackingId: result.tracking_id,
-    //   path: url,
-    //   device,
-    //   browser: "chrome",
-    // }),
+    getAverageScrollDepth({
+      trackingId: result.tracking_id,
+      path: url,
+      device,
+      browser: "chrome",
+    }),
   ]);
-
-  console.log(pageViews, clicks);
 
   //barcharts engagement: pageviews clicks scroll depth rage clicks
 
@@ -73,7 +71,11 @@ export default async function PageDashboard({
 
   return (
     <div className="grid gap-4 md:grid-cols-4 lg:grid-cols-8 mb-6 ">
-      <Metrics pageViews={pageViews} clicks={clicks} scrollDepth={0} />
+      <Metrics
+        pageViews={pageViews}
+        clicks={clicks}
+        scrollDepth={scrollDepth}
+      />
       <ChartLineDefault />
       <ChartPieLabelCustom />
       <TopPage />

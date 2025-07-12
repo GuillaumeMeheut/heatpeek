@@ -15,7 +15,7 @@ export type ClickHouseEvent = {
   ery: number;
   browser: string;
   os: string;
-  inserted_at: string;
+  timestamp: string;
 };
 
 export type RageClickEvent = {
@@ -28,7 +28,7 @@ export type RageClickEvent = {
   ery: number;
   browser: string;
   os: string;
-  inserted_at: string;
+  timestamp: string;
 };
 
 export type ScrollDepthEvent = {

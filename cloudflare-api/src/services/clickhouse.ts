@@ -97,7 +97,7 @@ export class ClickHouseService {
     return this.executeWithRetry(
       () =>
         this.client.insert({
-          table: "rage_raw_clicks",
+          table: "raw_rage_clicks",
           values: rageClicks,
           format: "JSONEachRow",
         }),

@@ -46,7 +46,7 @@ async function processClickEvents(
     selector: event.selector,
     erx: event.erx,
     ery: event.ery,
-    inserted_at: event.timestamp,
+    timestamp: event.timestamp,
   }));
 
   const result = await measureStep(metrics, "insert_clicks", () =>
@@ -78,10 +78,10 @@ async function processRageClickEvents(
     selector: event.selector,
     erx: event.erx,
     ery: event.ery,
-    inserted_at: event.timestamp,
+    timestamp: event.timestamp,
   }));
 
-  const result = await measureStep(metrics, "insert_rage_raw_clicks", () =>
+  const result = await measureStep(metrics, "insert_raw_rage_clicks", () =>
     clickhouseService.insertRageClicks(rageClickEvents)
   );
 

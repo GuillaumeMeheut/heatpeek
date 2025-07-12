@@ -10,6 +10,24 @@ const createClickhouseClient = () => {
 };
 
 type GetClicksParams = {
+  trackingId: string;
+  path: string;
+  snapshotId: string;
+  device?: string;
+  browser?: string;
+};
+
+type GetRageClicksParams = {
+  trackingId: string;
+  path: string;
+  snapshotId: string;
+  device?: string;
+  browser?: string;
+};
+
+type GetScrollDepthParams = {
+  trackingId: string;
+  path: string;
   snapshotId: string;
   device?: string;
   browser?: string;
@@ -30,13 +48,19 @@ export type AggregatedClick = {
 };
 
 export const getClicks = async ({
+  trackingId,
+  path,
   snapshotId,
   device,
   browser,
 }: GetClicksParams): Promise<RawClick[]> => {
   const client = createClickhouseClient();
 
-  const conditions: string[] = [`snapshot_id = {snapshotId:UUID}`];
+  const conditions: string[] = [
+    `tracking_id = {trackingId:String}`,
+    `path = {path:String}`,
+    `snapshot_id = {snapshotId:UUID}`,
+  ];
   if (device) conditions.push(`device = {device:String}`);
   if (browser) conditions.push(`browser = {browser:String}`);
 
@@ -50,6 +74,8 @@ export const getClicks = async ({
     query,
     format: "JSON",
     query_params: {
+      trackingId,
+      path,
       snapshotId,
       device,
       browser,
@@ -61,19 +87,25 @@ export const getClicks = async ({
 };
 
 export const getRageClicks = async ({
+  trackingId,
+  path,
   snapshotId,
   device,
   browser,
-}: GetClicksParams): Promise<RawClick[]> => {
+}: GetRageClicksParams): Promise<RawClick[]> => {
   const client = createClickhouseClient();
 
-  const conditions: string[] = [`snapshot_id = {snapshotId:UUID}`];
+  const conditions: string[] = [
+    `tracking_id = {trackingId:String}`,
+    `path = {path:String}`,
+    `snapshot_id = {snapshotId:UUID}`,
+  ];
   if (device) conditions.push(`device = {device:String}`);
   if (browser) conditions.push(`browser = {browser:String}`);
 
   const query = `
     SELECT erx,ery,selector
-    FROM rage_raw_clicks
+    FROM raw_rage_clicks
     WHERE ${conditions.join(" AND ")}
   `;
 
@@ -81,6 +113,8 @@ export const getRageClicks = async ({
     query,
     format: "JSON",
     query_params: {
+      trackingId,
+      path,
       snapshotId,
       device,
       browser,
@@ -102,21 +136,27 @@ export type ScrollDepth = {
 };
 
 export const getScrollDepth = async ({
+  trackingId,
+  path,
   snapshotId,
   device,
   browser,
-}: GetClicksParams): Promise<ScrollDepth[]> => {
+}: GetScrollDepthParams): Promise<ScrollDepth[]> => {
   const client = createClickhouseClient();
 
-  const conditions: string[] = [`snapshot_id = {snapshotId:UUID}`];
+  const conditions: string[] = [
+    `tracking_id = {trackingId:String}`,
+    `path = {path:String}`,
+    `snapshot_id = {snapshotId:UUID}`,
+  ];
   if (device) conditions.push(`device = {device:String}`);
   if (browser) conditions.push(`browser = {browser:String}`);
 
   const query = `
-  SELECT
-    scroll_depth,
-    sum(views) AS total_views
-  FROM aggregated_scroll_depth
+ SELECT
+  scroll_depth,
+  count() AS total_views
+  FROM raw_scroll_depth
   WHERE ${conditions.join(" AND ")}
   GROUP BY scroll_depth
 `;
@@ -125,6 +165,8 @@ export const getScrollDepth = async ({
     query,
     format: "JSON",
     query_params: {
+      trackingId,
+      path,
       snapshotId,
       device,
       browser,
@@ -240,9 +282,9 @@ export const getAverageScrollDepth = async ({
   if (browser) conditions.push(`browser = {browser:String}`);
 
   const query = `
-    SELECT
-      sum(scroll_depth * views) / sum(views) AS avg_scroll_depth
-    FROM aggregated_scroll_depth
+   SELECT
+      round(sum(scroll_depth) / count(), 2) AS avg_scroll_depth
+          FROM raw_scroll_depth
     WHERE ${conditions.join(" AND ")}
   `;
 
