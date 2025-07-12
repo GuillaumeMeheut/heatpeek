@@ -50,6 +50,7 @@ export type PageViewEvent = {
   browser: string;
   os: string;
   timestamp: string;
+  referrer: string;
   is_bounce: boolean;
 };
 
@@ -82,6 +83,7 @@ export type ScrollDepthEventData = BaseEvent & {
 export type PageViewEventData = BaseEvent & {
   type: "page_view";
   is_bounce: boolean;
+  referrer: string;
 };
 
 export type MultiEvent =

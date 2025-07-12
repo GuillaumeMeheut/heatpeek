@@ -7,6 +7,7 @@ import { getBrowserName } from "./utils/getBrowserName";
 import { getOsName } from "./utils/getOsName";
 import { setupNavigationTracking } from "./core/tracking/navigation";
 import { cleanupTracking } from "./core/tracking";
+import { getReferrerDomain } from "./utils/getReferrer";
 
 (function () {
   const trackingId = document.currentScript.getAttribute("id");
@@ -38,6 +39,7 @@ import { cleanupTracking } from "./core/tracking";
   const device = getViewportDeviceCategory();
   const browser = getBrowserName();
   const os = getOsName();
+  const referrer = getReferrerDomain();
 
   const runTracking = (path) => {
     cleanupTracking();
@@ -50,7 +52,7 @@ import { cleanupTracking } from "./core/tracking";
       device,
       browser,
       os,
-      document.referrer
+      referrer
     );
     config.fetch().then((configData) => {
       if (!configData) return;

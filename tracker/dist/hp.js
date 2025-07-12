@@ -346,7 +346,7 @@
       device: config2.device,
       browser: config2.browser,
       os: config2.os,
-      // referrer: document.referrer,
+      referrer: config2.referrer,
       timestamp: (/* @__PURE__ */ new Date()).toISOString(),
       is_bounce: false
     };
@@ -525,6 +525,18 @@
       }
     };
   }
+  function getReferrerDomain() {
+    const ref = document.referrer;
+    if (!ref) return null;
+    try {
+      const refUrl = new URL(ref);
+      const currentUrl = new URL(window.location.href);
+      if (refUrl.origin === currentUrl.origin) return null;
+      return refUrl.hostname;
+    } catch {
+      return null;
+    }
+  }
   (function() {
     const trackingId = document.currentScript.getAttribute("id");
     let endpoint, endpointAPI;
@@ -545,6 +557,7 @@
     const device = getViewportDeviceCategory();
     const browser = getBrowserName();
     const os = getOsName();
+    const referrer = getReferrerDomain();
     const runTracking = (path) => {
       cleanupTracking();
       config.init(
@@ -555,7 +568,7 @@
         device,
         browser,
         os,
-        document.referrer
+        referrer
       );
       config.fetch().then((configData) => {
         if (!configData) return;

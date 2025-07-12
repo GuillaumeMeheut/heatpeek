@@ -5,7 +5,7 @@ export function sendPageview(config) {
     device: config.device,
     browser: config.browser,
     os: config.os,
-    // referrer: document.referrer,
+    referrer: config.referrer,
     timestamp: new Date().toISOString(),
     is_bounce: false,
   };

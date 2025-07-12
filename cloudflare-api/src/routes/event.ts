@@ -135,6 +135,7 @@ async function processPageViewEvent(
     device,
     browser,
     os,
+    referrer: event.referrer,
     timestamp: event.timestamp,
     is_bounce: event.is_bounce,
   };
@@ -150,8 +151,16 @@ router.post("/pageview", cors(), async (c) => {
   const metrics = createPerformanceTracker();
 
   try {
-    const { trackingId, path, browser, device, os, timestamp, is_bounce } =
-      await measureStep(metrics, "parse_request", () => c.req.json());
+    const {
+      trackingId,
+      path,
+      browser,
+      device,
+      os,
+      timestamp,
+      is_bounce,
+      referrer,
+    } = await measureStep(metrics, "parse_request", () => c.req.json());
 
     if (!trackingId || !path || !browser || !device || !os || !timestamp) {
       return c.body(null, 204);
@@ -225,6 +234,7 @@ router.post("/pageview", cors(), async (c) => {
       const pageviewEvent: PageViewEventData = {
         type: "page_view",
         timestamp,
+        referrer,
         is_bounce: is_bounce || false,
       };
 
