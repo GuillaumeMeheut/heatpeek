@@ -9,7 +9,7 @@ const DIST_DIR = path.join(__dirname, "dist");
 // Function to build the tracker
 function buildTracker() {
   console.log("🔨 Building tracker...");
-  exec("npm run build", (error, stdout, stderr) => {
+  exec("npm run build -- --mode development", (error, stdout, stderr) => {
     if (error) {
       console.error("❌ Build failed:", error);
       return;

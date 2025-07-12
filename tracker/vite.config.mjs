@@ -2,8 +2,8 @@
 import { defineConfig } from "vite";
 import obfuscator from "rollup-plugin-obfuscator";
 
-export default defineConfig(({ command }) => {
-  const isDev = command === "serve";
+export default defineConfig(({ command, mode }) => {
+  const isDev = mode === "development";
 
   return {
     // Development server configuration
@@ -44,11 +44,10 @@ export default defineConfig(({ command }) => {
       minify: isDev ? false : "terser",
     },
 
-    // Development mode: serve the entry file directly
-    ...(isDev && {
-      define: {
-        global: "globalThis",
-      },
-    }),
+    // Define global variables
+    define: {
+      global: "globalThis",
+      __IS_DEV__: JSON.stringify(isDev),
+    },
   };
 });

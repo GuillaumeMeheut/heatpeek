@@ -12,10 +12,21 @@ import { cleanupTracking } from "./core/tracking";
   const trackingId = document.currentScript.getAttribute("id");
   let endpoint, endpointAPI;
 
-  if (location.hostname === "localhost" || location.hostname === "127.0.0.1") {
+  const isLocalhost =
+    location.hostname === "localhost" || location.hostname === "127.0.0.1";
+
+  if (__IS_DEV__ && isLocalhost) {
+    // Dev mode + localhost: use local endpoints
     endpoint = "http://localhost:3000";
     endpointAPI = "http://localhost:8787";
+  } else if (__IS_DEV__ && !isLocalhost) {
+    // Dev mode + external site: don't run tracking
+    return;
+  } else if (isLocalhost) {
+    // Production mode + localhost: don't run tracking
+    return;
   } else {
+    // Production mode + external site: use production endpoints
     endpoint = "https://heatpeek.com";
     endpointAPI = "https://api.heatpeek.com";
   }
@@ -30,7 +41,6 @@ import { cleanupTracking } from "./core/tracking";
 
   const runTracking = (path) => {
     cleanupTracking();
-    console.log(document.referrer);
 
     config.init(
       endpointAPI,
