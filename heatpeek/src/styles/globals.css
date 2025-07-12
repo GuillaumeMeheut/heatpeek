@@ -13,7 +13,7 @@
     --popover: 0 0% 100%;
     --popover-foreground: 0 0% 10%;
 
-    --primary: 11 95% 59%;
+    --primary: 19 100% 60%;
     --primary-foreground: 0 0% 98%;
 
     --secondary: 213 95% 59%;
@@ -32,11 +32,15 @@
     --input: 0 0% 89.8%;
     --ring: 0 0% 10%;
 
-    --chart-1: 11 95% 59%;
-    --chart-2: 43 100% 60%;
-    --chart-3: 213 95% 59%;
-    --chart-4: 197 100% 60%;
-    --chart-5: 260 85% 65%;
+    --chart-1: hsl(var(--primary));
+    --chart-2: hsl(var(--secondary));
+    --chart-3: hsl(var(--metric-1));
+    --chart-4: hsl(var(--metric-2));
+    --chart-5: hsl(var(--metric-3));
+
+    /* Metric colors from Metrics.tsx */
+    --metric-1: 142 76% 36%; /* green-500 */
+    --metric-2: 262 83% 58%; /* purple-500 */
 
     --radius: 0.5rem;
   }
@@ -70,11 +74,17 @@
     --input: 0 0% 14.9%;
     --ring: 0 0% 83.1%;
 
-    --chart-1: 11 95% 59%;
-    --chart-2: 43 100% 60%;
-    --chart-3: 213 95% 59%;
-    --chart-4: 197 100% 60%;
-    --chart-5: 260 85% 65%;
+    --chart-1: hsl(var(--primary));
+    --chart-2: hsl(var(--secondary));
+    --chart-3: oklch(0.769 0.188 70.08);
+    --chart-4: oklch(0.627 0.265 303.9);
+    --chart-5: oklch(0.645 0.246 16.439);
+
+    /* Metric colors from Metrics.tsx (dark mode) */
+    --metric-1: 12 80% 40%; /* orange-700 */
+    --metric-2: 142 71% 29%; /* green-700 */
+    --metric-3: 217 91% 48%; /* blue-700 */
+    --metric-4: 262 52% 47%; /* purple-700 */
   }
 }
 

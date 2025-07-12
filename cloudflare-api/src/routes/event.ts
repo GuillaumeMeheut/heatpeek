@@ -291,7 +291,9 @@ router.post("/events", cors(), async (c) => {
       !device ||
       !os ||
       !events ||
-      !Array.isArray(events)
+      !Array.isArray(events) ||
+      events.length === 0 ||
+      events.length > 10
     ) {
       return c.body(null, 204);
     }

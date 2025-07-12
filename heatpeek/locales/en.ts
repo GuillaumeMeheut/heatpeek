@@ -15,7 +15,6 @@ export default {
     signUp: "Sign Up",
     getStarted: "Get Started",
     heatmap: "Heatmap",
-    elements: "Elements",
     myAccount: "My Account",
   },
   auth: {
@@ -327,6 +326,10 @@ export default {
     allPages: "All Pages",
     new: "New",
     manage: "Manage",
+    last24hours: "Last 24 hours",
+    last7days: "Last 7 days",
+    last30days: "Last 30 days",
+    last90days: "Last 90 days",
   },
   urlsTable: {
     title: "Pages",
@@ -398,5 +401,12 @@ export default {
   },
   urlList: {
     manageSites: "Manage sites",
+  },
+  versioning: {
+    createNewVersionButton: "Create New Version",
+    confirmTitle: "Create a New Heatmap Version?",
+    confirmDescription:
+      "This will create a new version of the heatmap for the selected device. Previous versions will remain accessible for comparison.",
+    createNewVersionAction: "Confirm & Create Version",
   },
 } as const;

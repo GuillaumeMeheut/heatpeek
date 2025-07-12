@@ -3,7 +3,6 @@ import {
   UrlsRow,
   PageConfigRow,
   SnapshotsRow,
-  ClickedElementsRow,
   ProjectsRow,
   UrlsInsert,
   PageConfigInsert,
@@ -459,24 +458,6 @@ export const getProjectConfigId = cache(
     return data.id;
   }
 );
-
-export type ClickedElement = Pick<
-  ClickedElementsRow,
-  "snapshot_id" | "s" | "l" | "t" | "w" | "h" | "clicks_count"
->;
-
-export const addClickedElements = async (
-  supabase: SupabaseClient,
-  clickedElements: ClickedElement[]
-): Promise<void> => {
-  const { error } = await supabase
-    .from("clicked_elements")
-    .insert(clickedElements);
-
-  if (error) {
-    throw new Error("Error inserting clicked elements:", error);
-  }
-};
 
 export type Project = Pick<
   ProjectsRow,

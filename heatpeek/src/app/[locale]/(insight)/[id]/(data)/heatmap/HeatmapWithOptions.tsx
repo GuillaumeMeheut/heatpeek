@@ -24,11 +24,13 @@ export default function HeatmapWithOptions({
   pageData,
   clickType = "aggregated",
 }: HeatmapWithOptionsProps) {
-  const [opacity, setOpacity] = useState(type === "scroll_depth" ? 90 : 40);
+  const [opacity, setOpacity] = useState(40);
 
   useEffect(() => {
     if (type === HeatmapType.ScrollDepth) {
       setOpacity(90);
+    } else {
+      setOpacity(40);
     }
   }, [type]);
 

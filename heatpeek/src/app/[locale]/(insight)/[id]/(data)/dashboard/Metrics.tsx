@@ -1,72 +1,96 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
-  CalendarDays,
+  ArrowDownRight,
+  ArrowUpRight,
   Eye,
   MousePointer,
-  TrendingDown,
-  TrendingUp,
-  Users,
+  Mouse,
+  Clock,
 } from "lucide-react";
 
-export function Metrics() {
+export function Metrics({
+  pageViews,
+  clicks,
+  scrollDepth,
+}: {
+  pageViews: number;
+  clicks: number;
+  scrollDepth: number;
+}) {
   const metrics = [
     {
-      title: "Total Sessions",
-      value: "12,847",
-      change: "+12.5%",
-      trend: "up",
-      icon: Users,
-    },
-    {
       title: "Page Views",
-      value: "45,231",
+      value: pageViews,
       change: "+8.2%",
-      trend: "up",
+      trend: "up" as const,
       icon: Eye,
+      color: "from-orange-500 to-red-500",
     },
     {
       title: "Click Rate",
-      value: "3.4%",
+      value: `${((clicks / pageViews) * 100).toFixed(2)}%`,
       change: "-0.8%",
-      trend: "down",
+      trend: "down" as const,
       icon: MousePointer,
+      color: "from-green-500 to-emerald-500",
     },
     {
-      title: "Avg. Session Duration",
+      title: "Scroll Depth",
+      value: `${scrollDepth.toFixed(2)}%`,
+      change: "+5.5%",
+      trend: "up" as const,
+      icon: Mouse,
+      color: "from-blue-500 to-cyan-500",
+    },
+    {
+      title: "Average Time on Page",
       value: "4m 32s",
       change: "+15.3%",
-      trend: "up",
-      icon: CalendarDays,
+      trend: "up" as const,
+      icon: Clock,
+      color: "from-purple-500 to-pink-500",
     },
   ];
   return (
     <>
       {metrics.map((metric) => (
-        <Card key={metric.title} className="border-l-4 border-l-primary">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
+        <Card
+          key={metric.title}
+          className="relative overflow-hidden border-0 shadow-lg bg-white/80 backdrop-blur-sm lg:col-span-2"
+        >
+          <div
+            className={`absolute inset-0 bg-gradient-to-br ${metric.color} opacity-5`}
+          />
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 relative z-10">
+            <CardTitle className="text-sm font-medium text-gray-600">
               {metric.title}
             </CardTitle>
-            <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center">
-              <metric.icon className="h-4 w-4 text-muted-foreground" />
+            <div
+              className={`w-10 h-10 rounded-xl bg-gradient-to-br ${metric.color} flex items-center justify-center shadow-lg`}
+            >
+              <metric.icon className="h-5 w-5 text-white" />
             </div>
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{metric.value}</div>
-            <div className="flex items-center text-xs text-muted-foreground">
+          <CardContent className="relative z-10">
+            <div className="text-3xl font-bold text-gray-900 mb-2">
+              {metric.value}
+            </div>
+            <div className="flex items-center text-sm">
               {metric.trend === "up" ? (
-                <TrendingUp className="w-3 h-3 mr-1 text-green-500" />
+                <ArrowUpRight className="w-4 h-4 mr-1 text-green-500" />
               ) : (
-                <TrendingDown className="w-3 h-3 mr-1 text-red-500" />
+                <ArrowDownRight className="w-4 h-4 mr-1 text-red-500" />
               )}
               <span
                 className={
-                  metric.trend === "up" ? "text-green-500" : "text-red-500"
+                  metric.trend === "up"
+                    ? "text-green-600 font-medium"
+                    : "text-red-600 font-medium"
                 }
               >
                 {metric.change}
               </span>
-              <span className="ml-1">from last period</span>
+              <span className="text-gray-500 ml-1">vs last period</span>
             </div>
           </CardContent>
         </Card>

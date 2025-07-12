@@ -13,6 +13,7 @@ import { useI18n } from "@locales/client";
 import { useRouter } from "next/navigation";
 import { useSearchParams } from "next/navigation";
 import { HeatmapType } from "./types";
+import { useDebouncedState } from "@/hooks/debounce";
 
 interface TooltipButtonProps {
   icon: LucideIcon;
@@ -70,6 +71,12 @@ export function OptionsBar({
     router.replace(`?${params.toString()}`);
   };
 
+  const [localOpacity, setLocalOpacity] = useDebouncedState(
+    opacity,
+    200,
+    (debouncedValue) => onOpacityChange?.(debouncedValue)
+  );
+
   return (
     <TooltipProvider>
       <div className="fixed left-1/2 -translate-x-1/2 bottom-4 flex items-center gap-4 px-4 py-3 bg-black/90 backdrop-blur-sm rounded-full shadow-lg z-50 border border-white/30">
@@ -106,8 +113,8 @@ export function OptionsBar({
             </TooltipContent>
           </Tooltip>
           <Slider
-            defaultValue={[opacity]}
-            onValueCommit={(value) => onOpacityChange?.(value[0])}
+            value={[localOpacity]}
+            onValueChange={(value: number[]) => setLocalOpacity(value[0])}
             max={100}
             step={1}
             className="w-full"

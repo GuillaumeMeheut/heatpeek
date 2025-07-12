@@ -58,7 +58,6 @@ export function InsightNavbar({
 
   const isDashboard = pathname.includes("/dashboard");
   const isHeatmap = pathname.includes("/heatmap");
-  const isElements = pathname.includes("/elements");
   const isGetStarted = pathname.includes("/get-started");
 
   return (
@@ -96,13 +95,6 @@ export function InsightNavbar({
                 hasFilter
               >
                 {t("nav.heatmap")}
-              </NavLink>
-              <NavLink
-                href={`/${currentId}/elements`}
-                isActive={isElements}
-                hasFilter
-              >
-                {t("nav.elements")}
               </NavLink>
             </>
           )}

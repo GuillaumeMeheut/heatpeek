@@ -49,6 +49,7 @@
     "react-day-picker": "^8.10.1",
     "react-dom": "18.2.0",
     "react-hook-form": "^7.56.4",
+    "recharts": "^2.15.4",
     "sharp": "^0.34.1",
     "simpleheat": "^0.4.0",
     "sonner": "^2.0.5",

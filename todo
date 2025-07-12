@@ -1,18 +1,37 @@
 # Project Tasks Overview
 
+## 🌐 Global
+
+- [ ] Add interacted elements (number of clicks, visibility)
+- [ ] Create crons:
+  - [ ] Aggregate data every X hours
+  - [ ] Determine website size (traffic insights)
+- [ ] Include traffic data in config
+- [ ] SEO
+
+---
+
 ## 🖥️ Dashboard
 
 - [ ] Handle "Snapshot Not Found"
+- [ ] Handle "Query params not valid"
 - [ ] Project & URL creation more details about what is it and what to put
 - [ ] Fix auth error when signin with existing account (it say success)
 - [ ] Review the auth system
 - [ ] Forgot Password flow
+- [ ] Redirect user to dashboard if connected directly
+- [ ] URL Rewrite for filter url
+- [ ] Add ignored element and privacy element to page config
+- [ ] Implement an example dashboard, open to everyone with static data
 
 ---
 
 ## 🖥️ Backend
 
 - [ ] Add rate limit
+- [ ] Zod for types validation
+- [ ] Snapshot: Screen page security fetching link and img
+- [ ] Compress snapshot using lz-string
 
 ---
 
@@ -21,16 +40,7 @@
 - [ ] Build DOM tree
 - [ ] Implement is bounce
 - [ ] Implement new stats: time/page,
-
----
-
-## 🌐 Global
-
-- [ ] Create crons:
-  - [ ] Aggregate data every X hours
-  - [ ] Determine website size (traffic insights)
-- [ ] Include traffic data in config
-- [ ] SEO
+- [ ] Send small data instead of full name
 
 ---
 

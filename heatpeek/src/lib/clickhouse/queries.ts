@@ -1,4 +1,5 @@
 import { createClient } from "@clickhouse/client-web";
+import { DeviceEnum } from "@/app/[locale]/(insight)/[id]/(data)/heatmap/types";
 
 const createClickhouseClient = () => {
   return createClient({
@@ -136,4 +137,127 @@ export const getScrollDepth = async ({
     scroll_depth: Number(row.scroll_depth),
     views: Number(row.total_views),
   })) as ScrollDepth[];
+};
+
+export const getPageViews = async ({
+  trackingId,
+  path,
+  device,
+  browser,
+}: {
+  trackingId: string;
+  path: string;
+  device?: DeviceEnum | "all";
+  browser?: string;
+}): Promise<number> => {
+  const client = createClickhouseClient();
+
+  const conditions: string[] = [`tracking_id = {trackingId:String}`];
+
+  if (path && path !== "all") conditions.push(`path = {path:String}`);
+  if (device && device !== "all") conditions.push(`device = {device:String}`);
+  if (browser) conditions.push(`browser = {browser:String}`);
+
+  const query = `
+    SELECT sum(views) AS total_views
+    FROM aggregated_pageviews
+    WHERE ${conditions.join(" AND ")}
+  `;
+
+  const resultSet = await client.query({
+    query,
+    format: "JSON",
+    query_params: {
+      trackingId,
+      path,
+      device,
+      browser,
+    },
+  });
+
+  const rows = await resultSet.json();
+  const data = rows.data as { total_views?: string | number }[];
+  return Number(data?.[0]?.total_views) || 0;
+};
+
+export const getClickCount = async ({
+  trackingId,
+  path,
+  device,
+  browser,
+}: {
+  trackingId: string;
+  path: string;
+  device?: DeviceEnum | "all";
+  browser?: string;
+}): Promise<number> => {
+  const client = createClickhouseClient();
+
+  const conditions: string[] = [`tracking_id = {trackingId:String}`];
+
+  if (path && path !== "all") conditions.push(`path = {path:String}`);
+  if (device && device !== "all") conditions.push(`device = {device:String}`);
+  if (browser) conditions.push(`browser = {browser:String}`);
+
+  const query = `
+    SELECT count() AS click_count
+    FROM raw_clicks
+    WHERE ${conditions.join(" AND ")}
+  `;
+
+  const resultSet = await client.query({
+    query,
+    format: "JSON",
+    query_params: {
+      trackingId,
+      path,
+      device,
+      browser,
+    },
+  });
+
+  const rows = await resultSet.json();
+  const data = rows.data as { click_count?: string | number }[];
+  return Number(data?.[0]?.click_count) || 0;
+};
+
+export const getAverageScrollDepth = async ({
+  trackingId,
+  path,
+  device,
+  browser,
+}: {
+  trackingId: string;
+  path: string;
+  device?: DeviceEnum | "all";
+  browser?: string;
+}): Promise<number> => {
+  const client = createClickhouseClient();
+
+  const conditions: string[] = [`tracking_id = {trackingId:String}`];
+  if (path && path !== "all") conditions.push(`path = {path:String}`);
+  if (device && device !== "all") conditions.push(`device = {device:String}`);
+  if (browser) conditions.push(`browser = {browser:String}`);
+
+  const query = `
+    SELECT
+      sum(scroll_depth * views) / sum(views) AS avg_scroll_depth
+    FROM aggregated_scroll_depth
+    WHERE ${conditions.join(" AND ")}
+  `;
+
+  const resultSet = await client.query({
+    query,
+    format: "JSON",
+    query_params: {
+      trackingId,
+      path,
+      device,
+      browser,
+    },
+  });
+
+  const rows = await resultSet.json();
+  const data = rows.data as { avg_scroll_depth?: string | number }[];
+  return Number(data?.[0]?.avg_scroll_depth) || 0;
 };
