@@ -201,7 +201,6 @@
     mobile: "update_snap_mobile"
   };
   let navigationHandler;
-  let timeoutId;
   function setupSnapshotLogic(config2) {
     teardownSnapshotLogic();
     waitForDomIdle(() => {
@@ -210,7 +209,7 @@
       }
     });
     navigationHandler = () => {
-      timeoutId = setTimeout(() => {
+      waitForDomIdle(() => {
         if (shouldSendSnapshot(config2)) {
           sendSnapshot(config2);
         }
@@ -222,10 +221,6 @@
     if (navigationHandler) {
       document.removeEventListener("heatpeek:navigation", navigationHandler);
       navigationHandler = null;
-    }
-    if (timeoutId) {
-      clearTimeout(timeoutId);
-      timeoutId = null;
     }
   }
   function shouldSendSnapshot(config2) {
@@ -256,25 +251,130 @@
       }
     };
   }
-  function waitForDomIdle(callback, timeout = 4e3) {
+  function waitForDomIdle(callback, timeout = 8e3) {
     let called = false;
+    let loadPromises = [];
     const runOnce = () => {
       if (called) return;
       called = true;
-      if ("requestIdleCallback" in window) {
-        requestIdleCallback(callback, { timeout: 1e3 });
-      } else {
-        setTimeout(callback, 300);
-      }
+      Promise.all(loadPromises).then(() => {
+        setTimeout(() => {
+          if ("requestIdleCallback" in window) {
+            requestIdleCallback(callback, { timeout: 2e3 });
+          } else {
+            setTimeout(callback, 500);
+          }
+        }, 1e3);
+      }).catch(() => {
+        setTimeout(callback, 2e3);
+      });
+    };
+    const waitForImages = () => {
+      return new Promise((resolve) => {
+        const images = Array.from(document.querySelectorAll("img"));
+        if (images.length === 0) {
+          resolve();
+          return;
+        }
+        let loadedCount = 0;
+        const totalImages = images.length;
+        const checkComplete = () => {
+          loadedCount++;
+          if (loadedCount >= totalImages) {
+            resolve();
+          }
+        };
+        images.forEach((img) => {
+          if (img.complete) {
+            checkComplete();
+          } else {
+            img.addEventListener("load", checkComplete, { once: true });
+            img.addEventListener("error", checkComplete, { once: true });
+          }
+        });
+        setTimeout(resolve, 3e3);
+      });
+    };
+    const waitForFonts = () => {
+      return new Promise((resolve) => {
+        if ("fonts" in document) {
+          document.fonts.ready.then(resolve);
+        } else {
+          setTimeout(resolve, 1e3);
+        }
+      });
+    };
+    const waitForAnimations = () => {
+      return new Promise((resolve) => {
+        const animatedElements = document.querySelectorAll("*");
+        const checkStyles = () => {
+          let hasAnimations = false;
+          let hasTransitions = false;
+          animatedElements.forEach((el) => {
+            const style = window.getComputedStyle(el);
+            if (style.animationName && style.animationName !== "none") {
+              hasAnimations = true;
+            }
+            if (style.transitionProperty && style.transitionProperty !== "none") {
+              hasTransitions = true;
+            }
+          });
+          if (!hasAnimations && !hasTransitions) {
+            resolve();
+          } else {
+            setTimeout(checkStyles, 100);
+          }
+        };
+        setTimeout(checkStyles, 200);
+        setTimeout(resolve, 2e3);
+      });
+    };
+    const waitForNetworkIdle = () => {
+      return new Promise((resolve) => {
+        let lastActivity = Date.now();
+        const checkIdle = () => {
+          if (Date.now() - lastActivity > 1e3) {
+            resolve();
+          } else {
+            setTimeout(checkIdle, 200);
+          }
+        };
+        setTimeout(checkIdle, 1e3);
+        setTimeout(resolve, 3e3);
+      });
     };
     if (document.readyState === "complete") {
+      loadPromises = [
+        waitForImages(),
+        waitForFonts(),
+        waitForAnimations(),
+        waitForNetworkIdle()
+      ];
       runOnce();
     } else {
       const loadHandler = () => {
-        setTimeout(runOnce, 500);
+        setTimeout(() => {
+          loadPromises = [
+            waitForImages(),
+            waitForFonts(),
+            waitForAnimations(),
+            waitForNetworkIdle()
+          ];
+          runOnce();
+        }, 1e3);
       };
       window.addEventListener("load", loadHandler, { once: true });
-      setTimeout(runOnce, timeout);
+      setTimeout(() => {
+        if (!called) {
+          loadPromises = [
+            waitForImages(),
+            waitForFonts(),
+            waitForAnimations(),
+            waitForNetworkIdle()
+          ];
+          runOnce();
+        }
+      }, timeout);
     }
   }
   let maxScrollDepthPx = 0;

@@ -23,6 +23,7 @@
 - [ ] URL Rewrite for filter url
 - [ ] Add ignored element and privacy element to page config
 - [ ] Implement an example dashboard, open to everyone with static data
+- [ ] Use KV for active snapshot dom_data
 
 ---
 
@@ -38,6 +39,7 @@
 ## 📈 Tracker
 
 - [ ] Build DOM tree
+- [ ] Screenshot snapshot is not full load
 - [ ] Implement is bounce
 - [ ] Implement new stats: time/page,
 - [ ] Send small data instead of full name

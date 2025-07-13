@@ -162,7 +162,7 @@ export async function POST(request: NextRequest) {
     await browser.close();
 
     const compressedScreenshot = await sharp(screenshotBuffer)
-      .jpeg({
+      .png({
         quality: 75,
       })
       .toBuffer();

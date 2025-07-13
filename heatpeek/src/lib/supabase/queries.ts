@@ -347,12 +347,12 @@ export const uploadScreenshot = cache(
     supabase: SupabaseClient,
     uploadInfos: UploadScreenshotInfos
   ): Promise<string | null> => {
-    const fileName = `${uploadInfos.urlId}/${uploadInfos.layoutHash}.webp`;
+    const fileName = `${uploadInfos.urlId}/${uploadInfos.layoutHash}.png`;
 
     const { error: uploadError } = await supabase.storage
       .from("screenshots")
       .upload(fileName, uploadInfos.buffer, {
-        contentType: "image/webp",
+        contentType: "image/png",
         upsert: true,
       });
 
