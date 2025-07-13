@@ -12,7 +12,8 @@ import useClickHeatmap from "./useClickHeatmap";
 import useScrollHeatmap from "./useScrollDepthHeatmap";
 import React from "react";
 import ScrollDepthOverlay from "./ScrollDepthOverlay";
-import { isClickData, isScrollData } from "./utils";
+import ElementHoverOverlay from "./ElementHoverOverlay";
+import { isClickData, isScrollData, ClickedElement } from "./utils";
 import { HeatmapType } from "./types";
 
 type HeatmapProps = {
@@ -21,6 +22,7 @@ type HeatmapProps = {
   dataType: HeatmapType;
   clickType?: "aggregated" | "raw";
   overlayOpacity: number;
+  clickedElements?: ClickedElement[];
 };
 
 export default function Heatmap({
@@ -29,6 +31,7 @@ export default function Heatmap({
   dataType,
   clickType = "aggregated",
   overlayOpacity,
+  clickedElements = [],
 }: HeatmapProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -103,6 +106,7 @@ export default function Heatmap({
               }}
               width={containerDimensions.width}
               height={containerDimensions.height}
+              quality={100}
               priority
             />
           )}
@@ -131,9 +135,20 @@ export default function Heatmap({
             ref={canvasRef}
             width={containerDimensions.width}
             height={containerDimensions.height}
-            className="absolute inset-0 z-30 pointer-events-none"
+            className="absolute inset-0 z-30"
             aria-hidden="true"
           />
+
+          {/* Element hover overlay for click heatmaps */}
+          {dataType !== HeatmapType.ScrollDepth &&
+            clickedElements.length > 0 && (
+              <ElementHoverOverlay
+                containerDimensions={containerDimensions}
+                pageData={pageData}
+                elements={clickedElements}
+                canvasRef={canvasRef}
+              />
+            )}
         </div>
       )}
     </div>

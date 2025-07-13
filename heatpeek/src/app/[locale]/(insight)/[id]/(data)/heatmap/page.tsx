@@ -19,6 +19,7 @@ import {
   AggregatedClick,
 } from "@/lib/clickhouse/queries";
 import { DeviceEnum, HeatmapType } from "./types";
+import { getClickedElements } from "./utils";
 
 export default async function HeatmapPage({
   params,
@@ -73,15 +74,7 @@ export default async function HeatmapPage({
 
   let data: AggregatedClick[] | RawClick[] | ScrollDepth[] | null = null;
 
-  const fetchers = {
-    [HeatmapType.Clicks]: getClicks,
-    [HeatmapType.RageClicks]: getRageClicks,
-    [HeatmapType.ScrollDepth]: getScrollDepth,
-  };
-
-  const fetcher = fetchers[type];
-
-  data = await fetcher({
+  const clicks = await getClicks({
     trackingId: result.tracking_id,
     path: url,
     snapshotId: snapshot.id,
@@ -89,9 +82,43 @@ export default async function HeatmapPage({
     browser: "chrome",
   });
 
-  if (!data) {
-    return <div>No data found</div>;
+  const rageClicks = await getRageClicks({
+    trackingId: result.tracking_id,
+    path: url,
+    snapshotId: snapshot.id,
+    device,
+    browser: "chrome",
+  });
+
+  const scrollDepth = await getScrollDepth({
+    trackingId: result.tracking_id,
+    path: url,
+    snapshotId: snapshot.id,
+    device,
+    browser: "chrome",
+  });
+
+  // Set data based on the selected type
+  switch (type) {
+    case HeatmapType.Clicks:
+      data = clicks;
+      break;
+    case HeatmapType.RageClicks:
+      data = rageClicks;
+      break;
+    case HeatmapType.ScrollDepth:
+      data = scrollDepth;
+      break;
+    default:
+      data = clicks;
   }
+
+  const clickedElements = getClickedElements(
+    snapshot.dom_data,
+    clicks,
+    rageClicks,
+    scrollDepth
+  );
 
   return (
     <div className="flex">
@@ -113,6 +140,7 @@ export default async function HeatmapPage({
                     type={type}
                     pageData={snapshot}
                     clickType="raw"
+                    clickedElements={clickedElements}
                   />
                 </div>
               </div>

@@ -28,7 +28,7 @@ export function Metrics({
     },
     {
       title: "Click Rate",
-      value: `${((clicks / pageViews) * 100).toFixed(2)}%`,
+      value: `${((clicks / pageViews) * 100).toFixed(2) || 0}%`,
       change: "-0.8%",
       trend: "down" as const,
       icon: MousePointer,
