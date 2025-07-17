@@ -1,4 +1,3 @@
-import { getI18n } from "@locales/server";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -16,76 +15,108 @@ import {
   BarChart3,
   LayoutDashboard,
 } from "lucide-react";
+import Link from "next/link";
+import { getUser } from "@/lib/supabase/queries";
+import { createClient } from "@/lib/supabase/server";
 
 export default async function Pricing() {
-  const t = await getI18n();
+  const supabase = createClient();
+  const { user } = await getUser(supabase);
+
+  let userSubscription = null;
+
+  if (user) {
+    const { data: userSubscriptionData } = await supabase
+      .from("subscriptions")
+      .select("price_id, status")
+      .eq("user_id", user?.id)
+      .order("current_period_start", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    userSubscription = userSubscriptionData;
+  }
+
+  function mapPriceIdToTier(
+    priceId: string | null
+  ): "starter" | "pro" | "business" | null {
+    switch (priceId) {
+      case "price_1Rkl65IhQf3PD3CRYSEz91gf":
+        return "starter";
+      case "price_123PROD_PRO_ID":
+        return "pro";
+      default:
+        return null;
+    }
+  }
 
   const plans = [
     {
-      name: "Free",
-      price: 0,
-      description: "Perfect for getting started with heatmap analytics",
+      name: "Starter",
+      price: 19,
+      description: "For indie devs or small projects wanting deeper insights",
       features: [
         "Click heatmap",
-        "Rage clicks detection",
-        "Scroll depth analysis",
+        "Rage clicks heatmap",
+        "Scroll depth heatmap",
         "First clicked element tracking",
-        "2000 tracked pageviews/month",
-        "1 tracked website",
-        "2 tracked pages",
+        "30,000 tracked pageviews/month",
+        "3 tracked websites",
+        "10 tracked pages",
         "3 months retention storage",
-        "Basic analytics dashboard",
+        "Analytics dashboard",
         "Email support",
       ],
       popular: false,
       icon: BarChart3,
       buttonText: "Get Started Free",
-      buttonVariant: "outline" as const,
-    },
-    {
-      name: "Starter",
-      price: 15,
-      description: "For indie devs or small projects wanting deeper insights",
-      features: [
-        "Everything in Free",
-        "10,000 tracked pageviews/month",
-        "3 tracked websites",
-        "5 tracked pages per site",
-        "6 months retention storage",
-        "Custom page targeting (URL includes/excludes)",
-        "Advanced filters (device, viewport)",
-        "Email + priority support",
-      ],
-      popular: false,
-      icon: LayoutDashboard,
-      buttonText: "Start with Starter",
-      buttonVariant: "default" as const,
+      buttonVariant: "secondary" as const,
+      link: "https://buy.stripe.com/test_4gM9AT9yr1XH1w03rNdEs02",
+      priceId: "price_1RlEKNIhQf3PD3CROq3eDOqZ",
     },
     {
       name: "Pro",
-      price: 39,
+      price: 49,
+      description: "For indie devs or small projects wanting deeper insights",
+      features: [
+        "Everything in Free",
+        "100,000 tracked pageviews/month",
+        "10 tracked websites",
+        "30 tracked pages",
+        "6 months retention storage",
+        "Email support",
+      ],
+      popular: true,
+      icon: LayoutDashboard,
+      buttonText: "Upgrade to Pro",
+      buttonVariant: "default" as const,
+      link: "https://buy.stripe.com/test_fZu3cv3a3dGp7Uo8M7dEs04",
+      priceId: "price_1RlEQTIhQf3PD3CRzUqY2jWw",
+    },
+    {
+      name: "Business",
+      price: 129,
       description: "For growing products and teams that need scale",
       features: [
         "Everything in Starter",
-        "50,000 tracked pageviews/month",
-        "Unlimited tracked websites",
-        "Unlimited tracked pages",
+        "400,000 tracked pageviews/month",
+        "30 tracked websites",
+        "100 tracked pages",
         "12 months retention storage",
-        "Daily export of click data (CSV)",
-        "Team access (up to 5 members)",
-        "Slack notifications for rage clicks",
-        "Email + chat support",
+        "Email priority support",
       ],
-      popular: true,
+      popular: false,
       icon: LineChart,
-      buttonText: "Upgrade to Pro",
+      buttonText: "Upgrade to Business",
       buttonVariant: "default" as const,
+      link: "https://buy.stripe.com/test_5kQ14naCv0TDb6A9QbdEs06",
+      priceId: "price_1RlETFIhQf3PD3CRsUaD0sJS",
     },
   ];
 
   return (
     <div className="flex flex-col min-h-screen">
-      {/* Hero Section */}
+      {/* Hero */}
       <section className="flex flex-col items-center justify-center py-20 px-4 text-center">
         <Badge variant="secondary" className="mb-4">
           Pricing Plans
@@ -99,18 +130,28 @@ export default async function Pricing() {
         </p>
       </section>
 
-      {/* Pricing Cards */}
+      {/* Plans */}
       <section className="py-20 px-4">
         <div className="max-w-7xl mx-auto">
           <div className="grid md:grid-cols-3 gap-8">
             {plans.map((plan) => {
-              const IconComponent = plan.icon;
+              const Icon = plan.icon;
+              const isCurrent =
+                userSubscription?.tier === plan.name.toLowerCase();
+
+              const linkWithEmail =
+                user && plan.price > 0 && plan.link
+                  ? `${plan.link}?prefilled_email=${user.email}`
+                  : plan.link;
+
               return (
                 <Card
                   key={plan.name}
-                  className={`relative transition-all duration-300 hover:shadow-xl ${
+                  className={`relative transition-all duration-300 hover:shadow-xl flex flex-col ${
                     plan.popular
                       ? "border-primary shadow-lg scale-105"
+                      : isCurrent
+                      ? "border-secondary shadow-lg scale-105"
                       : "hover:scale-105"
                   }`}
                 >
@@ -122,11 +163,18 @@ export default async function Pricing() {
                       </Badge>
                     </div>
                   )}
+                  {isCurrent && (
+                    <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
+                      <Badge className="bg-secondary text-white px-4 py-1">
+                        Current Plan
+                      </Badge>
+                    </div>
+                  )}
 
                   <CardHeader className="text-center pb-8">
                     <div className="flex justify-center mb-4">
                       <div className="p-3 rounded-full bg-primary/10">
-                        <IconComponent className="h-8 w-8 text-primary" />
+                        <Icon className="h-8 w-8 text-primary" />
                       </div>
                     </div>
                     <CardTitle className="text-2xl font-bold">
@@ -143,7 +191,7 @@ export default async function Pricing() {
                     </div>
                   </CardHeader>
 
-                  <CardContent className="space-y-4">
+                  <CardContent className="space-y-4 flex-1">
                     <ul className="space-y-3">
                       {plan.features.map((feature, index) => (
                         <li key={index} className="flex items-start gap-3">
@@ -154,13 +202,18 @@ export default async function Pricing() {
                     </ul>
                   </CardContent>
 
-                  <CardFooter>
+                  <CardFooter className="mt-auto">
                     <Button
+                      asChild
                       className="w-full"
                       variant={plan.buttonVariant}
                       size="lg"
+                      disabled={isCurrent}
+                      aria-disabled={isCurrent}
                     >
-                      {plan.buttonText}
+                      <Link href={linkWithEmail} target="_blank">
+                        {isCurrent ? "Current Plan" : plan.buttonText}
+                      </Link>
                     </Button>
                   </CardFooter>
                 </Card>

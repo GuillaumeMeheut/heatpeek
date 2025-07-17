@@ -14,50 +14,6 @@ export type Database = {
   }
   public: {
     Tables: {
-      clicked_elements: {
-        Row: {
-          clicks_count: number | null
-          created_at: string
-          h: number | null
-          id: number
-          l: number | null
-          s: string | null
-          snapshot_id: string | null
-          t: number | null
-          w: number | null
-        }
-        Insert: {
-          clicks_count?: number | null
-          created_at?: string
-          h?: number | null
-          id?: number
-          l?: number | null
-          s?: string | null
-          snapshot_id?: string | null
-          t?: number | null
-          w?: number | null
-        }
-        Update: {
-          clicks_count?: number | null
-          created_at?: string
-          h?: number | null
-          id?: number
-          l?: number | null
-          s?: string | null
-          snapshot_id?: string | null
-          t?: number | null
-          w?: number | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "clicked_elements_snapshot_id_fkey"
-            columns: ["snapshot_id"]
-            isOneToOne: false
-            referencedRelation: "snapshots"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       page_config: {
         Row: {
           created_at: string
@@ -249,6 +205,77 @@ export type Database = {
           },
         ]
       }
+      subscription_limits: {
+        Row: {
+          id: string
+          subscription_id: string | null
+          type: string | null
+          value: number | null
+        }
+        Insert: {
+          id?: string
+          subscription_id?: string | null
+          type?: string | null
+          value?: number | null
+        }
+        Update: {
+          id?: string
+          subscription_id?: string | null
+          type?: string | null
+          value?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "subscription_limits_subscription_id_fkey"
+            columns: ["subscription_id"]
+            isOneToOne: false
+            referencedRelation: "subscriptions"
+            referencedColumns: ["stripe_subscription_id"]
+          },
+        ]
+      }
+      subscriptions: {
+        Row: {
+          cancel_at_period_end: boolean | null
+          current_period_end: string | null
+          current_period_start: string | null
+          id: string
+          price_id: string | null
+          status: string | null
+          stripe_customer_id: string | null
+          stripe_subscription_id: string | null
+          trial_end: string | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          cancel_at_period_end?: boolean | null
+          current_period_end?: string | null
+          current_period_start?: string | null
+          id?: string
+          price_id?: string | null
+          status?: string | null
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+          trial_end?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          cancel_at_period_end?: boolean | null
+          current_period_end?: string | null
+          current_period_start?: string | null
+          id?: string
+          price_id?: string | null
+          status?: string | null
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+          trial_end?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       urls: {
         Row: {
           clicks: number
@@ -299,6 +326,33 @@ export type Database = {
             referencedColumns: ["tracking_id"]
           },
         ]
+      }
+      user_profiles: {
+        Row: {
+          created_at: string | null
+          email: string
+          full_name: string | null
+          id: string
+          stripe_customer_id: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          email: string
+          full_name?: string | null
+          id: string
+          stripe_customer_id?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          email?: string
+          full_name?: string | null
+          id?: string
+          stripe_customer_id?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
       }
     }
     Views: {
