@@ -24,6 +24,9 @@
 - [ ] Add ignored element and privacy element to page config
 - [ ] Implement an example dashboard, open to everyone with static data
 - [ ] Use KV for active snapshot dom_data
+- [ ] Find a way to optimize large dataset of clicks bc of egress consumption
+- [ ] Rename project to websites
+- [ ] rename fiels to use snake case
 
 ---
 

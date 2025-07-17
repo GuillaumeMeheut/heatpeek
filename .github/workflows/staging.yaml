@@ -22,5 +22,10 @@ jobs:
         with:
           version: latest
 
-      - run: supabase link --project-ref $SUPABASE_PROJECT_ID
-      - run: supabase db push
+      - name: Link project
+        working-directory: heatpeek
+        run: supabase link --project-ref $SUPABASE_PROJECT_ID
+
+      - name: Push migrations
+        working-directory: heatpeek
+        run: supabase db push
