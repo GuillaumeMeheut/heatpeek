@@ -116,7 +116,6 @@ export default async function Pricing() {
 
   return (
     <div className="flex flex-col min-h-screen">
-      {/* Hero */}
       <section className="flex flex-col items-center justify-center py-20 px-4 text-center">
         <Badge variant="secondary" className="mb-4">
           Pricing Plans
