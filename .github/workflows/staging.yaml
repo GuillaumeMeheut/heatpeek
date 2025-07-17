@@ -26,6 +26,6 @@ jobs:
         working-directory: heatpeek
         run: supabase link --project-ref $SUPABASE_PROJECT_ID
 
-      - name: Push migrations
+      - name: Apply migrations
         working-directory: heatpeek
-        run: supabase db push
+        run: supabase db migrate deploy
