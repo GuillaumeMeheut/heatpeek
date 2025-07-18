@@ -205,77 +205,6 @@ export type Database = {
           },
         ]
       }
-      subscription_limits: {
-        Row: {
-          id: string
-          subscription_id: string | null
-          type: string | null
-          value: number | null
-        }
-        Insert: {
-          id?: string
-          subscription_id?: string | null
-          type?: string | null
-          value?: number | null
-        }
-        Update: {
-          id?: string
-          subscription_id?: string | null
-          type?: string | null
-          value?: number | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "subscription_limits_subscription_id_fkey"
-            columns: ["subscription_id"]
-            isOneToOne: false
-            referencedRelation: "subscriptions"
-            referencedColumns: ["stripe_subscription_id"]
-          },
-        ]
-      }
-      subscriptions: {
-        Row: {
-          cancel_at_period_end: boolean | null
-          current_period_end: string | null
-          current_period_start: string | null
-          id: string
-          price_id: string | null
-          status: string | null
-          stripe_customer_id: string | null
-          stripe_subscription_id: string | null
-          trial_end: string | null
-          updated_at: string | null
-          user_id: string | null
-        }
-        Insert: {
-          cancel_at_period_end?: boolean | null
-          current_period_end?: string | null
-          current_period_start?: string | null
-          id?: string
-          price_id?: string | null
-          status?: string | null
-          stripe_customer_id?: string | null
-          stripe_subscription_id?: string | null
-          trial_end?: string | null
-          updated_at?: string | null
-          user_id?: string | null
-        }
-        Update: {
-          cancel_at_period_end?: boolean | null
-          current_period_end?: string | null
-          current_period_start?: string | null
-          id?: string
-          price_id?: string | null
-          status?: string | null
-          stripe_customer_id?: string | null
-          stripe_subscription_id?: string | null
-          trial_end?: string | null
-          updated_at?: string | null
-          user_id?: string | null
-        }
-        Relationships: []
-      }
       urls: {
         Row: {
           clicks: number
@@ -330,26 +259,53 @@ export type Database = {
       user_profiles: {
         Row: {
           created_at: string | null
+          current_plan: string | null
+          data_retention_days: number | null
           email: string
           full_name: string | null
           id: string
+          is_locked: boolean | null
+          max_total_tracked_pages: number | null
+          max_websites: number | null
+          pageviews_limit: number | null
           stripe_customer_id: string | null
+          subscription_current_period_end: string | null
+          subscription_status: string | null
+          subscription_trial_end: string | null
           updated_at: string | null
         }
         Insert: {
           created_at?: string | null
+          current_plan?: string | null
+          data_retention_days?: number | null
           email: string
           full_name?: string | null
           id: string
+          is_locked?: boolean | null
+          max_total_tracked_pages?: number | null
+          max_websites?: number | null
+          pageviews_limit?: number | null
           stripe_customer_id?: string | null
+          subscription_current_period_end?: string | null
+          subscription_status?: string | null
+          subscription_trial_end?: string | null
           updated_at?: string | null
         }
         Update: {
           created_at?: string | null
+          current_plan?: string | null
+          data_retention_days?: number | null
           email?: string
           full_name?: string | null
           id?: string
+          is_locked?: boolean | null
+          max_total_tracked_pages?: number | null
+          max_websites?: number | null
+          pageviews_limit?: number | null
           stripe_customer_id?: string | null
+          subscription_current_period_end?: string | null
+          subscription_status?: string | null
+          subscription_trial_end?: string | null
           updated_at?: string | null
         }
         Relationships: []
