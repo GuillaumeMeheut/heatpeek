@@ -414,4 +414,79 @@ export default {
       "Cela va créer une nouvelle version de la heatmap pour l'appareil sélectionné. Les versions précédentes resteront accessibles pour comparaison.",
     createNewVersionAction: "Confirmer et créer la version",
   },
+  pricing: {
+    header: {
+      badge: "Plans Tarifaires",
+      title: "Tarification Simple et Transparente",
+      description:
+        "Choisissez le plan parfait pour vos besoins d'analyse. Commencez gratuitement et évoluez selon vos besoins.",
+    },
+    billing: {
+      monthly: "Mensuel",
+      yearly: "Annuel",
+      yearlySavings: "(2 mois gratuits)",
+    },
+    plans: {
+      starter: {
+        name: "Starter",
+        description:
+          "Pour les développeurs indépendants ou petits projets souhaitant des analyses approfondies",
+        features: [
+          "Analytique de pages",
+          "Heatmap de clics",
+          "Heatmap de clics de rage",
+          "Heatmap de profondeur de défilement",
+          "Suivi du premier élément cliqué",
+          "30 000 pages vues suivies/mois",
+          "3 sites web suivis",
+          "10 pages suivies",
+          "Stockage de rétention 3 mois",
+          "Tableau de bord d'analyse",
+          "Support par email",
+        ],
+        buttons: {
+          getStarted: "Commencer Gratuitement",
+        },
+      },
+      pro: {
+        name: "Pro",
+        description:
+          "Pour les développeurs indépendants ou petits projets souhaitant des analyses approfondies",
+        features: [
+          "Tout ce qui est inclus dans Starter",
+          "100 000 pages vues suivies/mois",
+          "10 sites web suivis",
+          "30 pages suivies",
+          "Stockage de rétention 6 mois",
+          "Support par email",
+        ],
+        buttons: {
+          upgrade: "Passer à Pro",
+        },
+      },
+      business: {
+        name: "Business",
+        description:
+          "Pour les produits en croissance et équipes nécessitant de l'évolutivité",
+        features: [
+          "Tout ce qui est inclus dans Starter",
+          "400 000 pages vues suivies/mois",
+          "30 sites web suivis",
+          "100 pages suivies",
+          "Stockage de rétention 12 mois",
+          "Support prioritaire par email",
+        ],
+        buttons: {
+          upgrade: "Passer à Business",
+        },
+      },
+    },
+    badges: {
+      mostPopular: "Le Plus Populaire",
+      currentPlan: "Plan Actuel",
+    },
+    buttons: {
+      manageSubscription: "Gérer l'Abonnement",
+    },
+  },
 } as const;

@@ -540,3 +540,25 @@ export const updatePageConfig = cache(
     }
   }
 );
+
+export const getCustomerDetails = cache(
+  async (
+    supabase: SupabaseClient,
+    userId: string
+  ): Promise<{
+    stripe_customer_id: string;
+    current_plan: string;
+    subscription_status: string;
+  } | null> => {
+    const { data, error } = await supabase
+      .from("user_profiles")
+      .select("stripe_customer_id, current_plan, subscription_status")
+      .eq("id", userId)
+      .single();
+    if (error) {
+      console.error("Error getting customer ID:", error);
+      throw new Error("Failed to get customer ID");
+    }
+    return data;
+  }
+);

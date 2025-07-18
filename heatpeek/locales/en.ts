@@ -409,4 +409,76 @@ export default {
       "This will create a new version of the heatmap for the selected device. Previous versions will remain accessible for comparison.",
     createNewVersionAction: "Confirm & Create Version",
   },
+  pricing: {
+    header: {
+      badge: "Pricing Plans",
+      title: "Simple, Transparent Pricing",
+      description:
+        "Choose the perfect plan for your analytics needs. Start free and upgrade as you grow.",
+    },
+    billing: {
+      monthly: "Monthly",
+      yearly: "Yearly",
+      yearlySavings: "(2 months free)",
+    },
+    plans: {
+      starter: {
+        name: "Starter",
+        description: "For indie devs or small projects wanting deeper insights",
+        features: [
+          "Page analytics",
+          "Click heatmap",
+          "Rage clicks heatmap",
+          "Scroll depth heatmap",
+          "First clicked element tracking",
+          "30,000 tracked pageviews/month",
+          "3 tracked websites",
+          "10 tracked pages",
+          "3 months retention storage",
+          "Analytics dashboard",
+          "Email support",
+        ],
+        buttons: {
+          getStarted: "Get Started Free",
+        },
+      },
+      pro: {
+        name: "Pro",
+        description: "For indie devs or small projects wanting deeper insights",
+        features: [
+          "Everything in Free",
+          "100,000 tracked pageviews/month",
+          "10 tracked websites",
+          "30 tracked pages",
+          "6 months retention storage",
+          "Email support",
+        ],
+        buttons: {
+          upgrade: "Upgrade to Pro",
+        },
+      },
+      business: {
+        name: "Business",
+        description: "For growing products and teams that need scale",
+        features: [
+          "Everything in Starter",
+          "400,000 tracked pageviews/month",
+          "30 tracked websites",
+          "100 tracked pages",
+          "12 months retention storage",
+          "Email priority support",
+        ],
+        buttons: {
+          upgrade: "Upgrade to Business",
+        },
+      },
+    },
+    badges: {
+      mostPopular: "Most Popular",
+      currentPlan: "Current Plan",
+    },
+    buttons: {
+      manageSubscription: "Manage Subscription",
+    },
+  },
 } as const;
