@@ -15,10 +15,11 @@ export const normalizeOrigin = (url: string) => {
 };
 
 export const getURL = (path: string = "") => {
-  // Check if PUBLIC_SITE_URL is set and non-empty. Set this to your site URL in production env.
+  // Check if NEXT_PUBLIC_SITE_URL is set and non-empty. Set this to your site URL in production env.
   let url =
-    process?.env?.PUBLIC_SITE_URL && process.env.PUBLIC_SITE_URL.trim() !== ""
-      ? process.env.PUBLIC_SITE_URL
+    process?.env?.NEXT_PUBLIC_SITE_URL &&
+    process.env.NEXT_PUBLIC_SITE_URL.trim() !== ""
+      ? process.env.NEXT_PUBLIC_SITE_URL
       : // If not set, default to localhost for local development.
         "http://localhost:3000/";
 
