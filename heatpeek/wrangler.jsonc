@@ -13,5 +13,22 @@
       "binding": "WORKER_SELF_REFERENCE",
       "service": "heatpeek"
     }
-  ]
+  ],
+  "env": {
+    "production": {
+      "vars": {
+        "NEXT_PUBLIC_SUPABASE_URL": "https://nopzpxrhrcerdfnecoqd.supabase.co",
+        "NEXT_PUBLIC_SUPABASE_ANON_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+        "NEXT_PUBLIC_SITE_URL": "https://heatpeek.com/",
+        "NEXT_PUBLIC_TRACKING_URL": "https://cdn.heatpeek.com/",
+        "NEXT_PUBLIC_CLOUDFLARE_WORKER_URL": "https://api.heatpeek.com/",
+        "NEXT_PUBLIC_STARTER_MONTHLY_PRICE_ID": "price_1RmMT8Id5K3ylfxvhKaxCEw6",
+        "NEXT_PUBLIC_STARTER_YEARLY_PRICE_ID": "price_1RmMT7Id5K3ylfxvS9Q49q6l",
+        "NEXT_PUBLIC_PRO_MONTHLY_PRICE_ID": "price_1RmMTAId5K3ylfxvZDvGG6FR",
+        "NEXT_PUBLIC_PRO_YEARLY_PRICE_ID": "price_1RmMTAId5K3ylfxvoIsiGvNe",
+        "NEXT_PUBLIC_BUSINESS_MONTHLY_PRICE_ID": "price_1RmMTCId5K3ylfxvNju0oVYB",
+        "NEXT_PUBLIC_BUSINESS_YEARLY_PRICE_ID": "price_1RmMTCId5K3ylfxvEVGgCGnx"
+      }
+    }
+  }
 }
