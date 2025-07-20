@@ -1,17 +1,7 @@
-import { StripeSync } from "@supabase/stripe-sync-engine";
 import { NextRequest, NextResponse } from "next/server";
 import Stripe from "stripe";
+import { getStripe, getStripeSync } from "@/lib/stripe/init";
 import { createServerSupabaseClientWithServiceRole } from "@/lib/supabase/server";
-
-const sync = new StripeSync({
-  databaseUrl: process.env.DATABASE_URL!,
-  stripeSecretKey: process.env.STRIPE_SECRET_KEY!,
-  stripeWebhookSecret: process.env.STRIPE_WEBHOOK_SECRET!,
-  backfillRelatedEntities: true,
-  schema: "stripe",
-});
-
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
 
 function parseMetadata(metadata: Stripe.Metadata) {
   return {
@@ -26,6 +16,7 @@ async function updateUserLimits(
   customerId: string,
   subscription: Stripe.Subscription
 ) {
+  const stripe = getStripe();
   const supabase = createServerSupabaseClientWithServiceRole();
 
   // Find user by stripe_customer_id
@@ -74,6 +65,9 @@ async function updateUserLimits(
 export async function POST(req: NextRequest) {
   const payload = await req.text();
   const signature = req.headers.get("stripe-signature")!;
+
+  const stripe = getStripe();
+  const sync = getStripeSync();
 
   try {
     const event = stripe.webhooks.constructEvent(
