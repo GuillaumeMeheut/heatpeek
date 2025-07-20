@@ -35,8 +35,7 @@ export async function createCheckoutSession(formData: FormData) {
 
   const origin = (await headers()).get("origin");
 
-  const isStarter =
-    priceId === process.env.NEXT_PUBLIC_STARTER_MONTHLY_PRICE_ID;
+  const isStarter = priceId === process.env.PUBLIC_STARTER_MONTHLY_PRICE_ID;
 
   const session = await stripe.checkout.sessions.create({
     line_items: [

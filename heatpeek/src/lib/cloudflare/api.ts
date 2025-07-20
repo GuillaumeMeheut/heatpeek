@@ -2,7 +2,7 @@ import { Device } from "@/types/database";
 
 export const purgeConfig = async (trackingId: string, path: string) => {
   await fetch(
-    `${process.env.NEXT_PUBLIC_CLOUDFLARE_WORKER_URL}api/project/config/purge`,
+    `${process.env.PUBLIC_CLOUDFLARE_WORKER_URL}api/project/config/purge`,
     {
       method: "DELETE",
       headers: {
@@ -23,7 +23,7 @@ export const purgeSnapshot = async (
   device: Device | "all"
 ) => {
   await fetch(
-    `${process.env.NEXT_PUBLIC_CLOUDFLARE_WORKER_URL}api/project/snapshot/purge`,
+    `${process.env.PUBLIC_CLOUDFLARE_WORKER_URL}api/project/snapshot/purge`,
     {
       method: "DELETE",
       headers: {

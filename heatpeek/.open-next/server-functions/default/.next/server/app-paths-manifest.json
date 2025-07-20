@@ -1,0 +1,18 @@
+{
+  "/_not-found/page": "app/_not-found/page.js",
+  "/api/verify/[trackingId]/route": "app/api/verify/[trackingId]/route.js",
+  "/sitemap.xml/route": "app/sitemap.xml/route.js",
+  "/api/webhook/stripe/route": "app/api/webhook/stripe/route.js",
+  "/[locale]/auth/confirm/route": "app/[locale]/auth/confirm/route.js",
+  "/[locale]/auth/callback/route": "app/[locale]/auth/callback/route.js",
+  "/[locale]/(insight)/manage-sites/page": "app/[locale]/(insight)/manage-sites/page.js",
+  "/[locale]/(insight)/[id]/get-started/page": "app/[locale]/(insight)/[id]/get-started/page.js",
+  "/[locale]/(insight)/[id]/manage-urls/page": "app/[locale]/(insight)/[id]/manage-urls/page.js",
+  "/[locale]/(landing)/pricing/page": "app/[locale]/(landing)/pricing/page.js",
+  "/[locale]/(landing)/page": "app/[locale]/(landing)/page.js",
+  "/[locale]/(landing)/signin/page": "app/[locale]/(landing)/signin/page.js",
+  "/[locale]/(landing)/signup/page": "app/[locale]/(landing)/signup/page.js",
+  "/[locale]/(landing)/why/page": "app/[locale]/(landing)/why/page.js",
+  "/[locale]/(insight)/[id]/(data)/heatmap/page": "app/[locale]/(insight)/[id]/(data)/heatmap/page.js",
+  "/[locale]/(insight)/[id]/(data)/dashboard/page": "app/[locale]/(insight)/[id]/(data)/dashboard/page.js"
+}
