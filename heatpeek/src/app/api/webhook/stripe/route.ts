@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import Stripe from "stripe";
-import { getStripe, getStripeSync } from "@/lib/stripe/init";
+import { getStripe } from "@/lib/stripe/init";
 import { createServerSupabaseClientWithServiceRole } from "@/lib/supabase/server";
 
 function parseMetadata(metadata: Stripe.Metadata) {
@@ -67,7 +67,6 @@ export async function POST(req: NextRequest) {
   const signature = req.headers.get("stripe-signature")!;
 
   const stripe = getStripe();
-  const sync = getStripeSync();
 
   try {
     const event = stripe.webhooks.constructEvent(
@@ -76,28 +75,12 @@ export async function POST(req: NextRequest) {
       process.env.STRIPE_WEBHOOK_SECRET!
     );
 
-    // First, sync to Supabase
-    try {
-      await sync.processWebhook(payload, signature);
-    } catch (syncError) {
-      if (
-        syncError instanceof Error &&
-        syncError.message.includes("Unhandled webhook event")
-      ) {
-        // ignore silently
-      } else {
-        console.error("Stripe Sync error:", syncError);
-        return new NextResponse("Stripe Sync error", { status: 400 });
-      }
-    }
-
     switch (event.type) {
       case "checkout.session.completed": {
         const session = event.data.object as Stripe.Checkout.Session;
         const customerId = session.customer;
         const userId = session.client_reference_id;
 
-        console.log(userId, customerId);
         if (userId && customerId) {
           const supabase = createServerSupabaseClientWithServiceRole();
           const { data: userProfile, error: fetchError } = await supabase
