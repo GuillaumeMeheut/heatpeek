@@ -311,12 +311,12 @@ export default function PricingClient({
       name: t("pricing.plans.starter.name"),
       monthly: {
         price: 19,
-        priceId: process.env.PUBLIC_STARTER_MONTHLY_PRICE_ID,
+        priceId: process.env.NEXT_PUBLIC_STARTER_MONTHLY_PRICE_ID,
         buttonText: t("pricing.plans.starter.buttons.getStarted"),
       },
       yearly: {
         price: 190,
-        priceId: process.env.PUBLIC_STARTER_YEARLY_PRICE_ID,
+        priceId: process.env.NEXT_PUBLIC_STARTER_YEARLY_PRICE_ID,
         buttonText: t("pricing.plans.starter.buttons.getStarted"),
       },
       description: t("pricing.plans.starter.description"),
@@ -341,12 +341,12 @@ export default function PricingClient({
       name: t("pricing.plans.pro.name"),
       monthly: {
         price: 49,
-        priceId: process.env.PUBLIC_PRO_MONTHLY_PRICE_ID,
+        priceId: process.env.NEXT_PUBLIC_PRO_MONTHLY_PRICE_ID,
         buttonText: t("pricing.plans.pro.buttons.upgrade"),
       },
       yearly: {
         price: 490,
-        priceId: process.env.PUBLIC_PRO_YEARLY_PRICE_ID,
+        priceId: process.env.NEXT_PUBLIC_PRO_YEARLY_PRICE_ID,
         buttonText: t("pricing.plans.pro.buttons.upgrade"),
       },
       description: t("pricing.plans.pro.description"),
@@ -366,12 +366,12 @@ export default function PricingClient({
       name: t("pricing.plans.business.name"),
       monthly: {
         price: 129,
-        priceId: process.env.PUBLIC_BUSINESS_MONTHLY_PRICE_ID,
+        priceId: process.env.NEXT_PUBLIC_BUSINESS_MONTHLY_PRICE_ID,
         buttonText: t("pricing.plans.business.buttons.upgrade"),
       },
       yearly: {
         price: 1290,
-        priceId: process.env.PUBLIC_BUSINESS_YEARLY_PRICE_ID,
+        priceId: process.env.NEXT_PUBLIC_BUSINESS_YEARLY_PRICE_ID,
         buttonText: t("pricing.plans.business.buttons.upgrade"),
       },
       description: t("pricing.plans.business.description"),

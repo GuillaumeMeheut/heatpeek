@@ -75,7 +75,7 @@ function VerifyStep({
       const checkVerification = async () => {
         try {
           const response = await fetch(
-            `${process.env.PUBLIC_SITE_URL}api/verify/${trackingId}`
+            `${process.env.NEXT_PUBLIC_SITE_URL}api/verify/${trackingId}`
           );
           if (!response.ok) {
             throw new Error("Verification failed");
