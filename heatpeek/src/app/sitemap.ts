@@ -1,7 +1,7 @@
 import type { MetadataRoute } from "next";
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://heatpeek.com";
+  const baseUrl = process.env.PUBLIC_SITE_URL || "https://heatpeek.com";
 
   // Common routes that exist in all locales
   const routes = [
