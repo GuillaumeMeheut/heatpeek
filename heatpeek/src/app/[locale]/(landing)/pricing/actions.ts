@@ -1,13 +1,11 @@
 "use server";
 
 import { headers } from "next/headers";
-import Stripe from "stripe";
 import { redirect } from "next/navigation";
 import { checkoutSchema } from "./types";
 import { getUser } from "@/lib/supabase/queries";
 import { createClient } from "@/lib/supabase/server";
-
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
+import { getStripe } from "@/lib/stripe/init";
 
 export async function createCheckoutSession(formData: FormData) {
   const rawData = {
@@ -37,6 +35,8 @@ export async function createCheckoutSession(formData: FormData) {
 
   const isStarter = priceId === process.env.PUBLIC_STARTER_MONTHLY_PRICE_ID;
 
+  const stripe = getStripe();
+
   const session = await stripe.checkout.sessions.create({
     line_items: [
       {
@@ -63,6 +63,7 @@ export async function createCustomerPortalSession(formData: FormData) {
   if (!customerId || typeof customerId !== "string")
     throw new Error("Missing customerId");
   const origin = (await headers()).get("origin");
+  const stripe = getStripe();
   const session = await stripe.billingPortal.sessions.create({
     customer: customerId,
     return_url: `${origin}/pricing`,
