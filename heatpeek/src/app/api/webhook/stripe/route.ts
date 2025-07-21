@@ -65,7 +65,6 @@ async function updateUserLimits(
 export async function POST(req: NextRequest) {
   const payload = await req.text();
   const signature = req.headers.get("stripe-signature")!;
-
   const stripe = getStripe();
 
   try {
