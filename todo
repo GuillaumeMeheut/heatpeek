@@ -27,6 +27,7 @@
 - [ ] Find a way to optimize large dataset of clicks bc of egress consumption
 - [ ] Rename project to websites
 - [ ] rename fiels to use snake case
+- [ ] Add caching with Cloudflare R2
 
 ---
 
@@ -46,6 +47,7 @@
 - [ ] Implement is bounce
 - [ ] Implement new stats: time/page,
 - [ ] Send small data instead of full name
+- [ ] sync if we send snapshot or not dont send data
 
 ---
 

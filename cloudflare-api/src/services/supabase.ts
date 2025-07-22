@@ -1,4 +1,5 @@
 import { createClient } from "@supabase/supabase-js";
+import { PageConfigRow, SnapshotsRow } from "../types/database";
 
 export type ProjectConfigResult = {
   id: string;
@@ -117,5 +118,94 @@ export class SupabaseService {
     }
 
     return data.id;
+  }
+  async getSnapshotInfos(
+    trackingId: string,
+    path: string,
+    device: string
+  ): Promise<{ should_update: boolean; url_id: string } | ProjectConfigError> {
+    const { data, error } = await this.supabase
+      .from("snapshots")
+      .select(
+        `should_update, url_id,
+      urls!inner(
+        tracking_id
+      )
+    `
+      )
+      .eq("urls.tracking_id", trackingId)
+      .eq("urls.path", path)
+      .eq("device", device)
+      .eq("is_outdated", false)
+      .single();
+
+    if (error) {
+      if (error.code === "PGRST116") {
+        return ProjectConfigError.NOT_FOUND;
+      }
+      console.error("Error fetching snapshot id:", error);
+      return ProjectConfigError.FETCH_ERROR;
+    }
+
+    return data;
+  }
+
+  async updateSnapshot(
+    urlId: string,
+    device: string,
+    snapshot: Partial<SnapshotsRow>
+  ): Promise<void> {
+    const { error } = await this.supabase
+      .from("snapshots")
+      .update(snapshot)
+      .eq("url_id", urlId)
+      .eq("is_outdated", false)
+      .eq("device", device);
+
+    if (error) {
+      console.log("Error updating snapshot:", error);
+      throw new Error("Failed to update snapshot");
+    }
+  }
+
+  async updatePageConfig(
+    urlId: string,
+    pageConfig: Partial<PageConfigRow>
+  ): Promise<void> {
+    const { error } = await this.supabase
+      .from("page_config")
+      .update(pageConfig)
+      .eq("url_id", urlId);
+
+    if (error) {
+      console.log("Error updating page config:", error);
+      throw new Error("Failed to update page config");
+    }
+  }
+
+  async uploadScreenshot(
+    urlId: string,
+    layoutHash: string,
+    buffer: Uint8Array
+  ): Promise<string> {
+    const fileName = `${urlId}/${layoutHash}.png`;
+
+    const { error: uploadError } = await this.supabase.storage
+      .from("screenshots")
+      .upload(fileName, buffer, {
+        contentType: "image/png",
+        upsert: true,
+      });
+
+    if (uploadError) {
+      console.error("Error uploading screenshot:", uploadError);
+      throw new Error("Failed to upload screenshot");
+    }
+
+    const { data: publicUrlData } = this.supabase.storage
+      .from("screenshots")
+      .getPublicUrl(fileName);
+
+    return publicUrlData.publicUrl;
   }
 }

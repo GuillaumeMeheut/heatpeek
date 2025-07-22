@@ -6,12 +6,14 @@
   "kv_namespaces": [
     {
       "binding": "CACHE_HEATPEEK",
-      "id": "c2b35274acc941cda0d360a700007173"
+      "id": "c2b35274acc941cda0d360a700007173",
+      "preview_id": "65ce29d18eb446e4881473661ddc1e73"
     }
-  ]
-  // "compatibility_flags": [
-  //   "nodejs_compat"
-  // ],
+  ],
+  "browser": {
+    "binding": "MYBROWSER"
+  },
+  "compatibility_flags": ["nodejs_compat"]
   // "vars": {
   //   "MY_VAR": "my-variable"
   // },

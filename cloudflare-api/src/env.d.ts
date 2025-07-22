@@ -1,4 +1,6 @@
 import type { KVNamespace } from "@cloudflare/workers-types";
+import type { BrowserWorker } from "@cloudflare/puppeteer";
+
 interface Env {
   SUPABASE_URL: string;
   SUPABASE_ANON_KEY: string;
@@ -9,6 +11,7 @@ interface Env {
   CLICKHOUSE_URL: string;
   CLICKHOUSE_USERNAME: string;
   CLICKHOUSE_PASSWORD: string;
+  MYBROWSER: BrowserWorker;
 }
 
 export { Env };

@@ -49,7 +49,7 @@ function shouldSendSnapshot(config) {
 }
 
 function sendSnapshot(config) {
-  fetch(`${config.endpoint}/api/screenPage`, {
+  fetch(`${config.endpointAPI}/api/snapshot`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
