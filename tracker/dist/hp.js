@@ -229,7 +229,7 @@
     return !!pageConfig?.page_config?.[deviceFieldMap[config2.device]];
   }
   function sendSnapshot(config2) {
-    fetch(`${config2.endpoint}/api/screenPage`, {
+    fetch(`${config2.endpointAPI}/api/snapshot`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({

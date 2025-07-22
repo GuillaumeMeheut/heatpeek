@@ -10,7 +10,7 @@ import {
   measureStep,
   finalizeMetrics,
   logPerformance,
-} from "../lib/utils";
+} from "../utils";
 import type {
   ClickEvent,
   RageClickEventData,
