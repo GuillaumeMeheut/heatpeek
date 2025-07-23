@@ -9,6 +9,12 @@ import {
   createLayoutHash,
   inlineImagesAndBackgrounds,
 } from "../utils/screenshot";
+import {
+  createPerformanceTracker,
+  measureStep,
+  finalizeMetrics,
+  logPerformance,
+} from "../utils";
 import { configKey, snapshotKey } from "../KV/key";
 
 const router = new Hono<{ Bindings: Env }>();
@@ -31,9 +37,12 @@ router.options("/", cors());
 
 router.post("/", cors(), async (c) => {
   let browser: Browser | null = null;
+  const metrics = createPerformanceTracker();
 
   try {
-    const body = await c.req.json();
+    const body = await measureStep(metrics, "parse_body", async () =>
+      c.req.json()
+    );
 
     const result = SnapshotRequestSchema.safeParse(body);
 
@@ -54,7 +63,6 @@ router.post("/", cors(), async (c) => {
     }
 
     const baseUrl = new URL(url).origin;
-
     const originUrl = new URL(referer).origin;
 
     if (originUrl !== baseUrl) {
@@ -66,15 +74,16 @@ router.post("/", cors(), async (c) => {
 
     const { SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY } = c.env;
 
-    const supabaseService = new SupabaseService(
-      SUPABASE_URL,
-      SUPABASE_SERVICE_ROLE_KEY
+    const supabaseService = await measureStep(
+      metrics,
+      "init_supabase_service",
+      async () => new SupabaseService(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY)
     );
 
-    const snapshotInfos = await supabaseService.getSnapshotInfos(
-      trackingId,
-      path,
-      device
+    const snapshotInfos = await measureStep(
+      metrics,
+      "get_snapshot_infos",
+      async () => supabaseService.getSnapshotInfos(trackingId, path, device)
     );
 
     if (
@@ -91,51 +100,80 @@ router.post("/", cors(), async (c) => {
       return c.text("ok");
     }
 
-    browser = await puppeteer.launch(c.env.MYBROWSER);
+    browser = await measureStep(metrics, "launch_browser", async () =>
+      puppeteer.launch(c.env.MYBROWSER)
+    );
 
     const sanitizedHtml = html.replace(
       /<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi,
       ""
     );
 
-    const inlinedHtml = await inlineImagesAndBackgrounds(
-      sanitizedHtml,
-      originUrl
+    const inlinedHtml = await measureStep(
+      metrics,
+      "inline_images_and_backgrounds",
+      async () => inlineImagesAndBackgrounds(sanitizedHtml, originUrl)
     );
 
-    const page = await browser.newPage();
+    const page = await measureStep(metrics, "new_page", async () =>
+      browser!.newPage()
+    );
 
-    await page.setContent(inlinedHtml, { waitUntil: "load" });
+    await measureStep(metrics, "set_content", async () =>
+      page.setContent(inlinedHtml, { waitUntil: "load" })
+    );
 
-    await page.setViewport({
-      width: viewport.width,
-      height: viewport.height,
-    });
+    await measureStep(metrics, "set_viewport", async () =>
+      page.setViewport({ width: viewport.width, height: viewport.height })
+    );
 
-    await page.evaluate(async () => {
-      const images = Array.from(document.images);
-      await Promise.all(
-        images.map((img) =>
-          img.decode().catch(() => {
-            // skip broken images
-          })
-        )
-      );
-    });
+    await measureStep(metrics, "wait_fonts", async () =>
+      page.evaluate(async () => {
+        await document.fonts.ready;
+      })
+    );
 
-    const pageDimensions = await page.evaluate(() => {
-      return {
-        width: document.documentElement.scrollWidth,
-        height: document.documentElement.scrollHeight,
-      };
-    });
+    await measureStep(metrics, "wait_images", async () =>
+      page.evaluate(async () => {
+        const images = Array.from(document.images);
+        await Promise.all(
+          images.map((img) =>
+            img.decode().catch(() => {
+              // skip broken images
+            })
+          )
+        );
+      })
+    );
 
-    const visibleDomElements = await captureDom(page);
-    const layoutHash = await createLayoutHash(visibleDomElements);
+    const pageDimensions = await measureStep(
+      metrics,
+      "get_page_dimensions",
+      async () =>
+        page.evaluate(() => {
+          return {
+            width: document.documentElement.scrollWidth,
+            height: document.documentElement.scrollHeight,
+          };
+        })
+    );
 
-    const screenshotBuffer = await page.screenshot({
-      fullPage: true,
-    });
+    const visibleDomElements = await measureStep(
+      metrics,
+      "capture_dom",
+      async () => captureDom(page)
+    );
+    const layoutHash = await measureStep(
+      metrics,
+      "create_layout_hash",
+      async () => createLayoutHash(visibleDomElements)
+    );
+
+    const screenshotBuffer = await measureStep(
+      metrics,
+      "take_screenshot",
+      async () => page.screenshot({ fullPage: true })
+    );
 
     // Convert screenshot buffer to Uint8Array
     const uint8Array =
@@ -143,20 +181,23 @@ router.post("/", cors(), async (c) => {
         ? new TextEncoder().encode(screenshotBuffer)
         : new Uint8Array(screenshotBuffer);
 
-    const publicImageUrl = await supabaseService.uploadScreenshot(
-      urlId,
-      layoutHash,
-      uint8Array
+    const publicImageUrl = await measureStep(
+      metrics,
+      "upload_screenshot",
+      async () =>
+        supabaseService.uploadScreenshot(urlId, layoutHash, uint8Array)
     );
 
-    await supabaseService.updateSnapshot(urlId, device, {
-      dom_data: JSON.stringify(visibleDomElements),
-      layout_hash: layoutHash,
-      screenshot_url: publicImageUrl,
-      width: pageDimensions.width,
-      height: pageDimensions.height,
-      should_update: false,
-    });
+    await measureStep(metrics, "update_snapshot", async () =>
+      supabaseService.updateSnapshot(urlId, device, {
+        dom_data: JSON.stringify(visibleDomElements),
+        layout_hash: layoutHash,
+        screenshot_url: publicImageUrl,
+        width: pageDimensions.width,
+        height: pageDimensions.height,
+        should_update: false,
+      })
+    );
 
     const deviceFieldMap = {
       desktop: "update_snap_desktop",
@@ -166,16 +207,25 @@ router.post("/", cors(), async (c) => {
 
     const updateField = deviceFieldMap[device];
 
-    await supabaseService.updatePageConfig(urlId, {
-      [updateField]: false,
+    await measureStep(metrics, "update_page_config", async () =>
+      supabaseService.updatePageConfig(urlId, {
+        [updateField]: false,
+      })
+    );
+
+    await measureStep(metrics, "clear_cache", async () => {
+      await c.env.CACHE_HEATPEEK.delete(configKey(trackingId, path));
+      await c.env.CACHE_HEATPEEK.delete(snapshotKey(trackingId, path, device));
     });
 
-    await c.env.CACHE_HEATPEEK.delete(configKey(trackingId, path));
-    await c.env.CACHE_HEATPEEK.delete(snapshotKey(trackingId, path, device));
+    finalizeMetrics(metrics);
+    logPerformance(metrics, "Snapshot API");
 
     return c.json({ success: true }, 200);
   } catch (error) {
-    console.error("Screenshot error:", error);
+    finalizeMetrics(metrics);
+    logPerformance(metrics, "Snapshot API ERROR");
+    console.error("Screenshot error:", error, metrics);
     return c.json({ error: "Failed to capture screenshot" }, 500);
   } finally {
     if (browser) {
