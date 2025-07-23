@@ -113,6 +113,7 @@ export async function inlineImagesAndBackgrounds(
   await Promise.all([
     inlineImages(document, baseUrl),
     inlineStylesheets(document, baseUrl),
+    inlineFonts(document, baseUrl),
   ]);
 
   return "<!DOCTYPE html>\n" + document.documentElement.outerHTML;
@@ -225,5 +226,49 @@ async function inlineStylesheets(
         err
       );
     }
+  }
+}
+
+async function inlineFonts(document: Document, baseUrl: string): Promise<void> {
+  const styleElements = Array.from(document.querySelectorAll("style"));
+  const fontUrlRegex = /url\(["']?([^"')]+)["']?\)/g;
+
+  for (const styleEl of styleElements) {
+    let cssText = styleEl.textContent || "";
+    let match;
+    const fontUrls = new Set<string>();
+    // Find all font URLs in @font-face src
+    while ((match = fontUrlRegex.exec(cssText))) {
+      const url = match[1];
+      // Only process if not already a data URI
+      if (url && !url.startsWith("data:")) {
+        fontUrls.add(url);
+      }
+    }
+    // Fetch and replace each font URL
+    for (const fontUrl of fontUrls) {
+      try {
+        const absoluteUrl = new URL(fontUrl, baseUrl).href.replace(
+          "http://localhost:3001",
+          "https://guillaume-meheut.vercel.app"
+        );
+        const res = await fetch(absoluteUrl);
+        if (!res.ok) continue;
+        const buffer = await res.arrayBuffer();
+        // Guess MIME type from extension
+        let mime = "font/woff2";
+        if (fontUrl.endsWith(".woff")) mime = "font/woff";
+        if (fontUrl.endsWith(".ttf")) mime = "font/ttf";
+        if (fontUrl.endsWith(".otf")) mime = "font/otf";
+        if (fontUrl.endsWith(".eot")) mime = "application/vnd.ms-fontobject";
+        const base64 = Buffer.from(buffer).toString("base64");
+        const dataUri = `data:${mime};base64,${base64}`;
+        // Replace all occurrences of this fontUrl in the style
+        cssText = cssText.split(fontUrl).join(dataUri);
+      } catch (err) {
+        console.warn(`Failed to inline font: ${fontUrl}`, err);
+      }
+    }
+    styleEl.textContent = cssText;
   }
 }
