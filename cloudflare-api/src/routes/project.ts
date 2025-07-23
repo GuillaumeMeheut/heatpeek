@@ -33,7 +33,12 @@ router.get("/config", cors(), async (c) => {
 
   try {
     const cachedConfig = await getConfigCache(trackingId, path, CACHE_HEATPEEK);
+
     if (cachedConfig) {
+      if (cachedConfig === "__NOT_FOUND__") {
+        return c.body(null, 200, CACHE_HEADERS);
+      }
+
       return c.json(cachedConfig, 200, CACHE_HEADERS);
     }
 
