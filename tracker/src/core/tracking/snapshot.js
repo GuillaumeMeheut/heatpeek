@@ -44,7 +44,7 @@ export function teardownSnapshotLogic() {
 
 function shouldSendSnapshot(config) {
   if (config.browser !== "chrome") return false;
-  const pageConfig = config.get();
+  const pageConfig = config.data;
   return !!pageConfig?.page_config?.[deviceFieldMap[config.device]];
 }
 

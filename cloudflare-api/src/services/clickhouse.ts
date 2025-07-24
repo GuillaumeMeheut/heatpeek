@@ -6,6 +6,7 @@ import type {
   ScrollDepthEvent,
 } from "../types/clickhouse";
 import { ClickHouseError } from "../types/clickhouse";
+import { toClickhouseDateTime } from "../utils/date";
 
 export class ClickHouseService {
   private client;
@@ -28,7 +29,7 @@ export class ClickHouseService {
         async_insert: 1,
         wait_for_async_insert: 1,
         async_insert_max_data_size: "1000000", // 1MB
-        async_insert_busy_timeout_ms: 500,
+        async_insert_busy_timeout_ms: 1000,
       },
     });
   }
@@ -143,6 +144,34 @@ export class ClickHouseService {
     } catch (error) {
       console.error("ClickHouse error insertPageView:", error);
       return ClickHouseError.QUERY_ERROR;
+    }
+  }
+
+  async getTotalPageviews(
+    trackingIdList: string,
+    billingStart: Date,
+    billingEnd: Date
+  ): Promise<number> {
+    try {
+      const query = `
+        SELECT SUM(views) as total_views
+        FROM aggregated_pageviews
+        WHERE tracking_id IN (${trackingIdList})
+        AND date >= '${toClickhouseDateTime(billingStart)}'
+        AND date < '${toClickhouseDateTime(billingEnd)}'
+      `;
+
+      const result = await this.client.query({
+        query,
+        format: "JSON",
+      });
+
+      const rows = await result.json();
+      const data = rows.data as { total_views?: string | number }[];
+      return Number(data?.[0]?.total_views) || 0;
+    } catch (error) {
+      console.error("ClickHouse error getTotalPageviews:", error);
+      throw new Error(error as string);
     }
   }
 

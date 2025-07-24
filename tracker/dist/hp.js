@@ -91,9 +91,6 @@
       } catch (error) {
         return null;
       }
-    },
-    get() {
-      return this.data;
     }
   };
   function getUniqueSelector(el) {
@@ -225,7 +222,7 @@
   }
   function shouldSendSnapshot(config2) {
     if (config2.browser !== "chrome") return false;
-    const pageConfig = config2.get();
+    const pageConfig = config2.data;
     return !!pageConfig?.page_config?.[deviceFieldMap[config2.device]];
   }
   function sendSnapshot(config2) {
@@ -463,8 +460,7 @@
       });
     }
   }
-  function initializeTracking({ config: config2 }) {
-    cleanupTracking();
+  function initializeTracking(config2) {
     if (!shouldTrack(config2)) return;
     sendPageview(config2);
     setupSnapshotLogic(config2);
@@ -473,9 +469,9 @@
     startBufferFlush(config2);
   }
   function shouldTrack(config2) {
-    const pageConfig = config2.get();
+    const pageConfig = config2.data;
     if (config2.device === "large-desktop") return false;
-    if (pageConfig?.page_config?.is_active === false) return false;
+    if (pageConfig.usage_exceeded) return false;
     return true;
   }
   function cleanupTracking() {
@@ -672,7 +668,7 @@
       );
       config.fetch().then((configData) => {
         if (!configData) return;
-        initializeTracking({ config });
+        initializeTracking(config);
       });
     };
     runTracking(window.location.pathname);

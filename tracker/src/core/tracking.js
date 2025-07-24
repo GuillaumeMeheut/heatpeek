@@ -7,9 +7,7 @@ import {
 } from "./tracking/scrollDepth";
 import { sendPageview } from "./tracking/pageviews";
 
-export function initializeTracking({ config }) {
-  cleanupTracking();
-
+export function initializeTracking(config) {
   if (!shouldTrack(config)) return;
 
   sendPageview(config);
@@ -22,9 +20,9 @@ export function initializeTracking({ config }) {
 }
 
 function shouldTrack(config) {
-  const pageConfig = config.get();
+  const pageConfig = config.data;
   if (config.device === "large-desktop") return false;
-  if (pageConfig?.page_config?.is_active === false) return false;
+  if (pageConfig.usage_exceeded) return false;
   return true;
 }
 

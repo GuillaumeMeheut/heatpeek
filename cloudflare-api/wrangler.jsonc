@@ -13,7 +13,10 @@
   "browser": {
     "binding": "MYBROWSER"
   },
-  "compatibility_flags": ["nodejs_compat"]
+  "compatibility_flags": ["nodejs_compat"],
+  "triggers": {
+    "crons": ["0 2 * * *"]
+  }
   // "vars": {
   //   "MY_VAR": "my-variable"
   // },

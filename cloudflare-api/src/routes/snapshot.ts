@@ -3,7 +3,7 @@ import { cors } from "hono/cors";
 import puppeteer, { Browser } from "@cloudflare/puppeteer";
 import type { Env } from "../env";
 import { z } from "zod";
-import { ProjectConfigError, SupabaseService } from "../services/supabase";
+import { SupabaseService, SupabaseError } from "../services/supabase";
 import {
   captureDom,
   createLayoutHash,
@@ -85,13 +85,6 @@ router.post("/", cors(), async (c) => {
       "get_snapshot_infos",
       async () => supabaseService.getSnapshotInfos(trackingId, path, device)
     );
-
-    if (
-      snapshotInfos === ProjectConfigError.NOT_FOUND ||
-      snapshotInfos === ProjectConfigError.FETCH_ERROR
-    ) {
-      throw new Error("Failed to get snapshot");
-    }
 
     urlId = snapshotInfos.url_id;
 
