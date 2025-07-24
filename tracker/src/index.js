@@ -56,7 +56,7 @@ import { getReferrerDomain } from "./utils/getReferrer";
     );
     config.fetch().then((configData) => {
       if (!configData) return;
-      initializeTracking({ config });
+      initializeTracking(config);
     });
   };
 

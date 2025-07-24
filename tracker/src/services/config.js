@@ -35,8 +35,4 @@ export const config = {
       return null;
     }
   },
-
-  get() {
-    return this.data;
-  },
 };

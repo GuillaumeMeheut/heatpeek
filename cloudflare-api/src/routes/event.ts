@@ -4,7 +4,7 @@ import type { Env } from "../env";
 import { ClickHouseService } from "../services/clickhouse";
 import { ClickHouseError } from "../types/clickhouse";
 import { getSnapshotCache, setSnapshotCache } from "../KV/key";
-import { ProjectConfigError, SupabaseService } from "../services/supabase";
+import { SupabaseService, SupabaseError } from "../services/supabase";
 import {
   createPerformanceTracker,
   measureStep,
@@ -218,11 +218,11 @@ router.post("/pageview", cors(), async (c) => {
         });
       }
 
-      if (snapshotId === ProjectConfigError.FETCH_ERROR) {
+      if (snapshotId === SupabaseError.FETCH_ERROR) {
         return c.json({ success: false, error: "Database error" }, 500);
       }
 
-      if (snapshotId === ProjectConfigError.NOT_FOUND) {
+      if (snapshotId === SupabaseError.NOT_FOUND) {
         return c.json({ success: false, error: "Snapshot not found" }, 404);
       }
     } catch (error) {
@@ -360,11 +360,11 @@ router.post("/events", cors(), async (c) => {
         });
       }
 
-      if (snapshotId === ProjectConfigError.FETCH_ERROR) {
+      if (snapshotId === SupabaseError.FETCH_ERROR) {
         return c.json({ success: false, error: "Database error" }, 500);
       }
 
-      if (snapshotId === ProjectConfigError.NOT_FOUND) {
+      if (snapshotId === SupabaseError.NOT_FOUND) {
         return c.json({ success: false, error: "Snapshot not found" }, 404);
       }
     } catch (error) {

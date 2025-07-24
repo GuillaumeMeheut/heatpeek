@@ -1,9 +1,14 @@
 import { createClient } from "@supabase/supabase-js";
-import { PageConfigRow, SnapshotsRow } from "../types/database";
+import {
+  PageConfigRow,
+  ProjectConfigRow,
+  SnapshotsRow,
+  UserProfileRow,
+} from "../types/database";
 
 export type ProjectConfigResult = {
   id: string;
-  usageExceeded: boolean;
+  usage_exceeded: boolean;
   page_config: {
     path: string;
     ignored_el: string[] | null;
@@ -14,7 +19,7 @@ export type ProjectConfigResult = {
   } | null;
 };
 
-export enum ProjectConfigError {
+export enum SupabaseError {
   FETCH_ERROR = "FETCH_ERROR",
   NOT_FOUND = "NOT_FOUND",
 }
@@ -35,14 +40,14 @@ export class SupabaseService {
   async getProjectConfig(
     trackingId: string,
     path: string
-  ): Promise<ProjectConfigResult | ProjectConfigError> {
+  ): Promise<ProjectConfigResult | SupabaseError> {
     try {
       const { data, error } = await this.supabase
         .from("project_config")
         .select(
           `
           id,
-          usageExceeded,
+          usage_exceeded,
           page_config!inner(
             path,
             ignored_el,
@@ -59,29 +64,29 @@ export class SupabaseService {
 
       if (error) {
         if (error.code === "PGRST116") {
-          return ProjectConfigError.NOT_FOUND;
+          return SupabaseError.NOT_FOUND;
         }
         console.error("Supabase error getProjectConfig:", error);
-        return ProjectConfigError.FETCH_ERROR;
+        return SupabaseError.FETCH_ERROR;
       }
 
       if (!data) {
-        return ProjectConfigError.NOT_FOUND;
+        return SupabaseError.NOT_FOUND;
       }
 
       const pageConfig = data.page_config?.[0];
       if (!pageConfig) {
-        return ProjectConfigError.NOT_FOUND;
+        return SupabaseError.NOT_FOUND;
       }
 
       return {
         id: data.id,
-        usageExceeded: data.usageExceeded,
+        usage_exceeded: data.usage_exceeded,
         page_config: pageConfig,
       };
     } catch (error) {
       console.error("Unexpected error getProjectConfig:", error);
-      return ProjectConfigError.FETCH_ERROR;
+      return SupabaseError.FETCH_ERROR;
     }
   }
 
@@ -89,7 +94,7 @@ export class SupabaseService {
     trackingId: string,
     path: string,
     device: string
-  ): Promise<string | ProjectConfigError> {
+  ): Promise<string | SupabaseError> {
     const { data, error } = await this.supabase
       .from("snapshots")
       .select(
@@ -107,14 +112,14 @@ export class SupabaseService {
 
     if (error) {
       if (error.code === "PGRST116") {
-        return ProjectConfigError.NOT_FOUND;
+        return SupabaseError.NOT_FOUND;
       }
       console.error("Supabase error getSnapshotId:", error);
-      return ProjectConfigError.FETCH_ERROR;
+      return SupabaseError.FETCH_ERROR;
     }
 
     if (!data?.id) {
-      return ProjectConfigError.NOT_FOUND;
+      return SupabaseError.NOT_FOUND;
     }
 
     return data.id;
@@ -123,7 +128,7 @@ export class SupabaseService {
     trackingId: string,
     path: string,
     device: string
-  ): Promise<{ should_update: boolean; url_id: string } | ProjectConfigError> {
+  ): Promise<{ should_update: boolean; url_id: string }> {
     const { data, error } = await this.supabase
       .from("snapshots")
       .select(
@@ -140,11 +145,8 @@ export class SupabaseService {
       .single();
 
     if (error) {
-      if (error.code === "PGRST116") {
-        return ProjectConfigError.NOT_FOUND;
-      }
-      console.error("Error fetching snapshot id:", error);
-      return ProjectConfigError.FETCH_ERROR;
+      console.error("Error fetching snapshot infos:", error);
+      throw new Error(error.message);
     }
 
     return data;
@@ -207,5 +209,78 @@ export class SupabaseService {
       .getPublicUrl(fileName);
 
     return publicUrlData.publicUrl;
+  }
+
+  async getUsersWithActiveSubscription(): Promise<
+    | Pick<
+        UserProfileRow,
+        "id" | "pageviews_limit" | "subscription_current_period_end"
+      >[]
+  > {
+    try {
+      const { data, error } = await this.supabase
+        .from("user_profiles")
+        .select("id, pageviews_limit, subscription_current_period_end")
+        .in("subscription_status", ["active", "trialing"])
+        .not("pageviews_limit", "is", null);
+
+      if (error) {
+        console.error("Supabase error getUsersWithActiveSubscription:", error);
+        throw new Error(error.message);
+      }
+
+      return data;
+    } catch (error) {
+      console.error("Unexpected error getUsersWithActiveSubscription:", error);
+      throw new Error(error as string);
+    }
+  }
+
+  async getProjectsByUserIds(
+    userIds: string[]
+  ): Promise<{ user_id: string; tracking_id: string }[]> {
+    try {
+      const { data, error } = await this.supabase
+        .from("projects")
+        .select("user_id, tracking_id")
+        .in("user_id", userIds);
+
+      if (error) {
+        console.error("Supabase error getProjectsByUserIds:", error);
+        throw new Error(error.message);
+      }
+
+      return data;
+    } catch (error) {
+      console.error("Unexpected error getProjectsByUserIds:", error);
+      throw new Error(error as string);
+    }
+  }
+
+  async markProjectConfigsAsUsageExceeded(
+    trackingIds: string[]
+  ): Promise<void> {
+    try {
+      if (trackingIds.length === 0) return;
+
+      const { error } = await this.supabase
+        .from("project_config")
+        .update({ usage_exceeded: true })
+        .in("tracking_id", trackingIds);
+
+      if (error) {
+        console.error(
+          "Supabase error markProjectConfigsAsUsageExceeded:",
+          error
+        );
+        throw new Error(error.message);
+      }
+    } catch (error) {
+      console.error(
+        "Unexpected error markProjectConfigsAsUsageExceeded:",
+        error
+      );
+      throw new Error(error as string);
+    }
   }
 }

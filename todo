@@ -42,7 +42,7 @@
 
 ## 📈 Tracker
 
-- [ ] Build DOM tree
+- [ ] Build DOM tree / should also inline image and font
 - [ ] Screenshot snapshot is not full load
 - [ ] Implement is bounce
 - [ ] Implement new stats: time/page,

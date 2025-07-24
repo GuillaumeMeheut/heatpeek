@@ -14,10 +14,10 @@ export const getConfigCache = async (
   trackingId: string,
   path: string,
   CACHE_HEATPEEK: Env["CACHE_HEATPEEK"]
-): Promise<ProjectConfigResult | null> => {
+): Promise<ProjectConfigResult | "__NOT_FOUND__" | null> => {
   const KVKey = configKey(trackingId, path);
   const cached = await CACHE_HEATPEEK.get(KVKey, { type: "json" });
-  return cached as ProjectConfigResult | null;
+  return cached as ProjectConfigResult | "__NOT_FOUND__" | null;
 };
 
 export const setConfigCache = async (
@@ -27,7 +27,8 @@ export const setConfigCache = async (
   CACHE_HEATPEEK: Env["CACHE_HEATPEEK"]
 ): Promise<void> => {
   const KVKey = configKey(trackingId, path);
-  await CACHE_HEATPEEK.put(KVKey, JSON.stringify(config), {
+  const value = config === null ? '"__NOT_FOUND__"' : JSON.stringify(config);
+  await CACHE_HEATPEEK.put(KVKey, value, {
     expirationTtl: EXPIRATION_KV_CONFIG_TTL,
   });
 };

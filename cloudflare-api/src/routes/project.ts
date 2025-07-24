@@ -1,7 +1,7 @@
 import { Hono } from "hono";
 import { cors } from "hono/cors";
 import type { Env } from "../env";
-import { SupabaseService, ProjectConfigError } from "../services/supabase";
+import { SupabaseService, SupabaseError } from "../services/supabase";
 import {
   getConfigCache,
   setConfigCache,
@@ -33,17 +33,22 @@ router.get("/config", cors(), async (c) => {
 
   try {
     const cachedConfig = await getConfigCache(trackingId, path, CACHE_HEATPEEK);
+
     if (cachedConfig) {
+      if (cachedConfig === "__NOT_FOUND__") {
+        return c.body(null, 200, CACHE_HEADERS);
+      }
+
       return c.json(cachedConfig, 200, CACHE_HEADERS);
     }
 
     const config = await supabaseService.getProjectConfig(trackingId, path);
 
-    if (config === ProjectConfigError.FETCH_ERROR) {
+    if (config === SupabaseError.FETCH_ERROR) {
       return c.body(null, 204);
     }
 
-    if (config === ProjectConfigError.NOT_FOUND) {
+    if (config === SupabaseError.NOT_FOUND) {
       await setConfigCache(trackingId, path, null, CACHE_HEATPEEK);
       return c.body(null, 204);
     }
