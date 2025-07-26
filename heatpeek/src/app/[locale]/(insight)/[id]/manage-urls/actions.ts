@@ -2,7 +2,13 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
-import { deleteUrl, updateUrl, updatePageConfig } from "@/lib/supabase/queries";
+import {
+  deleteUrl,
+  getUser,
+  getUserPlanLimits,
+  getTotalTrackedPages,
+  updateUrl,
+} from "@/lib/supabase/queries";
 import { getI18n } from "@locales/server";
 import { urlAddSchema, urlUpdateSchema } from "./types";
 import { z } from "zod";
@@ -11,40 +17,67 @@ import { purgeConfig, purgeSnapshot } from "@/lib/cloudflare/api";
 export async function addNewUrlAndPageConfigAction(
   data: z.infer<ReturnType<typeof urlAddSchema>>
 ) {
-  const t = await getI18n();
-  const supabase = await createClient();
+  try {
+    const t = await getI18n();
+    const supabase = await createClient();
 
-  const result = urlAddSchema(t).safeParse(data);
+    const result = urlAddSchema(t).safeParse(data);
 
-  if (!result.success) {
-    throw new Error(result.error.errors[0].message);
-  }
+    if (!result.success) {
+      throw new Error(result.error.errors[0].message);
+    }
+    const { user } = await getUser(supabase);
 
-  const { error } = await supabase.rpc("add_url_with_config_and_snapshots", {
-    _path: new URL(result.data.url).pathname,
-    _label: result.data.label || null,
-    _project_id: result.data.projectId,
-    _is_active: result.data.is_active,
-  });
-
-  if (error) {
-    console.error("error", error);
-    if (error.code === "23505") {
-      throw new Error("This URL already exists in the project.");
+    if (!user) {
+      throw new Error("User not found.");
     }
 
-    if (error.code === "P0001") {
-      throw new Error("Missing project configuration.");
+    const userPlanLimits = await getUserPlanLimits(supabase, user.id);
+
+    if (!userPlanLimits) {
+      throw new Error("User plan limits not found.");
     }
 
-    throw new Error("An unexpected error occurred.");
-  }
+    const currentTrackedPages = await getTotalTrackedPages(supabase, user.id);
 
-  if (!data) {
+    if (currentTrackedPages === null) {
+      throw new Error("Current tracked pages not found.");
+    }
+
+    if (currentTrackedPages >= userPlanLimits.max_total_tracked_pages) {
+      throw new Error(
+        "You have reached the maximum number of tracked pages for your plan."
+      );
+    }
+
+    const { error } = await supabase.rpc("add_url_with_config_and_snapshots", {
+      _path: new URL(result.data.url).pathname,
+      _label: result.data.label || null,
+      _project_id: result.data.projectId,
+    });
+
+    if (error) {
+      console.error("error", error);
+      if (error.code === "23505") {
+        throw new Error("This URL already exists for this website.");
+      }
+
+      if (error.code === "P0001") {
+        throw new Error("Missing project configuration.");
+      }
+
+      throw new Error("An unexpected error occurred.");
+    }
+
+    if (!data) {
+      throw new Error("Failed to create URL.");
+    }
+
+    revalidatePath(`/[locale]/(insight)/[id]/manage-urls`, "page");
+  } catch (error) {
+    console.error("Add new url and page config action error", error);
     throw new Error("Failed to create URL.");
   }
-
-  revalidatePath(`/[locale]/(insight)/[id]/manage-urls`, "page");
 }
 
 export async function deleteUrlAction(
@@ -78,12 +111,6 @@ export async function updateUrlAction(
   await updateUrl(supabase, urlId, {
     label: result.data.label || null,
   });
-
-  if (result.data.is_active) {
-    await updatePageConfig(supabase, urlId, {
-      is_active: result.data.is_active,
-    });
-  }
 
   revalidatePath(`/[locale]/(insight)/[id]/manage-urls`, "page");
 }

@@ -13,7 +13,6 @@ import { Button } from "@/components/ui/button";
 import { Loader2, Plus } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
 import { useState, useTransition } from "react";
 import { useI18n } from "@locales/client";
 import { addNewUrlAndPageConfigAction } from "./actions";
@@ -34,7 +33,6 @@ export default function AddUrlDialog({ projectId }: { projectId: string }) {
         const rawData = {
           url: formData.get("url"),
           label: formData.get("label"),
-          is_active: formData.get("is_active") === "on",
           projectId: formData.get("projectId"),
         };
         const result = urlAddSchema(t).safeParse(rawData);
@@ -83,10 +81,6 @@ export default function AddUrlDialog({ projectId }: { projectId: string }) {
                 name="label"
                 placeholder={t("addUrl.labelPlaceholder")}
               />
-            </div>
-            <div className="flex items-center space-x-2">
-              <Switch id="is_active" name="is_active" defaultChecked={true} />
-              <Label htmlFor="is_active">{t("addUrl.trackingLabel")}</Label>
             </div>
           </div>
           <DialogFooter>

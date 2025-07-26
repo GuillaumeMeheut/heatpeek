@@ -3,15 +3,6 @@ import Stripe from "stripe";
 import { getStripe } from "@/lib/stripe/init";
 import { createServerSupabaseClientWithServiceRole } from "@/lib/supabase/server";
 
-function parseMetadata(metadata: Stripe.Metadata) {
-  return {
-    pageviews_limit: parseInt(metadata.pageviews_limit || "0"),
-    max_websites: parseInt(metadata.max_websites || "0"),
-    max_total_tracked_pages: parseInt(metadata.max_total_tracked_pages || "0"),
-    data_retention_days: parseInt(metadata.data_retention_days || "0"),
-  };
-}
-
 async function updateUserLimits(
   customerId: string,
   subscription: Stripe.Subscription
@@ -38,7 +29,6 @@ async function updateUserLimits(
   const price = await stripe.prices.retrieve(priceId, { expand: ["product"] });
   const product = price.product as Stripe.Product;
 
-  const limits = parseMetadata(product.metadata);
   const planName = product.name?.toLowerCase() || "unknown";
 
   const { error: updateError } = await supabase
@@ -53,7 +43,6 @@ async function updateUserLimits(
       subscription_trial_end: subscription.trial_end
         ? new Date(subscription.trial_end * 1000)
         : null,
-      ...limits,
     })
     .eq("id", user.id);
 
@@ -124,17 +113,16 @@ export async function POST(req: NextRequest) {
           .single();
 
         if (user && !userError) {
-          const { error: lockError } = await supabase
+          const { error: updateError } = await supabase
             .from("user_profiles")
             .update({
-              is_locked: true,
               subscription_status: "canceled",
               subscription_current_period_end: null,
             })
             .eq("id", user.id);
 
-          if (lockError) {
-            console.error("Error locking user account:", lockError);
+          if (updateError) {
+            console.error("Error updating user account:", updateError);
           }
         }
 

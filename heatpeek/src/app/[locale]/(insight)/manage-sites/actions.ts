@@ -6,7 +6,9 @@ import {
   addProject,
   addProjectConfig,
   deleteProject,
+  getTotalProjects,
   getUser,
+  getUserPlanLimits,
   updateProject,
 } from "@/lib/supabase/queries";
 import { projectAddSchema, projectUpdateSchema } from "./types";
@@ -21,12 +23,33 @@ export async function addProjectAction(
   const t = await getI18n();
   const supabase = await createClient();
   const { user } = await getUser(supabase);
-  if (!user) redirect("/signin");
+  if (!user) {
+    throw new Error("User not found.");
+  }
 
   const result = projectAddSchema(t).safeParse(data);
 
   if (!result.success) {
     throw new Error(result.error.errors[0].message);
+  }
+
+  const userPlanLimits = await getUserPlanLimits(supabase, user.id);
+
+  if (!userPlanLimits) {
+    throw new Error("User plan limits not found.");
+  }
+
+  const currentTrackedWebsites = await getTotalProjects(supabase, user.id);
+
+  if (currentTrackedWebsites === null) {
+    throw new Error("Current tracked websites not found.");
+  }
+  console.log(currentTrackedWebsites);
+
+  if (currentTrackedWebsites >= userPlanLimits.max_websites) {
+    throw new Error(
+      "You have reached the maximum number of websites for your plan."
+    );
   }
 
   const label = data.label || new URL(data.baseUrl).hostname;

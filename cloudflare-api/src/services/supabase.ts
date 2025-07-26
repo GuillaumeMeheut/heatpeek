@@ -1,6 +1,7 @@
 import { createClient } from "@supabase/supabase-js";
 import {
   PageConfigRow,
+  PlansRow,
   ProjectConfigRow,
   SnapshotsRow,
   UserProfileRow,
@@ -212,17 +213,16 @@ export class SupabaseService {
   }
 
   async getUsersWithActiveSubscription(): Promise<
-    | Pick<
-        UserProfileRow,
-        "id" | "pageviews_limit" | "subscription_current_period_end"
-      >[]
+    Pick<
+      UserProfileRow,
+      "id" | "subscription_current_period_end" | "current_plan"
+    >[]
   > {
     try {
       const { data, error } = await this.supabase
         .from("user_profiles")
-        .select("id, pageviews_limit, subscription_current_period_end")
-        .in("subscription_status", ["active", "trialing"])
-        .not("pageviews_limit", "is", null);
+        .select("id, subscription_current_period_end, current_plan")
+        .in("subscription_status", ["active", "trialing"]);
 
       if (error) {
         console.error("Supabase error getUsersWithActiveSubscription:", error);
@@ -253,6 +253,23 @@ export class SupabaseService {
       return data;
     } catch (error) {
       console.error("Unexpected error getProjectsByUserIds:", error);
+      throw new Error(error as string);
+    }
+  }
+  async getPlans(): Promise<Pick<PlansRow, "id" | "pageviews_limit">[]> {
+    try {
+      const { data, error } = await this.supabase
+        .from("plans")
+        .select("id,pageviews_limit");
+
+      if (error) {
+        console.error("Supabase error getPlans:", error);
+        throw new Error(error.message);
+      }
+
+      return data;
+    } catch (error) {
+      console.error("Unexpected error getPlans:", error);
       throw new Error(error as string);
     }
   }

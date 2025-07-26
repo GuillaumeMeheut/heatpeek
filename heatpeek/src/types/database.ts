@@ -10,7 +10,8 @@ export type ProjectConfigRow =
 export type ProjectsRow = Database["public"]["Tables"]["projects"]["Row"];
 export type SnapshotsRow = Database["public"]["Tables"]["snapshots"]["Row"];
 export type UrlsRow = Database["public"]["Tables"]["urls"]["Row"];
-export type UserProfile = Database["public"]["Tables"]["user_profiles"]["Row"];
+export type UserProfileRow =
+  Database["public"]["Tables"]["user_profiles"]["Row"];
 
 // Table Insert Types
 export type PageConfigInsert =
