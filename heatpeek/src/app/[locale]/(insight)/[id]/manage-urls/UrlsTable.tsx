@@ -7,9 +7,8 @@ import {
   CardDescription,
   CardContent,
 } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Edit, Trash2, Eye, MousePointerClick, Loader2 } from "lucide-react";
+import { Edit, Trash2, Eye, Loader2 } from "lucide-react";
 import { UrlAndConfig } from "@/lib/supabase/queries";
 import { useI18n } from "@locales/client";
 import {
@@ -22,7 +21,6 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
 import { useState, useTransition } from "react";
 import { updateUrlAction, deleteUrlAction } from "./actions";
 import { toast } from "sonner";
@@ -52,16 +50,6 @@ export default function UrlsTable({
   const [editingUrl, setEditingUrl] = useState<UrlAndConfig | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
-
-  const getStatusBadge = (isActive: boolean) => {
-    return (
-      <Badge variant={isActive ? "green" : "destructive"}>
-        {isActive
-          ? t("urlsTable.status.active")
-          : t("urlsTable.status.inactive")}
-      </Badge>
-    );
-  };
 
   const handleEditUrl = (url: UrlAndConfig) => {
     setEditingUrl(url);
@@ -104,12 +92,6 @@ export default function UrlsTable({
                   <th className="text-left p-4 font-medium">
                     {t("urlsTable.columns.urlAndName")}
                   </th>
-                  <th className="text-left p-4 font-medium">
-                    {t("urlsTable.columns.status")}
-                  </th>
-                  <th className="text-left p-4 font-medium">
-                    {t("urlsTable.columns.performance")}
-                  </th>
                   <th className="text-right p-4 font-medium">
                     {t("urlsTable.columns.actions")}
                   </th>
@@ -126,30 +108,6 @@ export default function UrlsTable({
                         <div className="font-medium">{url.label}</div>
                         <div className="text-sm text-muted-foreground flex items-center gap-1">
                           {url.path}
-                        </div>
-                      </div>
-                    </td>
-
-                    <td className="p-4">
-                      {getStatusBadge(url.page_config.is_active)}
-                    </td>
-                    <td className="p-4">
-                      <div className="space-y-2">
-                        <div className="flex items-center gap-2 text-sm">
-                          <Eye className="w-4 h-4 text-muted-foreground" />
-                          <span className="font-medium">
-                            {url.views.toLocaleString()}
-                          </span>
-                          <span className="text-muted-foreground">
-                            {t("urlsTable.performance.views")}
-                          </span>
-                        </div>
-                        <div className="flex items-center gap-2 text-sm">
-                          <MousePointerClick className="w-4 h-4 text-muted-foreground" />
-                          <span className="font-medium">{url.clicks}</span>{" "}
-                          <span className="text-muted-foreground">
-                            {t("urlsTable.performance.clicks")}
-                          </span>
                         </div>
                       </div>
                     </td>
@@ -242,7 +200,6 @@ const EditDialog = ({
       try {
         const rawData = {
           label: formData.get("label"),
-          is_active: formData.get("is_active") === "on",
         };
 
         const result = urlUpdateSchema(t).safeParse(rawData);
@@ -251,9 +208,7 @@ const EditDialog = ({
         }
 
         // Check if there are any changes
-        const hasChanges =
-          result.data.label !== editingUrl.label ||
-          result.data.is_active !== editingUrl.page_config.is_active;
+        const hasChanges = result.data.label !== editingUrl.label;
 
         if (!hasChanges) {
           setIsEditDialogOpen(false);
@@ -293,16 +248,6 @@ const EditDialog = ({
                 defaultValue={editingUrl.label ?? ""}
                 name="label"
               />
-            </div>
-            <div className="flex items-center space-x-2">
-              <Switch
-                id="is_active"
-                name="is_active"
-                defaultChecked={editingUrl.page_config.is_active}
-              />
-              <Label htmlFor="is_active">
-                {t("urlsTable.editDialog.trackingLabel")}
-              </Label>
             </div>
           </div>
           <DialogFooter>

@@ -11,6 +11,7 @@ import {
   ProjectsInsert,
   ProjectConfigInsert,
   ProjectsUpdate,
+  UserProfileRow,
 } from "@/types/database";
 import { createClient } from "./server";
 
@@ -138,9 +139,9 @@ export const getUrls = cache(
 
 export type UrlAndConfig = Pick<
   UrlsRow,
-  "id" | "path" | "label" | "views" | "clicks" | "tracking_id"
+  "id" | "path" | "label" | "tracking_id"
 > & {
-  page_config: Pick<PageConfigRow, "id" | "is_active">;
+  page_config: Pick<PageConfigRow, "id">;
 };
 
 export const getUrlsAndConfig = cache(
@@ -155,12 +156,9 @@ export const getUrlsAndConfig = cache(
         id,
         path,
         label,
-        views,
-        clicks,
         tracking_id,
         page_config (
-          id,
-          is_active
+          id
         )
       `
       )
@@ -545,11 +543,10 @@ export const getCustomerDetails = cache(
   async (
     supabase: SupabaseClient,
     userId: string
-  ): Promise<{
-    stripe_customer_id: string;
-    current_plan: string;
-    subscription_status: string;
-  } | null> => {
+  ): Promise<Pick<
+    UserProfileRow,
+    "stripe_customer_id" | "current_plan" | "subscription_status"
+  > | null> => {
     const { data, error } = await supabase
       .from("user_profiles")
       .select("stripe_customer_id, current_plan, subscription_status")
@@ -562,3 +559,83 @@ export const getCustomerDetails = cache(
     return data;
   }
 );
+
+export const getUserPlanLimits = async (
+  supabase: SupabaseClient,
+  userId: string
+): Promise<{
+  pageviews_limit: number;
+  max_websites: number;
+  max_total_tracked_pages: number;
+  data_retention_days: number;
+} | null> => {
+  const { data, error } = await supabase
+    .from("user_profiles")
+    .select(
+      `
+        subscription_status,
+        plans:current_plan (
+          pageviews_limit,
+          max_websites,
+          max_total_tracked_pages,
+          data_retention_days
+        )
+      `
+    )
+    .eq("id", userId)
+    .single();
+
+  if (error) {
+    console.error("Error fetching user plan limits:", error);
+    throw new Error("Failed to fetch user plan limits");
+  }
+
+  // If subscription_status is not 'active' or 'trialing', user is limited
+  if (
+    !data ||
+    (data.subscription_status !== "active" &&
+      data.subscription_status !== "trialing")
+  ) {
+    return null;
+  }
+
+  // Supabase sometimes returns an array for joined tables, so handle that
+  if (Array.isArray(data.plans)) {
+    return data.plans[0] ?? null;
+  }
+  return data.plans ?? null;
+};
+
+export const getTotalTrackedPages = async (
+  supabase: SupabaseClient,
+  userId: string
+): Promise<number | null> => {
+  const { count, error } = await supabase
+    .from("urls")
+    .select("*", { count: "exact", head: true })
+    .eq("user_id", userId);
+
+  if (error) {
+    console.error("Error fetching user total tracked pages:", error);
+    throw new Error("Failed to fetch user total tracked pages");
+  }
+
+  return count;
+};
+
+export const getTotalProjects = async (
+  supabase: SupabaseClient,
+  userId: string
+): Promise<number | null> => {
+  const { count, error } = await supabase
+    .from("projects")
+    .select("*", { count: "exact", head: true })
+    .eq("user_id", userId);
+
+  if (error) {
+    console.error("Error fetching user total tracked websites:", error);
+    throw new Error("Failed to fetch user total tracked websites");
+  }
+
+  return count;
+};

@@ -12,7 +12,6 @@ export const urlAddSchema = (t: TranslationFunction) =>
       .string()
       .max(20, t("urlManagement.validation.labelTooLong"))
       .optional(),
-    is_active: z.boolean(),
     projectId: z.string(),
   });
 

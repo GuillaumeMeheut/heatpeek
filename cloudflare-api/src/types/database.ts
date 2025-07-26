@@ -12,6 +12,7 @@ export type SnapshotsRow = Database["public"]["Tables"]["snapshots"]["Row"];
 export type UrlsRow = Database["public"]["Tables"]["urls"]["Row"];
 export type UserProfileRow =
   Database["public"]["Tables"]["user_profiles"]["Row"];
+export type PlansRow = Database["public"]["Tables"]["plans"]["Row"];
 
 // Table Insert Types
 export type PageConfigInsert =
@@ -24,6 +25,7 @@ export type SnapshotsInsert =
 export type UrlsInsert = Database["public"]["Tables"]["urls"]["Insert"];
 export type UserProfileInsert =
   Database["public"]["Tables"]["user_profiles"]["Insert"];
+export type PlansInsert = Database["public"]["Tables"]["plans"]["Insert"];
 
 // Table Update Types
 export type PageConfigUpdate =
@@ -36,6 +38,7 @@ export type SnapshotsUpdate =
 export type UrlsUpdate = Database["public"]["Tables"]["urls"]["Update"];
 export type UserProfileUpdate =
   Database["public"]["Tables"]["user_profiles"]["Update"];
+export type PlansUpdate = Database["public"]["Tables"]["plans"]["Update"];
 
 //Enum Types
 export type Device = Database["public"]["Enums"]["device"];

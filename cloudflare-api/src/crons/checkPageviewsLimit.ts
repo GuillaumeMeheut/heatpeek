@@ -42,10 +42,11 @@ export const scheduled = async (
 
     const trackingIdsToLock: string[] = [];
 
+    const plans = await supabaseService.getPlans();
+
     for (const user of users) {
-      const { id, pageviews_limit, subscription_current_period_end } = user;
-      if (!subscription_current_period_end || pageviews_limit === null)
-        continue;
+      const { id, subscription_current_period_end, current_plan } = user;
+      if (!subscription_current_period_end) continue;
 
       const billingEnd = new Date(subscription_current_period_end);
       const billingStart = subMonths(billingEnd, 1);
@@ -63,6 +64,12 @@ export const scheduled = async (
         billingStart,
         billingEnd
       );
+
+      const pageviews_limit = plans.find(
+        (p) => p.id === current_plan
+      )?.pageviews_limit;
+
+      if (!pageviews_limit) continue;
 
       if (totalViews > pageviews_limit) {
         const exceededTrackingIds = projects
