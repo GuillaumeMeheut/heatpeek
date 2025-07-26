@@ -49,8 +49,9 @@ type User = {
 };
 
 type CustomerDetails = {
-  stripe_customer_id: string;
-  current_plan?: string;
+  stripe_customer_id: string | null;
+  current_plan: string | null;
+  subscription_status: string | null;
 };
 
 // Utility functions
@@ -121,7 +122,9 @@ function PlanCard({
   customerDetails: CustomerDetails | null;
 }) {
   const Icon = plan.icon;
-  const hasSubscription = !!customerDetails?.stripe_customer_id;
+  const hasSubscription =
+    !!customerDetails?.stripe_customer_id &&
+    customerDetails.subscription_status === "active";
   const router = useRouter();
   const iconClasses = getIconColorClasses(isCurrentPlan);
   const t = useI18n();
@@ -180,9 +183,9 @@ function PlanCard({
       </CardContent>
 
       <CardFooter className="mt-auto">
-        {hasSubscription ? (
+        {customerDetails && hasSubscription ? (
           <ManageSubscriptionForm
-            customerId={customerDetails!.stripe_customer_id}
+            customerId={customerDetails.stripe_customer_id!}
             text={
               isCurrentPlan
                 ? t("pricing.buttons.manageSubscription")
