@@ -1,7 +1,13 @@
 import AddUrl from "./AddUrl";
 import { getI18n } from "@locales/server";
 
-export default async function Header({ projectId }: { projectId: string }) {
+export default async function Header({
+  projectId,
+  trackingId,
+}: {
+  projectId: string;
+  trackingId: string;
+}) {
   const t = await getI18n();
   return (
     <div className="mb-6">
@@ -13,7 +19,7 @@ export default async function Header({ projectId }: { projectId: string }) {
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <AddUrl projectId={projectId} />
+          <AddUrl projectId={projectId} trackingId={trackingId} />
         </div>
       </div>
     </div>

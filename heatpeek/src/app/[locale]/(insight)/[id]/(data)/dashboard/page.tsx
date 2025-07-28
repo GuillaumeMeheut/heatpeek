@@ -8,6 +8,7 @@ import {
   getAverageScrollDepth,
   getClickCount,
   getPageViews,
+  getAverageTimeOnPage,
 } from "@/lib/clickhouse/queries";
 import { ChartPieLabelCustom } from "@/components/ui/chart-pie-label-custom";
 import { ChartLineDefault } from "@/components/ui/chart-line";
@@ -45,7 +46,7 @@ export default async function PageDashboard({
     return <div>Error</div>;
   }
 
-  const [pageViews, clicks, scrollDepth] = await Promise.all([
+  const [pageViews, clicks, scrollDepth, avgTimeOnPage] = await Promise.all([
     getPageViews({
       trackingId: result.tracking_id,
       path: url,
@@ -64,6 +65,12 @@ export default async function PageDashboard({
       device,
       browser: "chrome",
     }),
+    getAverageTimeOnPage({
+      trackingId: result.tracking_id,
+      path: url,
+      device,
+      browser: "chrome",
+    }),
   ]);
 
   //barcharts engagement: pageviews clicks scroll depth rage clicks
@@ -76,6 +83,7 @@ export default async function PageDashboard({
         pageViews={pageViews}
         clicks={clicks}
         scrollDepth={scrollDepth}
+        avgTimeOnPage={avgTimeOnPage}
       />
       <ChartLineDefault />
       <ChartPieLabelCustom />

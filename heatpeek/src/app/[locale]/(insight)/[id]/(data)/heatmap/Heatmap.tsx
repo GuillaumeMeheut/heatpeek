@@ -3,35 +3,31 @@
 import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import { HeatmapSnapshot } from "@/lib/supabase/queries";
-import {
-  AggregatedClick,
-  RawClick,
-  ScrollDepth,
-} from "@/lib/clickhouse/queries";
+import { RawClick, ScrollDepth } from "@/lib/clickhouse/queries";
 import useClickHeatmap from "./useClickHeatmap";
 import useScrollHeatmap from "./useScrollDepthHeatmap";
 import React from "react";
 import ScrollDepthOverlay from "./ScrollDepthOverlay";
 import ElementHoverOverlay from "./ElementHoverOverlay";
 import { isClickData, isScrollData, ClickedElement } from "./utils";
-import { HeatmapType } from "./types";
+import { HeatmapType, ParsedDomDataType } from "./types";
 
 type HeatmapProps = {
-  data: AggregatedClick[] | RawClick[] | ScrollDepth[];
+  data: RawClick[] | ScrollDepth[];
   pageData: HeatmapSnapshot;
   dataType: HeatmapType;
-  clickType?: "aggregated" | "raw";
   overlayOpacity: number;
   clickedElements?: ClickedElement[];
+  parsedDomData: ParsedDomDataType;
 };
 
 export default function Heatmap({
   data,
   pageData,
   dataType,
-  clickType = "aggregated",
   overlayOpacity,
   clickedElements = [],
+  parsedDomData,
 }: HeatmapProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -70,8 +66,8 @@ export default function Heatmap({
     isClickData(data, dataType) ? data : [],
     containerDimensions,
     pageData,
-    clickType,
-    canvasRef
+    canvasRef,
+    parsedDomData
   );
 
   const { cumulativeViews, maxCumulative } = useScrollHeatmap(

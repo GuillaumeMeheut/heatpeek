@@ -20,7 +20,13 @@ import { toast } from "sonner";
 import { urlAddSchema } from "./types";
 import { Form } from "@/components/ui/form";
 
-export default function AddUrlDialog({ projectId }: { projectId: string }) {
+export default function AddUrlDialog({
+  projectId,
+  trackingId,
+}: {
+  projectId: string;
+  trackingId: string;
+}) {
   const t = useI18n();
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
@@ -41,7 +47,7 @@ export default function AddUrlDialog({ projectId }: { projectId: string }) {
           throw new Error(result.error.errors[0].message);
         }
 
-        await addNewUrlAndPageConfigAction(result.data);
+        await addNewUrlAndPageConfigAction(result.data, trackingId);
         setIsAddDialogOpen(false);
         toast.success(t("addUrl.success"));
       } catch (error) {

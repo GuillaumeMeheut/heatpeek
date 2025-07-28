@@ -15,7 +15,8 @@ import { z } from "zod";
 import { purgeConfig, purgeSnapshot } from "@/lib/cloudflare/api";
 
 export async function addNewUrlAndPageConfigAction(
-  data: z.infer<ReturnType<typeof urlAddSchema>>
+  data: z.infer<ReturnType<typeof urlAddSchema>>,
+  trackingId: string
 ) {
   try {
     const t = await getI18n();
@@ -50,8 +51,10 @@ export async function addNewUrlAndPageConfigAction(
       );
     }
 
+    const path = new URL(result.data.url).pathname;
+
     const { error } = await supabase.rpc("add_url_with_config_and_snapshots", {
-      _path: new URL(result.data.url).pathname,
+      _path: path,
       _label: result.data.label || null,
       _project_id: result.data.projectId,
     });
@@ -69,9 +72,7 @@ export async function addNewUrlAndPageConfigAction(
       throw new Error("An unexpected error occurred.");
     }
 
-    if (!data) {
-      throw new Error("Failed to create URL.");
-    }
+    await purgeConfig(trackingId, path);
 
     revalidatePath(`/[locale]/(insight)/[id]/manage-urls`, "page");
   } catch (error) {

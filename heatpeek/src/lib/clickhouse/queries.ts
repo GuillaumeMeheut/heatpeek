@@ -39,14 +39,6 @@ export type RawClick = {
   selector: string;
 };
 
-export type AggregatedClick = {
-  grid_x: number;
-  grid_y: number;
-  count: number;
-  last_updated_at: string;
-  snapshot_id: string;
-};
-
 export const getClicks = async ({
   trackingId,
   path,
@@ -283,7 +275,7 @@ export const getAverageScrollDepth = async ({
 
   const query = `
    SELECT
-      round(sum(scroll_depth) / count(), 2) AS avg_scroll_depth
+      round(avg(scroll_depth), 2) AS avg_scroll_depth
           FROM raw_scroll_depth
     WHERE ${conditions.join(" AND ")}
   `;
@@ -302,4 +294,45 @@ export const getAverageScrollDepth = async ({
   const rows = await resultSet.json();
   const data = rows.data as { avg_scroll_depth?: string | number }[];
   return Number(data?.[0]?.avg_scroll_depth) || 0;
+};
+
+export const getAverageTimeOnPage = async ({
+  trackingId,
+  path,
+  device,
+  browser,
+}: {
+  trackingId: string;
+  path: string;
+  device?: DeviceEnum | "all";
+  browser?: string;
+}): Promise<number> => {
+  const client = createClickhouseClient();
+
+  const conditions: string[] = [`tracking_id = {trackingId:String}`];
+  if (path && path !== "all") conditions.push(`path = {path:String}`);
+  if (device && device !== "all") conditions.push(`device = {device:String}`);
+  if (browser) conditions.push(`browser = {browser:String}`);
+
+  const query = `
+   SELECT
+      round(avg(duration), 2) AS avg_time_on_page
+          FROM raw_times_on_page
+    WHERE ${conditions.join(" AND ")}
+  `;
+
+  const resultSet = await client.query({
+    query,
+    format: "JSON",
+    query_params: {
+      trackingId,
+      path,
+      device,
+      browser,
+    },
+  });
+
+  const rows = await resultSet.json();
+  const data = rows.data as { avg_time_on_page?: string | number }[];
+  return Number(data?.[0]?.avg_time_on_page) || 0;
 };

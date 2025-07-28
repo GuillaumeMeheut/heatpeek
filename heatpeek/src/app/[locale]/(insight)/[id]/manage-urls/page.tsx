@@ -1,5 +1,4 @@
-import { getUser, getUrlsAndConfig } from "@/lib/supabase/queries";
-import { redirect } from "next/navigation";
+import { getUrlsAndConfig, getTrackingId } from "@/lib/supabase/queries";
 import { createClient } from "@/lib/supabase/server";
 import Header from "./Header";
 import UrlsTable from "./UrlsTable";
@@ -12,16 +11,19 @@ export default async function ManagePages({
   params: Promise<{ id: string }>;
 }) {
   const supabase = await createClient();
-  const { user } = await getUser(supabase);
-  if (!user) redirect("/signin");
 
   const { id } = await params;
   const t = await getI18n();
+
   const urls = await getUrlsAndConfig(supabase, id);
+
+  const trackingId = await getTrackingId(supabase, id);
+
+  if (!trackingId) return;
 
   return (
     <div className="flex-1 container py-6">
-      <Header projectId={id} />
+      <Header projectId={id} trackingId={trackingId} />
       {urls && urls.length > 0 ? (
         <UrlsTable urls={urls} projectId={id} />
       ) : (
@@ -29,7 +31,7 @@ export default async function ManagePages({
           <p className="text-muted-foreground">
             {t("urlManagement.emptyState")}
           </p>
-          <AddUrl projectId={id} />
+          <AddUrl projectId={id} trackingId={trackingId} />
         </div>
       )}
     </div>

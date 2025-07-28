@@ -42,6 +42,17 @@ export type ScrollDepthEvent = {
   scroll_depth: number;
 };
 
+export type EngagementEvent = {
+  snapshot_id: string;
+  tracking_id: string;
+  path: string;
+  device: string;
+  browser: string;
+  os: string;
+  timestamp: string;
+  duration: number;
+};
+
 export type PageViewEvent = {
   snapshot_id: string;
   tracking_id: string;
@@ -54,7 +65,12 @@ export type PageViewEvent = {
   is_bounce: boolean;
 };
 
-export type EventType = "click" | "rage_click" | "scroll_depth" | "page_view";
+export type EventType =
+  | "click"
+  | "rage_click"
+  | "scroll_depth"
+  | "engagement"
+  | "page_view";
 
 export type BaseEvent = {
   type: EventType;
@@ -80,6 +96,11 @@ export type ScrollDepthEventData = BaseEvent & {
   sd: number;
 };
 
+export type EngagementEventData = BaseEvent & {
+  type: "engagement";
+  e: number;
+};
+
 export type PageViewEventData = BaseEvent & {
   type: "page_view";
   is_bounce: boolean;
@@ -90,4 +111,5 @@ export type MultiEvent =
   | ClickEvent
   | RageClickEventData
   | ScrollDepthEventData
+  | EngagementEventData
   | PageViewEventData;

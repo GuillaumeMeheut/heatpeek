@@ -4,6 +4,7 @@ import type {
   PageViewEvent,
   RageClickEvent,
   ScrollDepthEvent,
+  EngagementEvent,
 } from "../types/clickhouse";
 import { ClickHouseError } from "../types/clickhouse";
 import { toClickhouseDateTime } from "../utils/date";
@@ -121,6 +122,27 @@ export class ClickHouseService {
         this.client.insert({
           table: "raw_scroll_depth",
           values: scrollDepth,
+          format: "JSONEachRow",
+        }),
+      maxRetries,
+      initialDelayMs
+    );
+  }
+
+  async insertEngagement(
+    engagement: EngagementEvent[],
+    maxRetries: number = 3,
+    initialDelayMs: number = 200
+  ): Promise<boolean | ClickHouseError> {
+    if (engagement.length === 0) {
+      return true;
+    }
+
+    return this.executeWithRetry(
+      () =>
+        this.client.insert({
+          table: "raw_times_on_page",
+          values: engagement,
           format: "JSONEachRow",
         }),
       maxRetries,

@@ -436,6 +436,57 @@
     });
     resetScrollTracking();
   }
+  let runningEngagementStart = null;
+  let currentEngagementTime = 0;
+  let engagementSent = false;
+  function getEngagementTime() {
+    if (runningEngagementStart) {
+      return currentEngagementTime + (Date.now() - runningEngagementStart);
+    } else {
+      return currentEngagementTime;
+    }
+  }
+  function resetEngagementTracking() {
+    runningEngagementStart = Date.now();
+    currentEngagementTime = 0;
+    engagementSent = false;
+  }
+  function handleVisibilityChange$1() {
+    if (document.visibilityState === "visible" && document.hasFocus() && runningEngagementStart === null) {
+      runningEngagementStart = Date.now();
+    } else if (document.visibilityState === "hidden" || !document.hasFocus()) {
+      currentEngagementTime = getEngagementTime();
+      runningEngagementStart = null;
+    }
+  }
+  function pushEngagementEvent() {
+    const engagementTime = getEngagementTime();
+    if (engagementTime >= 1e3 && !engagementSent) {
+      const buffer = getEventBuffer();
+      buffer.push({
+        type: "engagement",
+        e: Math.round(engagementTime / 1e3 * 100) / 100,
+        // Convert to seconds with 2 decimal places
+        timestamp: (/* @__PURE__ */ new Date()).toISOString()
+      });
+      engagementSent = true;
+    }
+  }
+  function setupTimeOnPageTracking() {
+    teardownTimeOnPageTracking();
+    resetEngagementTracking();
+    document.addEventListener("visibilitychange", handleVisibilityChange$1);
+    window.addEventListener("blur", handleVisibilityChange$1);
+    window.addEventListener("focus", handleVisibilityChange$1);
+  }
+  function teardownTimeOnPageTracking() {
+    document.removeEventListener("visibilitychange", handleVisibilityChange$1);
+    window.removeEventListener("blur", handleVisibilityChange$1);
+    window.removeEventListener("focus", handleVisibilityChange$1);
+    runningEngagementStart = null;
+    currentEngagementTime = 0;
+    engagementSent = false;
+  }
   function sendPageview(config2) {
     const payload = {
       trackingId: config2.trackingId,
@@ -466,6 +517,7 @@
     setupSnapshotLogic(config2);
     setupClickTracking();
     setupScrollTracking();
+    setupTimeOnPageTracking();
     startBufferFlush(config2);
   }
   function shouldTrack(config2) {
@@ -479,25 +531,26 @@
     teardownClickTracking();
     teardownSnapshotLogic();
     teardownScrollTracking();
+    teardownTimeOnPageTracking();
   }
   let eventBuffer = [];
   let flushIntervalId = null;
-  function flushBuffer(config2) {
+  function flushBuffer() {
     if (!eventBuffer.length) return;
     const payload = {
-      trackingId: config2.trackingId,
-      path: config2.path,
-      device: config2.device,
-      browser: config2.browser,
-      os: config2.os,
+      trackingId: currentConfig.trackingId,
+      path: currentConfig.path,
+      device: currentConfig.device,
+      browser: currentConfig.browser,
+      os: currentConfig.os,
       events: eventBuffer.splice(0),
       timestamp: (/* @__PURE__ */ new Date()).toISOString()
     };
     const json = JSON.stringify(payload);
     if (navigator.sendBeacon) {
-      navigator.sendBeacon(`${config2.endpointAPI}/api/event/events`, json);
+      navigator.sendBeacon(`${currentConfig.endpointAPI}/api/event/events`, json);
     } else {
-      fetch(`${config2.endpointAPI}/api/event/events`, {
+      fetch(`${currentConfig.endpointAPI}/api/event/events`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: json
@@ -509,28 +562,18 @@
   }
   function handleBeforeUnload() {
     pushScrollDepthEvent();
-    flushBuffer(currentConfig);
+    pushEngagementEvent();
+    flushBuffer();
   }
   function handleVisibilityChange() {
-    if (document.visibilityState === "hidden") {
-      flushBuffer(currentConfig);
-    }
-  }
-  function handleBeforeNavigation() {
-    pushScrollDepthEvent();
-    flushBuffer(currentConfig);
   }
   let currentConfig;
   function startBufferFlush(config2) {
     stopBufferFlush();
     currentConfig = config2;
-    flushIntervalId = setInterval(() => flushBuffer(currentConfig), 5e3);
+    flushIntervalId = setInterval(() => flushBuffer(), 5e3);
     window.addEventListener("beforeunload", handleBeforeUnload);
     document.addEventListener("visibilitychange", handleVisibilityChange);
-    document.addEventListener(
-      "heatpeek:before-navigation",
-      handleBeforeNavigation
-    );
   }
   function stopBufferFlush() {
     if (flushIntervalId) {
@@ -539,10 +582,6 @@
     }
     window.removeEventListener("beforeunload", handleBeforeUnload);
     document.removeEventListener("visibilitychange", handleVisibilityChange);
-    document.removeEventListener(
-      "heatpeek:before-navigation",
-      handleBeforeNavigation
-    );
   }
   function getBrowserName() {
     const ua = navigator.userAgent;
@@ -566,8 +605,6 @@
     const originalPushState = history.pushState;
     const originalReplaceState = history.replaceState;
     let lastUrl = location.pathname;
-    let navigationTimeout = null;
-    let isNavigating = false;
     const handlePageChange = (isSPA = false) => {
       const newUrl = location.pathname;
       if (isSPA && newUrl === lastUrl) return;
@@ -576,29 +613,15 @@
         new CustomEvent("heatpeek:navigation", { detail: newUrl })
       );
     };
-    const notifyBeforeNavigation = () => {
-      if (isNavigating) return;
-      isNavigating = true;
-      document.dispatchEvent(new Event("heatpeek:before-navigation"));
-      if (navigationTimeout) {
-        clearTimeout(navigationTimeout);
-      }
-      navigationTimeout = setTimeout(() => {
-        isNavigating = false;
-      }, 100);
-    };
     const onHashChange = () => handlePageChange(true);
     const onPopState = () => {
-      notifyBeforeNavigation();
       handlePageChange(true);
     };
     const onPushState = (...args) => {
-      notifyBeforeNavigation();
       originalPushState.apply(history, args);
       handlePageChange(true);
     };
     const onReplaceState = (...args) => {
-      notifyBeforeNavigation();
       originalReplaceState.apply(history, args);
       handlePageChange(true);
     };
@@ -616,9 +639,6 @@
       window.removeEventListener("pageshow", onPageshow);
       history.pushState = originalPushState;
       history.replaceState = originalReplaceState;
-      if (navigationTimeout) {
-        clearTimeout(navigationTimeout);
-      }
     };
   }
   function getReferrerDomain() {
@@ -634,48 +654,55 @@
     }
   }
   (function() {
-    const trackingId = document.currentScript.getAttribute("id");
-    let endpoint, endpointAPI;
-    const isLocalhost = location.hostname === "localhost" || location.hostname === "127.0.0.1";
-    if (isLocalhost) {
-      endpoint = "http://localhost:3000";
-      endpointAPI = "http://localhost:8787";
-    } else if (!isLocalhost) {
-      return;
-    } else if (isLocalhost) {
-      return;
-    } else {
-      endpoint = "https://heatpeek.com";
-      endpointAPI = "https://api.heatpeek.com";
-    }
-    if (!trackingId || detectBot()) return;
-    verifyTracking(endpoint, trackingId);
-    const device = getViewportDeviceCategory();
-    const browser = getBrowserName();
-    const os = getOsName();
-    const referrer = getReferrerDomain();
-    const runTracking = (path) => {
-      cleanupTracking();
-      config.init(
-        endpointAPI,
-        endpoint,
-        trackingId,
-        path,
-        device,
-        browser,
-        os,
-        referrer
-      );
-      config.fetch().then((configData) => {
-        if (!configData) return;
-        initializeTracking(config);
+    try {
+      const trackingId = document.currentScript.getAttribute("id");
+      let endpoint, endpointAPI;
+      const isLocalhost = location.hostname === "localhost" || location.hostname === "127.0.0.1";
+      if (isLocalhost) {
+        endpoint = "http://localhost:3000";
+        endpointAPI = "http://localhost:8787";
+      } else if (!isLocalhost) {
+        return;
+      } else if (isLocalhost) {
+        return;
+      } else {
+        endpoint = "https://heatpeek.com";
+        endpointAPI = "https://api.heatpeek.com";
+      }
+      if (!trackingId || detectBot()) return;
+      verifyTracking(endpoint, trackingId);
+      const device = getViewportDeviceCategory();
+      const browser = getBrowserName();
+      const os = getOsName();
+      const referrer = getReferrerDomain();
+      const runTracking = (path) => {
+        cleanupTracking();
+        config.init(
+          endpointAPI,
+          endpoint,
+          trackingId,
+          path,
+          device,
+          browser,
+          os,
+          referrer
+        );
+        config.fetch().then((configData) => {
+          if (!configData) return;
+          initializeTracking(config);
+        });
+      };
+      runTracking(window.location.pathname);
+      setupNavigationTracking();
+      document.addEventListener("heatpeek:navigation", (e) => {
+        const newPath = e.detail;
+        pushScrollDepthEvent();
+        pushEngagementEvent();
+        flushBuffer();
+        runTracking(newPath);
       });
-    };
-    runTracking(window.location.pathname);
-    setupNavigationTracking();
-    document.addEventListener("heatpeek:navigation", (e) => {
-      const newPath = e.detail;
-      runTracking(newPath);
-    });
+    } catch (error) {
+      console.warn("Heatpeek tracking error:", error);
+    }
   })();
 })();

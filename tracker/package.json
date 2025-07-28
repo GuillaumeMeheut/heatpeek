@@ -7,7 +7,6 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "copy-tracker": "cp dist/index.iife.js ../heatpeek/public/heatpeek-tracker.js",
     "serve": "node dev-server.js"
   },
   "devDependencies": {

@@ -9,3 +9,11 @@ export enum DeviceEnum {
   Tablet = "tablet",
   Mobile = "mobile",
 }
+
+export type ParsedDomDataType = Array<{
+  s: string;
+  l: number;
+  t: number;
+  w: number;
+  h: number;
+}>;
