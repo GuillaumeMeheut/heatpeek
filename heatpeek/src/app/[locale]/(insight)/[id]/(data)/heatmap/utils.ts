@@ -1,8 +1,5 @@
-import {
-  AggregatedClick,
-  RawClick,
-  ScrollDepth,
-} from "@/lib/clickhouse/queries";
+import { RawClick, ScrollDepth } from "@/lib/clickhouse/queries";
+import { ParsedDomDataType } from "./types";
 
 export const palette = [
   "#DDDEDE", // white (least views)
@@ -13,14 +10,14 @@ export const palette = [
 ];
 
 export function isClickData(
-  data: AggregatedClick[] | RawClick[] | ScrollDepth[],
+  data: RawClick[] | ScrollDepth[],
   dataType: "clicks" | "rage_clicks" | "scroll_depth"
-): data is AggregatedClick[] | RawClick[] {
+): data is RawClick[] {
   return dataType === "clicks" || dataType === "rage_clicks";
 }
 
 export function isScrollData(
-  data: AggregatedClick[] | RawClick[] | ScrollDepth[],
+  data: RawClick[] | ScrollDepth[],
   dataType: "clicks" | "rage_clicks" | "scroll_depth"
 ): data is ScrollDepth[] {
   return dataType === "scroll_depth";
@@ -48,15 +45,12 @@ export type DomElement = {
 };
 
 export function getClickedElements(
-  domData: string | null,
-  clicks: AggregatedClick[] | RawClick[],
+  domData: ParsedDomDataType,
+  clicks: RawClick[],
   rageClicks: RawClick[],
-  scrollDepth: ScrollDepth[]
+  scrollDepth: ScrollDepth[],
+  pageHeight: number
 ): ClickedElement[] {
-  if (!domData) {
-    return [];
-  }
-
   const clickMap = new Map<string, number>();
   const rageClickMap = new Map<string, number>();
 
@@ -90,16 +84,11 @@ export function getClickedElements(
   );
   const allTotalClicks = totalClicks + totalRageClicks;
 
-  const domElements = JSON.parse(domData) as DomElement[];
-
   // Calculate visibility percentage for each element based on scroll depth
-  const domWithClicks = domElements
+  const domWithClicks = domData
     .map((el): ClickedElement => {
       const elementClicks = clickMap.get(el.s) || 0;
       const elementRageClicks = rageClickMap.get(el.s) || 0;
-
-      // Calculate visibility percentage based on element position and scroll depth
-      const pageHeight = Math.max(...domElements.map((d) => d.t + d.h));
 
       // Count views where users scrolled to at least the top of this element
       const viewsPastElement = scrollDepth

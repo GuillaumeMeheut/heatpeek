@@ -16,9 +16,8 @@ import {
   getRageClicks,
   getClicks,
   ScrollDepth,
-  AggregatedClick,
 } from "@/lib/clickhouse/queries";
-import { DeviceEnum, HeatmapType } from "./types";
+import { DeviceEnum, HeatmapType, ParsedDomDataType } from "./types";
 import { getClickedElements } from "./utils";
 
 export default async function HeatmapPage({
@@ -67,12 +66,16 @@ export default async function HeatmapPage({
     return <div>The data is still being processed</div>;
   }
 
+  if (!snapshot.dom_data) {
+    return <div>A problem as occured</div>;
+  }
+
   const result = await getTrackingIdAndBaseUrl(supabase, projectId);
   if (!result) {
     return <div>Error</div>;
   }
 
-  let data: AggregatedClick[] | RawClick[] | ScrollDepth[] | null = null;
+  let data: RawClick[] | ScrollDepth[] | null = null;
 
   const clicks = await getClicks({
     trackingId: result.tracking_id,
@@ -113,11 +116,14 @@ export default async function HeatmapPage({
       data = clicks;
   }
 
+  const parsedDomData = JSON.parse(snapshot.dom_data) as ParsedDomDataType;
+
   const clickedElements = getClickedElements(
-    snapshot.dom_data,
+    parsedDomData,
     clicks,
     rageClicks,
-    scrollDepth
+    scrollDepth,
+    snapshot.height ?? 0
   );
 
   return (
@@ -139,8 +145,8 @@ export default async function HeatmapPage({
                     data={data}
                     type={type}
                     pageData={snapshot}
-                    clickType="raw"
                     clickedElements={clickedElements}
+                    parsedDomData={parsedDomData}
                   />
                 </div>
               </div>

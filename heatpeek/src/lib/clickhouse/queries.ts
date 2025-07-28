@@ -39,14 +39,6 @@ export type RawClick = {
   selector: string;
 };
 
-export type AggregatedClick = {
-  grid_x: number;
-  grid_y: number;
-  count: number;
-  last_updated_at: string;
-  snapshot_id: string;
-};
-
 export const getClicks = async ({
   trackingId,
   path,
