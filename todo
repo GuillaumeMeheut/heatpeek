@@ -2,11 +2,9 @@
 
 ## 🌐 Global
 
-- [ ] Add interacted elements (number of clicks, visibility)
 - [ ] Create crons:
   - [ ] Aggregate data every X hours
   - [ ] Determine website size (traffic insights)
-- [ ] Include traffic data in config
 - [ ] SEO
 
 ---
@@ -24,7 +22,7 @@
 - [ ] Add ignored element and privacy element to page config
 - [ ] Implement an example dashboard, open to everyone with static data
 - [ ] Use KV for active snapshot dom_data
-- [ ] Find a way to optimize large dataset of clicks bc of egress consumption
+- [ ] Find a way to optimize large dataset of clicks bc of egress consumption(cachin for a day?)
 - [ ] Rename project to websites
 - [ ] rename fiels to use snake case
 - [ ] Add caching with Cloudflare R2

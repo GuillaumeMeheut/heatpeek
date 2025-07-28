@@ -8,40 +8,24 @@ export function setupNavigationTracking() {
 
   const handlePageChange = (isSPA = false) => {
     const newUrl = location.pathname;
+
     if (isSPA && newUrl === lastUrl) return;
+
     lastUrl = newUrl;
     document.dispatchEvent(
       new CustomEvent("heatpeek:navigation", { detail: newUrl })
     );
   };
 
-  const notifyBeforeNavigation = () => {
-    if (isNavigating) return; // Prevent duplicate events
-
-    isNavigating = true;
-    document.dispatchEvent(new Event("heatpeek:before-navigation"));
-
-    // Reset the flag after a short delay to allow for the navigation sequence to complete
-    if (navigationTimeout) {
-      clearTimeout(navigationTimeout);
-    }
-    navigationTimeout = setTimeout(() => {
-      isNavigating = false;
-    }, 100);
-  };
-
   const onHashChange = () => handlePageChange(true);
   const onPopState = () => {
-    notifyBeforeNavigation();
     handlePageChange(true);
   };
   const onPushState = (...args) => {
-    notifyBeforeNavigation();
     originalPushState.apply(history, args);
     handlePageChange(true);
   };
   const onReplaceState = (...args) => {
-    notifyBeforeNavigation();
     originalReplaceState.apply(history, args);
     handlePageChange(true);
   };

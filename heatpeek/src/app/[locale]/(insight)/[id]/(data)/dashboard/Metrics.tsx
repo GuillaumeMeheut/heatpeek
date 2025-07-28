@@ -12,10 +12,12 @@ export function Metrics({
   pageViews,
   clicks,
   scrollDepth,
+  avgTimeOnPage,
 }: {
   pageViews: number;
   clicks: number;
   scrollDepth: number;
+  avgTimeOnPage: number;
 }) {
   const metrics = [
     {
@@ -44,7 +46,7 @@ export function Metrics({
     },
     {
       title: "Average Time on Page",
-      value: "4m 32s",
+      value: `${avgTimeOnPage}s`,
       change: "+15.3%",
       trend: "up" as const,
       icon: Clock,

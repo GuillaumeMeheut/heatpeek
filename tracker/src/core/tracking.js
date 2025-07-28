@@ -5,6 +5,11 @@ import {
   pushScrollDepthEvent,
   teardownScrollTracking,
 } from "./tracking/scrollDepth";
+import {
+  setupTimeOnPageTracking,
+  pushEngagementEvent,
+  teardownTimeOnPageTracking,
+} from "./tracking/timeOnPage";
 import { sendPageview } from "./tracking/pageviews";
 
 export function initializeTracking(config) {
@@ -15,6 +20,7 @@ export function initializeTracking(config) {
   setupSnapshotLogic(config);
   setupClickTracking();
   setupScrollTracking();
+  setupTimeOnPageTracking();
 
   startBufferFlush(config);
 }
@@ -31,20 +37,21 @@ export function cleanupTracking() {
   teardownClickTracking();
   teardownSnapshotLogic();
   teardownScrollTracking();
+  teardownTimeOnPageTracking();
 }
 
 let eventBuffer = [];
 let flushIntervalId = null;
 
-function flushBuffer(config) {
+export function flushBuffer() {
   if (!eventBuffer.length) return;
 
   const payload = {
-    trackingId: config.trackingId,
-    path: config.path,
-    device: config.device,
-    browser: config.browser,
-    os: config.os,
+    trackingId: currentConfig.trackingId,
+    path: currentConfig.path,
+    device: currentConfig.device,
+    browser: currentConfig.browser,
+    os: currentConfig.os,
     events: eventBuffer.splice(0),
     timestamp: new Date().toISOString(),
   };
@@ -52,9 +59,9 @@ function flushBuffer(config) {
   const json = JSON.stringify(payload);
 
   if (navigator.sendBeacon) {
-    navigator.sendBeacon(`${config.endpointAPI}/api/event/events`, json);
+    navigator.sendBeacon(`${currentConfig.endpointAPI}/api/event/events`, json);
   } else {
-    fetch(`${config.endpointAPI}/api/event/events`, {
+    fetch(`${currentConfig.endpointAPI}/api/event/events`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: json,
@@ -68,19 +75,11 @@ export function getEventBuffer() {
 
 function handleBeforeUnload() {
   pushScrollDepthEvent();
-  flushBuffer(currentConfig);
+  pushEngagementEvent();
+  flushBuffer();
 }
 
-function handleVisibilityChange() {
-  if (document.visibilityState === "hidden") {
-    flushBuffer(currentConfig);
-  }
-}
-
-function handleBeforeNavigation() {
-  pushScrollDepthEvent();
-  flushBuffer(currentConfig);
-}
+function handleVisibilityChange() {}
 
 let currentConfig;
 
@@ -88,14 +87,10 @@ export function startBufferFlush(config) {
   stopBufferFlush();
   currentConfig = config;
 
-  flushIntervalId = setInterval(() => flushBuffer(currentConfig), 5000);
+  flushIntervalId = setInterval(() => flushBuffer(), 5000);
 
   window.addEventListener("beforeunload", handleBeforeUnload);
   document.addEventListener("visibilitychange", handleVisibilityChange);
-  document.addEventListener(
-    "heatpeek:before-navigation",
-    handleBeforeNavigation
-  );
 }
 
 export function stopBufferFlush() {
@@ -106,8 +101,4 @@ export function stopBufferFlush() {
 
   window.removeEventListener("beforeunload", handleBeforeUnload);
   document.removeEventListener("visibilitychange", handleVisibilityChange);
-  document.removeEventListener(
-    "heatpeek:before-navigation",
-    handleBeforeNavigation
-  );
 }
