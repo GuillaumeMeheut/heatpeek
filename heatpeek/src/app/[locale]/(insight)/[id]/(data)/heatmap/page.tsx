@@ -19,6 +19,7 @@ import {
 } from "@/lib/clickhouse/queries";
 import { DeviceEnum, HeatmapType, ParsedDomDataType } from "./types";
 import { getClickedElements } from "./utils";
+import { FilterDateEnum } from "@/components/Filters/types";
 
 export default async function HeatmapPage({
   params,
@@ -29,6 +30,7 @@ export default async function HeatmapPage({
     url: string;
     device?: DeviceEnum;
     type?: HeatmapType;
+    date?: FilterDateEnum;
   };
 }) {
   const supabase = await createClient();
@@ -37,6 +39,7 @@ export default async function HeatmapPage({
   const { id: projectId } = await params;
   const url = searchParams.url;
   const device = searchParams.device;
+  const date = searchParams.date;
 
   let type = searchParams.type;
 
@@ -50,6 +53,7 @@ export default async function HeatmapPage({
   }
 
   if (
+    !date ||
     !url ||
     !device ||
     (device !== DeviceEnum.Desktop &&
@@ -80,29 +84,32 @@ export default async function HeatmapPage({
 
   let data: RawClick[] | ScrollDepth[] | null = null;
 
-  const clicks = await getClicks({
-    trackingId: result.tracking_id,
-    path: url,
-    snapshotId: snapshot.id,
-    device,
-    browser: "chrome",
-  });
-
-  const rageClicks = await getRageClicks({
-    trackingId: result.tracking_id,
-    path: url,
-    snapshotId: snapshot.id,
-    device,
-    browser: "chrome",
-  });
-
-  const scrollDepth = await getScrollDepth({
-    trackingId: result.tracking_id,
-    path: url,
-    snapshotId: snapshot.id,
-    device,
-    browser: "chrome",
-  });
+  const [clicks, rageClicks, scrollDepth] = await Promise.all([
+    getClicks({
+      trackingId: result.tracking_id,
+      path: url,
+      snapshotId: snapshot.id,
+      device,
+      browser: "chrome",
+      date,
+    }),
+    getRageClicks({
+      trackingId: result.tracking_id,
+      path: url,
+      snapshotId: snapshot.id,
+      device,
+      browser: "chrome",
+      date,
+    }),
+    getScrollDepth({
+      trackingId: result.tracking_id,
+      path: url,
+      snapshotId: snapshot.id,
+      device,
+      browser: "chrome",
+      date,
+    }),
+  ]);
 
   // Set data based on the selected type
   switch (type) {
