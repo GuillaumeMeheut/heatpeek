@@ -316,7 +316,7 @@ export const getAverageTimeOnPage = async ({
 
   const query = `
    SELECT
-      round(avg(duration), 2) AS avg_time_on_page
+      round(avg(duration), 0) AS avg_time_on_page
           FROM raw_times_on_page
     WHERE ${conditions.join(" AND ")}
   `;

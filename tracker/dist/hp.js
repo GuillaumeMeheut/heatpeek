@@ -465,8 +465,7 @@
       const buffer = getEventBuffer();
       buffer.push({
         type: "engagement",
-        e: Math.round(engagementTime / 1e3 * 100) / 100,
-        // Convert to seconds with 2 decimal places
+        e: Math.round(engagementTime / 1e3),
         timestamp: (/* @__PURE__ */ new Date()).toISOString()
       });
       engagementSent = true;
