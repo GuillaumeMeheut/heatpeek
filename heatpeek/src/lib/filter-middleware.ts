@@ -1,42 +1,59 @@
+import { DeviceEnum } from "@/app/[locale]/(insight)/[id]/(data)/heatmap/types";
+import { FilterDateEnum } from "@/components/Filters/types";
 import { type NextRequest, NextResponse } from "next/server";
 
 interface FilterRule {
   parameter: string;
-  defaultValue: string;
+  defaultValue: string | undefined;
+  allowedValues?: string[]; // Add allowed values for validation
   transformations?: Record<string, string>;
   routeSpecificTransformations?: Record<string, Record<string, string>>;
   routes?: {
     include?: string[];
     exclude?: string[];
   };
-  routeSpecificDefaults?: Record<string, string>;
+  routeSpecificDefaults?: Record<string, string | undefined>;
 }
 
 const filterRules: FilterRule[] = [
   {
     parameter: "device",
-    defaultValue: "desktop",
+    defaultValue: DeviceEnum.Desktop,
+    allowedValues: [DeviceEnum.Desktop, DeviceEnum.Tablet, DeviceEnum.Mobile], // Valid device values - removed "all"
     routeSpecificTransformations: {
       "/heatmap": {
-        all: "desktop", // Convert "all" to "desktop" only for heatmap routes
+        // Remove "all" transformation since we're not using it anymore
       },
     },
     routes: {
       include: ["/(data)", "/heatmap", "/dashboard"], // Include dashboard routes
     },
     routeSpecificDefaults: {
-      "/dashboard": "all", // Dashboard defaults to "all"
+      "/dashboard": undefined, // Dashboard defaults to undefined (no filter)
     },
   },
   //For url filter check component FiltersUrl.tsx the default value doesnt apply for url
   {
     parameter: "url",
-    defaultValue: "",
+    defaultValue: undefined,
     routes: {
       include: ["/(data)", "/heatmap", "/dashboard"], // Include dashboard routes
     },
     routeSpecificDefaults: {
-      "/dashboard": "all", // Dashboard defaults to "all" for url too
+      "/dashboard": undefined, // Dashboard defaults to undefined (no filter) for url too
+    },
+  },
+  {
+    parameter: "date",
+    defaultValue: FilterDateEnum.Last24Hours,
+    allowedValues: [
+      FilterDateEnum.Last24Hours,
+      FilterDateEnum.Last7Days,
+      FilterDateEnum.Last30Days,
+      FilterDateEnum.Last90Days,
+    ], // Valid date values
+    routes: {
+      include: ["/(data)", "/heatmap", "/dashboard"], // Include dashboard routes
     },
   },
 ];
@@ -76,8 +93,10 @@ export function handleUrlFilters(request: NextRequest) {
 
     // Ensure parameter exists
     if (!params.has(rule.parameter)) {
-      params.set(rule.parameter, defaultValue);
-      modified = true;
+      if (defaultValue !== undefined) {
+        params.set(rule.parameter, defaultValue);
+        modified = true;
+      }
     } else {
       // Apply transformations if they exist
       const currentValue = params.get(rule.parameter);
@@ -104,6 +123,21 @@ export function handleUrlFilters(request: NextRequest) {
       ) {
         const newValue = rule.transformations[currentValue];
         params.set(rule.parameter, newValue);
+        modified = true;
+      }
+
+      // Validate the value against allowed values - only for included routes
+      if (
+        rule.allowedValues &&
+        currentValue &&
+        rule.routes?.include && // Only validate if routes are explicitly included
+        !rule.allowedValues.includes(currentValue)
+      ) {
+        if (defaultValue !== undefined) {
+          params.set(rule.parameter, defaultValue);
+        } else {
+          params.delete(rule.parameter);
+        }
         modified = true;
       }
     }

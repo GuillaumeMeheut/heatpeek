@@ -111,3 +111,23 @@ export function corsHeaders() {
     "Access-Control-Allow-Headers": "Content-Type, Authorization",
   };
 }
+
+/**
+ * Formats time duration from seconds to a readable format
+ * If duration is >= 60 seconds, formats as "Xm Ys"
+ * Otherwise, formats as "Xs"
+ */
+export function formatTimeDuration(seconds: number): string {
+  if (seconds < 60) {
+    return `${Math.round(seconds)}s`;
+  }
+
+  const minutes = Math.floor(seconds / 60);
+  const remainingSeconds = Math.round(seconds % 60);
+
+  if (remainingSeconds === 0) {
+    return `${minutes}m`;
+  }
+
+  return `${minutes}m ${remainingSeconds}s`;
+}

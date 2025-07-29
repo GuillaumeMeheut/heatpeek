@@ -7,6 +7,7 @@ import {
   Mouse,
   Clock,
 } from "lucide-react";
+import { formatTimeDuration } from "@/lib/utils";
 
 export function Metrics({
   pageViews,
@@ -30,7 +31,9 @@ export function Metrics({
     },
     {
       title: "Click Rate",
-      value: `${((clicks / pageViews) * 100).toFixed(2) || 0}%`,
+      value: `${
+        pageViews > 0 ? ((clicks / pageViews) * 100).toFixed(2) : "0.00"
+      }%`,
       change: "-0.8%",
       trend: "down" as const,
       icon: MousePointer,
@@ -46,7 +49,7 @@ export function Metrics({
     },
     {
       title: "Average Time on Page",
-      value: `${avgTimeOnPage}s`,
+      value: formatTimeDuration(avgTimeOnPage),
       change: "+15.3%",
       trend: "up" as const,
       icon: Clock,
