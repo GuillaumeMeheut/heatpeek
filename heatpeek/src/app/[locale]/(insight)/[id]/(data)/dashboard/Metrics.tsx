@@ -7,6 +7,7 @@ import {
   Mouse,
   Clock,
 } from "lucide-react";
+import { formatTimeDuration } from "@/lib/utils";
 
 export function Metrics({
   pageViews,
@@ -46,7 +47,7 @@ export function Metrics({
     },
     {
       title: "Average Time on Page",
-      value: `${avgTimeOnPage}s`,
+      value: formatTimeDuration(avgTimeOnPage),
       change: "+15.3%",
       trend: "up" as const,
       icon: Clock,
