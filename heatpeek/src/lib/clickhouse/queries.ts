@@ -1,5 +1,6 @@
 import { createClient } from "@clickhouse/client-web";
 import { DeviceEnum } from "@/app/[locale]/(insight)/[id]/(data)/heatmap/types";
+import { FilterDateEnum } from "@/components/Filters/types";
 
 const createClickhouseClient = () => {
   return createClient({
@@ -212,6 +213,87 @@ export const getPageViews = async ({
   const rows = await resultSet.json();
   const data = rows.data as { total_views?: string | number }[];
   return Number(data?.[0]?.total_views) || 0;
+};
+
+export const getPageViewsTimeseries = async ({
+  trackingId,
+  path,
+  device,
+  browser,
+  dateRange,
+}: {
+  trackingId: string;
+  path: string;
+  device?: DeviceEnum | "all";
+  browser?: string;
+  dateRange: FilterDateEnum;
+}) => {
+  const client = createClickhouseClient();
+
+  const conditions: string[] = [`tracking_id = {trackingId:String}`];
+  if (path && path !== "all") conditions.push(`path = {path:String}`);
+  if (device && device !== "all") conditions.push(`device = {device:String}`);
+  if (browser) conditions.push(`browser = {browser:String}`);
+
+  // Determine grouping & date filter
+  let groupExpr = "";
+  let dateCondition = "";
+  let tableName = "";
+  let aggregationExpr = "";
+
+  switch (dateRange) {
+    case FilterDateEnum.Last24Hours:
+      groupExpr = "toStartOfHour(timestamp) AS period";
+      dateCondition = "timestamp >= now() - INTERVAL 24 HOUR";
+      tableName = "raw_pageviews";
+      aggregationExpr = "count() AS total_views";
+      break;
+    case FilterDateEnum.Last7Days:
+      groupExpr = "toDate(date) AS period";
+      dateCondition = "date >= now() - INTERVAL 7 DAY";
+      tableName = "aggregated_pageviews";
+      aggregationExpr = "sum(views) AS total_views";
+      break;
+    case FilterDateEnum.Last30Days:
+      groupExpr = "toDate(date) AS period";
+      dateCondition = "date >= now() - INTERVAL 30 DAY";
+      tableName = "aggregated_pageviews";
+      aggregationExpr = "sum(views) AS total_views";
+      break;
+    case FilterDateEnum.Last90Days:
+      groupExpr = "toStartOfMonth(date) AS period";
+      dateCondition = "date >= now() - INTERVAL 90 DAY";
+      tableName = "aggregated_pageviews";
+      aggregationExpr = "sum(views) AS total_views";
+      break;
+    default:
+      throw new Error(`Invalid date range: ${dateRange}`);
+  }
+  conditions.push(dateCondition);
+
+  const query = `
+    SELECT 
+      ${groupExpr},
+      ${aggregationExpr}
+    FROM ${tableName}
+    WHERE ${conditions.join(" AND ")}
+    GROUP BY period
+    ORDER BY period ASC
+  `;
+
+  const resultSet = await client.query({
+    query,
+    format: "JSON",
+    query_params: { trackingId, path, device, browser },
+  });
+
+  const rows = await resultSet.json();
+  return (rows.data as { period: string; total_views: string | number }[]).map(
+    (r) => ({
+      date: r.period,
+      pageViews: Number(r.total_views),
+    })
+  );
 };
 
 export const getClickCount = async ({

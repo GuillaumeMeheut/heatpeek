@@ -5,13 +5,7 @@ import { useState, useEffect } from "react";
 import { Monitor, Smartphone, Tablet } from "lucide-react";
 import { ToggleGroup, ToggleGroupItem } from "../ui/toggle-group";
 import { DeviceEnum } from "@/app/[locale]/(insight)/[id]/(data)/heatmap/types";
-
-export enum FilterDeviceEnum {
-  All = "all",
-  Desktop = DeviceEnum.Desktop,
-  Tablet = DeviceEnum.Tablet,
-  Mobile = DeviceEnum.Mobile,
-}
+import { FilterDevice } from "./types";
 
 export function FiltersDevice() {
   const router = useRouter();
@@ -22,26 +16,22 @@ export function FiltersDevice() {
   // Get initial device from URL params
   const deviceParam = searchParams.get("device");
   const initialDevice =
-    deviceParam ||
-    (isDashboard ? FilterDeviceEnum.All : FilterDeviceEnum.Desktop);
+    deviceParam || (isDashboard ? "all" : DeviceEnum.Desktop);
 
   // State for selected device
-  const [selectedDevice, setSelectedDevice] = useState<FilterDeviceEnum>(
-    initialDevice as FilterDeviceEnum
+  const [selectedDevice, setSelectedDevice] = useState<FilterDevice>(
+    initialDevice as FilterDevice
   );
 
   // Update state when URL params change
   useEffect(() => {
     const deviceParam = searchParams.get("device");
-    const device =
-      deviceParam ||
-      (isDashboard ? FilterDeviceEnum.All : FilterDeviceEnum.Desktop);
-    setSelectedDevice(device as FilterDeviceEnum);
+    const device = deviceParam || (isDashboard ? "all" : DeviceEnum.Desktop);
+    setSelectedDevice(device as FilterDevice);
   }, [searchParams, isDashboard]);
 
-  const handleDeviceChange = (value: FilterDeviceEnum) => {
-    const newDevice =
-      value || (isDashboard ? FilterDeviceEnum.All : FilterDeviceEnum.Desktop);
+  const handleDeviceChange = (value: FilterDevice) => {
+    const newDevice = value || (isDashboard ? "all" : DeviceEnum.Desktop);
     setSelectedDevice(newDevice);
 
     // Update URL
@@ -57,16 +47,14 @@ export function FiltersDevice() {
       value={selectedDevice}
       onValueChange={handleDeviceChange}
     >
-      {isDashboard && (
-        <ToggleGroupItem value={FilterDeviceEnum.All}>All</ToggleGroupItem>
-      )}
-      <ToggleGroupItem value={FilterDeviceEnum.Desktop}>
+      {isDashboard && <ToggleGroupItem value="all">All</ToggleGroupItem>}
+      <ToggleGroupItem value={DeviceEnum.Desktop}>
         <Monitor className="h-4 w-4" />
       </ToggleGroupItem>
-      <ToggleGroupItem value={FilterDeviceEnum.Tablet}>
+      <ToggleGroupItem value={DeviceEnum.Tablet}>
         <Tablet className="h-4 w-4" />
       </ToggleGroupItem>
-      <ToggleGroupItem value={FilterDeviceEnum.Mobile}>
+      <ToggleGroupItem value={DeviceEnum.Mobile}>
         <Smartphone className="h-4 w-4" />
       </ToggleGroupItem>
     </ToggleGroup>

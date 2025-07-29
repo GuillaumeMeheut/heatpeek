@@ -1,8 +1,11 @@
+import { DeviceEnum } from "@/app/[locale]/(insight)/[id]/(data)/heatmap/types";
+import { FilterDateEnum } from "@/components/Filters/types";
 import { type NextRequest, NextResponse } from "next/server";
 
 interface FilterRule {
   parameter: string;
   defaultValue: string;
+  allowedValues?: string[]; // Add allowed values for validation
   transformations?: Record<string, string>;
   routeSpecificTransformations?: Record<string, Record<string, string>>;
   routes?: {
@@ -16,6 +19,12 @@ const filterRules: FilterRule[] = [
   {
     parameter: "device",
     defaultValue: "desktop",
+    allowedValues: [
+      DeviceEnum.Desktop,
+      DeviceEnum.Tablet,
+      DeviceEnum.Mobile,
+      "all",
+    ], // Valid device values
     routeSpecificTransformations: {
       "/heatmap": {
         all: "desktop", // Convert "all" to "desktop" only for heatmap routes
@@ -37,6 +46,19 @@ const filterRules: FilterRule[] = [
     },
     routeSpecificDefaults: {
       "/dashboard": "all", // Dashboard defaults to "all" for url too
+    },
+  },
+  {
+    parameter: "date",
+    defaultValue: FilterDateEnum.Last24Hours,
+    allowedValues: [
+      FilterDateEnum.Last24Hours,
+      FilterDateEnum.Last7Days,
+      FilterDateEnum.Last30Days,
+      FilterDateEnum.Last90Days,
+    ], // Valid date values
+    routes: {
+      include: ["/(data)", "/heatmap", "/dashboard"], // Include dashboard routes
     },
   },
 ];
@@ -104,6 +126,17 @@ export function handleUrlFilters(request: NextRequest) {
       ) {
         const newValue = rule.transformations[currentValue];
         params.set(rule.parameter, newValue);
+        modified = true;
+      }
+
+      // Validate the value against allowed values - only for included routes
+      if (
+        rule.allowedValues &&
+        currentValue &&
+        rule.routes?.include && // Only validate if routes are explicitly included
+        !rule.allowedValues.includes(currentValue)
+      ) {
+        params.set(rule.parameter, defaultValue);
         modified = true;
       }
     }

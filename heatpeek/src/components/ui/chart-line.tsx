@@ -1,19 +1,10 @@
 "use client";
 
-import { TrendingUp } from "lucide-react";
-import {
-  CartesianGrid,
-  Line,
-  LineChart,
-  ResponsiveContainer,
-  XAxis,
-} from "recharts";
-
+import { CartesianGrid, Line, LineChart, XAxis } from "recharts";
 import {
   Card,
   CardContent,
   CardDescription,
-  CardFooter,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
@@ -23,38 +14,37 @@ import {
   ChartTooltip,
   ChartTooltipContent,
 } from "@/components/ui/chart";
-
-export const description = "A line chart";
-
-const chartData = [
-  { month: "January", desktop: 186 },
-  { month: "February", desktop: 305 },
-  { month: "March", desktop: 237 },
-  { month: "April", desktop: 73 },
-  { month: "May", desktop: 209 },
-  { month: "June", desktop: 214 },
-  { month: "January", desktop: 186 },
-  { month: "February", desktop: 305 },
-  { month: "March", desktop: 237 },
-  { month: "April", desktop: 73 },
-  { month: "May", desktop: 209 },
-  { month: "June", desktop: 214 },
-  { month: "January", desktop: 186 },
-  { month: "February", desktop: 305 },
-  { month: "March", desktop: 237 },
-  { month: "April", desktop: 73 },
-  { month: "May", desktop: 209 },
-  { month: "June", desktop: 214 },
-];
+import { FilterDateEnum } from "../Filters/types";
 
 const chartConfig = {
-  desktop: {
-    label: "Desktop",
+  pageViews: {
+    label: "Page Views",
     color: "var(--chart-1)",
   },
 } satisfies ChartConfig;
 
-export function ChartLineDefault() {
+export function ChartLineDefault({
+  dateRange,
+  data,
+}: {
+  dateRange: string;
+  data: { date: string; pageViews: number }[];
+}) {
+  const tickFormatter = (value: string) => {
+    const date = new Date(value);
+    if (dateRange === FilterDateEnum.Last24Hours)
+      return date.getHours() + ":00";
+    if (
+      dateRange === FilterDateEnum.Last7Days ||
+      dateRange === FilterDateEnum.Last30Days
+    )
+      return date.toLocaleDateString("en-US", {
+        month: "short",
+        day: "numeric",
+      });
+    return date.toLocaleDateString("en-US", { month: "short" }); // monthly
+  };
+
   return (
     <Card className="md:col-span-4 lg:col-span-5">
       <CardHeader>
@@ -63,30 +53,20 @@ export function ChartLineDefault() {
       </CardHeader>
       <CardContent>
         <ChartContainer config={chartConfig} className="max-h-[250px] w-full">
-          <LineChart
-            accessibilityLayer
-            data={chartData}
-            margin={{
-              left: 12,
-              right: 12,
-            }}
-          >
+          <LineChart data={data} margin={{ left: 12, right: 12 }}>
             <CartesianGrid vertical={false} />
             <XAxis
-              dataKey="month"
+              dataKey="date"
               tickLine={false}
               axisLine={false}
               tickMargin={8}
-              tickFormatter={(value) => value.slice(0, 3)}
+              tickFormatter={tickFormatter}
             />
-            <ChartTooltip
-              cursor={false}
-              content={<ChartTooltipContent hideLabel />}
-            />
+            <ChartTooltip cursor={false} content={<ChartTooltipContent />} />
             <Line
-              dataKey="desktop"
+              dataKey="pageViews"
               type="natural"
-              stroke="var(--color-desktop)"
+              stroke="var(--color-pageViews)"
               strokeWidth={2}
               dot={false}
             />
