@@ -28,49 +28,50 @@ export function FiltersUrl({
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const urlParam = searchParams.get("url");
-  const [selectedUrl, setSelectedUrl] = useState(urlParam || "all");
+  const isDashboard = pathname.includes("/dashboard");
+  const [selectedUrl, setSelectedUrl] = useState(
+    urlParam || (isDashboard ? "all" : undefined)
+  );
   const t = useI18n();
 
-  const isDashboard = pathname.includes("/dashboard");
-
   const setUrl = useCallback(
-    (url: string) => {
+    (url: string | undefined) => {
       setSelectedUrl(url);
       const params = new URLSearchParams(searchParams.toString());
-      params.set("url", url);
+      if (url && url !== "all") {
+        params.set("url", url);
+      } else {
+        params.delete("url");
+      }
       router.replace(`?${params.toString()}`);
     },
     [searchParams, router]
   );
 
   useEffect(() => {
-    if (
-      !isDashboard &&
-      urls &&
-      urls.length > 0 &&
-      (!urlParam || urlParam === "all")
-    ) {
-      // If not on dashboard and we have URLs, but no URL param or "all", set to first URL
+    if (!isDashboard && urls && urls.length > 0 && !urlParam) {
+      // If not on dashboard and we have URLs, but no URL param, set to first URL
       const firstUrl = urls[0];
       setUrl(firstUrl.path);
-    } else if (!urlParam && urls && urls.length > 0) {
-      // If no URL is set and we have URLs, set the first one (for dashboard)
+    } else if (!urlParam && urls && urls.length > 0 && !isDashboard) {
+      // If no URL is set and we have URLs, set the first one (for non-dashboard pages)
       const firstUrl = urls[0];
       setUrl(firstUrl.path);
     } else {
-      setUrl(urlParam || "all");
+      setUrl(urlParam || (isDashboard ? "all" : undefined));
     }
   }, [urlParam, urls, isDashboard, setUrl]);
 
   const handleUrlChange = (value: string) => {
-    setSelectedUrl(value);
+    const newUrl = value === "all" ? "all" : value;
+    setSelectedUrl(newUrl);
 
     // Update the query param
     const params = new URLSearchParams(searchParams.toString());
-    if (value === "all") {
-      params.delete("url");
+    if (newUrl && newUrl !== "all") {
+      params.set("url", newUrl);
     } else {
-      params.set("url", value);
+      params.delete("url");
     }
     router.replace(`?${params.toString()}`);
   };
@@ -85,9 +86,9 @@ export function FiltersUrl({
   return (
     <div className="flex items-center gap-2">
       <Select
-        value={selectedUrl}
+        value={selectedUrl || "all"}
         onValueChange={handleUrlChange}
-        defaultValue={selectedUrl}
+        defaultValue={selectedUrl || "all"}
       >
         <SelectTrigger className="w-[170px]">
           <SelectValue />

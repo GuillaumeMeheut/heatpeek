@@ -22,7 +22,7 @@ export default async function PageDashboard({
 }: {
   searchParams: {
     url?: string;
-    device?: DeviceEnum;
+    device?: DeviceEnum | undefined;
     date?: FilterDateEnum;
   };
   params: Promise<{ id: string }>;
@@ -39,12 +39,10 @@ export default async function PageDashboard({
 
   if (
     !date ||
-    !url ||
-    !device ||
-    (device !== DeviceEnum.Desktop &&
+    (device !== undefined &&
+      device !== DeviceEnum.Desktop &&
       device !== DeviceEnum.Mobile &&
-      device !== DeviceEnum.Tablet &&
-      device !== "all")
+      device !== DeviceEnum.Tablet)
   ) {
     return <div>Query params are not valid</div>;
   }
@@ -60,24 +58,28 @@ export default async function PageDashboard({
       path: url,
       device,
       browser: "chrome",
+      date,
     }),
     getClickCount({
       trackingId: result.tracking_id,
       path: url,
       device,
       browser: "chrome",
+      date,
     }),
     getAverageScrollDepth({
       trackingId: result.tracking_id,
       path: url,
       device,
       browser: "chrome",
+      date,
     }),
     getAverageTimeOnPage({
       trackingId: result.tracking_id,
       path: url,
       device,
       browser: "chrome",
+      date,
     }),
   ]);
 
@@ -86,12 +88,10 @@ export default async function PageDashboard({
     path: url,
     device,
     browser: "chrome",
-    dateRange: date,
+    date,
   });
 
   //barcharts engagement: pageviews clicks scroll depth rage clicks
-
-  //Linecharts pageview by split by date e.g if filter last 24 hours I split by 1 hour
 
   return (
     <div className="grid gap-4 md:grid-cols-4 lg:grid-cols-8 mb-6 ">

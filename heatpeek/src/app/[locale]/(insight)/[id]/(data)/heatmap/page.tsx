@@ -25,7 +25,11 @@ export default async function HeatmapPage({
   searchParams,
 }: {
   params: Promise<{ id: string }>;
-  searchParams: { url?: string; device?: DeviceEnum; type?: HeatmapType };
+  searchParams: {
+    url: string;
+    device?: DeviceEnum;
+    type?: HeatmapType;
+  };
 }) {
   const supabase = await createClient();
   const { user } = await getUser(supabase);
@@ -47,7 +51,6 @@ export default async function HeatmapPage({
 
   if (
     !url ||
-    url === "all" ||
     !device ||
     (device !== DeviceEnum.Desktop &&
       device !== DeviceEnum.Mobile &&

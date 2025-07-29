@@ -1,6 +1,6 @@
 import { DeviceEnum } from "@/app/[locale]/(insight)/[id]/(data)/heatmap/types";
 
-export type FilterDevice = DeviceEnum | "all";
+export type FilterDevice = DeviceEnum | undefined;
 
 export enum FilterDateEnum {
   Last24Hours = "1d",

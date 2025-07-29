@@ -30,13 +30,17 @@ export function FiltersDevice() {
     setSelectedDevice(device as FilterDevice);
   }, [searchParams, isDashboard]);
 
-  const handleDeviceChange = (value: FilterDevice) => {
+  const handleDeviceChange = (value: string) => {
     const newDevice = value || (isDashboard ? "all" : DeviceEnum.Desktop);
-    setSelectedDevice(newDevice);
+    setSelectedDevice(newDevice as FilterDevice);
 
     // Update URL
     const params = new URLSearchParams(searchParams.toString());
-    params.set("device", newDevice);
+    if (newDevice && newDevice !== "all") {
+      params.set("device", newDevice);
+    } else {
+      params.delete("device");
+    }
     router.replace(`?${params.toString()}`);
   };
 
@@ -47,7 +51,7 @@ export function FiltersDevice() {
       value={selectedDevice}
       onValueChange={handleDeviceChange}
     >
-      {isDashboard && <ToggleGroupItem value="all">All</ToggleGroupItem>}
+      {isDashboard && <ToggleGroupItem value={"all"}>All</ToggleGroupItem>}
       <ToggleGroupItem value={DeviceEnum.Desktop}>
         <Monitor className="h-4 w-4" />
       </ToggleGroupItem>
