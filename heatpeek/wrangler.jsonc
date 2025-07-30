@@ -37,8 +37,8 @@
   "d1_databases": [
     {
       "binding": "NEXT_TAG_CACHE_D1",
-      "database_id": "heatpeek-next-tag-cache",
-      "database_name": "heatpeek-next-tag-cache-name"
+      "database_id": "de3ef9da-2530-4dad-a423-5142c0ee9c9d",
+      "database_name": "heatpeek-next-tag-cache"
     }
   ],
   "env": {

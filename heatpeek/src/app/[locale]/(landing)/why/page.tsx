@@ -10,6 +10,8 @@ import {
 } from "lucide-react";
 import { getI18n } from "@locales/server";
 
+export const revalidate = false;
+
 export default async function Why() {
   const t = await getI18n();
 
