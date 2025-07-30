@@ -327,7 +327,7 @@ export default {
   },
   filters: {
     searchPages: "Rechercher des pages...",
-    allPages: "Toutes les Pages",
+    allPages: "Toutes les pages suivies",
     new: "Nouveau",
     manage: "Gérer",
     last24hours: "Dernières 24 heures",

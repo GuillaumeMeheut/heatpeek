@@ -35,6 +35,7 @@
 - [ ] Zod for types validation
 - [ ] Snapshot: Screen page security fetching link and img
 - [ ] Compress snapshot using lz-string
+- [ ] Use the queue from cloudflare worker for events processing
 
 ---
 
@@ -43,7 +44,6 @@
 - [ ] Build DOM tree / should also inline image and font
 - [ ] Screenshot snapshot is not full load
 - [ ] Implement is bounce
-- [ ] Implement new stats: time/page,
 - [ ] Send small data instead of full name
 - [ ] sync if we send snapshot or not dont send data
 
