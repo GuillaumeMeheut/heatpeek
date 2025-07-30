@@ -1,11 +1,21 @@
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Shield, Zap, BarChart2 } from "lucide-react";
 import Image from "next/image";
-import { getI18n } from "@locales/server";
+import { getI18n, getStaticParams } from "@locales/server";
+import { setStaticParamsLocale } from "next-international/server";
 
-export const revalidate = false;
+export function generateStaticParams() {
+  return getStaticParams();
+}
 
-export default async function Home() {
+export default async function Home({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}) {
+  const { locale } = await params;
+  setStaticParamsLocale(locale);
+
   const t = await getI18n();
 
   return (

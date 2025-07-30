@@ -25,7 +25,6 @@
 - [ ] Find a way to optimize large dataset of clicks bc of egress consumption(cachin for a day?)
 - [ ] Rename project to websites
 - [ ] rename fiels to use snake case
-- [ ] Add caching with Cloudflare R2
 
 ---
 

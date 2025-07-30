@@ -8,11 +8,21 @@ import {
   Server,
   Lock,
 } from "lucide-react";
-import { getI18n } from "@locales/server";
+import { getI18n, getStaticParams } from "@locales/server";
+import { setStaticParamsLocale } from "next-international/server";
 
-export const revalidate = false;
+export function generateStaticParams() {
+  return getStaticParams();
+}
 
-export default async function Why() {
+export default async function Why({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}) {
+  const { locale } = await params;
+  setStaticParamsLocale(locale);
+
   const t = await getI18n();
 
   return (
