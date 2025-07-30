@@ -41,6 +41,8 @@
     /* Metric colors from Metrics.tsx */
     --metric-1: 142 76% 36%; /* green-500 */
     --metric-2: 262 83% 58%; /* purple-500 */
+    --metric-3: 217 91% 48%; /* blue-500 */
+    --metric-4: 262 52% 47%; /* purple-500 */
 
     --radius: 0.5rem;
   }

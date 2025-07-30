@@ -6,13 +6,13 @@ import { createClient } from "@/lib/supabase/server";
 export default async function PageGetStarted({
   params,
 }: {
-  params: Promise<{ id: string }>;
+  params: { id: string };
 }) {
   const supabase = await createClient();
   const { user } = await getUser(supabase);
   if (!user) redirect("/signin");
 
-  const { id } = await params;
+  const { id } = params;
 
   const result = await getTrackingIdAndBaseUrl(supabase, id);
   if (!result) {

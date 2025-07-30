@@ -4,10 +4,10 @@ export default async function DashboardLayout({
   params,
   children,
 }: {
-  params: Promise<{ id: string }>;
+  params: { id: string };
   children: React.ReactNode;
 }) {
-  const { id } = await params;
+  const { id } = params;
   return (
     <>
       <Filters projectId={id} />
