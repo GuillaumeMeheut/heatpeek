@@ -1,5 +1,6 @@
 import { createClient } from "@clickhouse/client-web";
 import { FilterDateEnum } from "@/components/Filters/types";
+import { cache } from "react";
 
 // Common types
 type BaseQueryParams = {
@@ -110,46 +111,45 @@ export type ScrollDepth = {
 };
 
 // Query functions
-export const getClicks = async (
-  params: SnapshotQueryParams
-): Promise<RawClick[]> => {
-  const { conditions, queryParams } = buildConditions(params);
-  conditions.push(`snapshot_id = {snapshotId:UUID}`);
-  queryParams.snapshotId = params.snapshotId;
+export const getClicks = cache(
+  async (params: SnapshotQueryParams): Promise<RawClick[]> => {
+    const { conditions, queryParams } = buildConditions(params);
+    conditions.push(`snapshot_id = {snapshotId:UUID}`);
+    queryParams.snapshotId = params.snapshotId;
 
-  const query = `
+    const query = `
     SELECT erx, ery, selector
     FROM raw_clicks
     WHERE ${conditions.join(" AND ")}
   `;
 
-  return executeQuery<RawClick>(query, queryParams);
-};
+    return executeQuery<RawClick>(query, queryParams);
+  }
+);
 
-export const getRageClicks = async (
-  params: SnapshotQueryParams
-): Promise<RawClick[]> => {
-  const { conditions, queryParams } = buildConditions(params);
-  conditions.push(`snapshot_id = {snapshotId:UUID}`);
-  queryParams.snapshotId = params.snapshotId;
+export const getRageClicks = cache(
+  async (params: SnapshotQueryParams): Promise<RawClick[]> => {
+    const { conditions, queryParams } = buildConditions(params);
+    conditions.push(`snapshot_id = {snapshotId:UUID}`);
+    queryParams.snapshotId = params.snapshotId;
 
-  const query = `
+    const query = `
     SELECT erx, ery, selector
     FROM raw_rage_clicks
     WHERE ${conditions.join(" AND ")}
   `;
 
-  return executeQuery<RawClick>(query, queryParams);
-};
+    return executeQuery<RawClick>(query, queryParams);
+  }
+);
 
-export const getScrollDepth = async (
-  params: SnapshotQueryParams
-): Promise<ScrollDepth[]> => {
-  const { conditions, queryParams } = buildConditions(params);
-  conditions.push(`snapshot_id = {snapshotId:UUID}`);
-  queryParams.snapshotId = params.snapshotId;
+export const getScrollDepth = cache(
+  async (params: SnapshotQueryParams): Promise<ScrollDepth[]> => {
+    const { conditions, queryParams } = buildConditions(params);
+    conditions.push(`snapshot_id = {snapshotId:UUID}`);
+    queryParams.snapshotId = params.snapshotId;
 
-  const query = `
+    const query = `
     SELECT
       scroll_depth,
       count() AS total_views
@@ -158,34 +158,36 @@ export const getScrollDepth = async (
     GROUP BY scroll_depth
   `;
 
-  const rows = await executeQuery<RawScrollDepthRow>(query, queryParams);
-  return rows.map((row) => ({
-    scroll_depth: Number(row.scroll_depth),
-    views: Number(row.total_views),
-  }));
-};
+    const rows = await executeQuery<RawScrollDepthRow>(query, queryParams);
+    return rows.map((row) => ({
+      scroll_depth: Number(row.scroll_depth),
+      views: Number(row.total_views),
+    }));
+  }
+);
 
 // Helper function for pageviews logic
-export const getPageViews = async (
-  params: BaseQueryParams
-): Promise<number> => {
-  const { conditions, queryParams } = buildConditions(params, "date");
+export const getPageViews = cache(
+  async (params: BaseQueryParams): Promise<number> => {
+    const { conditions, queryParams } = buildConditions(params, "date");
 
-  const query = `
+    const query = `
     SELECT sum(views) AS total_views
     FROM aggregated_pageviews
     WHERE ${conditions.join(" AND ")}
   `;
 
-  return executeSingleValueQuery(query, queryParams, "total_views");
-};
+    return executeSingleValueQuery(query, queryParams, "total_views");
+  }
+);
 
-export const getPageViewsByBrowser = async (
-  params: BaseQueryParams
-): Promise<{ browser: string; count: number }[]> => {
-  const { conditions, queryParams } = buildConditions(params, "date");
+export const getPageViewsByBrowser = cache(
+  async (
+    params: BaseQueryParams
+  ): Promise<{ browser: string; count: number }[]> => {
+    const { conditions, queryParams } = buildConditions(params, "date");
 
-  const query = `
+    const query = `
     SELECT browser, sum(views) AS browser_count
     FROM aggregated_pageviews
     WHERE ${conditions.join(" AND ")}
@@ -193,18 +195,19 @@ export const getPageViewsByBrowser = async (
     ORDER BY browser_count DESC
   `;
 
-  const result = await executeQuery<{
-    browser: string;
-    browser_count: number;
-  }>(query, queryParams);
+    const result = await executeQuery<{
+      browser: string;
+      browser_count: number;
+    }>(query, queryParams);
 
-  return result.map((r) => ({
-    browser: r.browser,
-    count: Number(r.browser_count),
-  }));
-};
+    return result.map((r) => ({
+      browser: r.browser,
+      count: Number(r.browser_count),
+    }));
+  }
+);
 
-export const getPageViewsTimeseries = async (params: BaseQueryParams) => {
+export const getPageViewsTimeseries = cache(async (params: BaseQueryParams) => {
   const { conditions, queryParams } = buildConditions(params, "date");
 
   // Determine grouping based on date range
@@ -228,7 +231,7 @@ export const getPageViewsTimeseries = async (params: BaseQueryParams) => {
     date: r.period,
     pageViews: Number(r.total_views),
   }));
-};
+});
 
 const getGroupExpr = (date?: FilterDateEnum) => {
   switch (date) {
@@ -244,44 +247,44 @@ const getGroupExpr = (date?: FilterDateEnum) => {
   }
 };
 
-export const getClickCount = async (
-  params: BaseQueryParams
-): Promise<number> => {
-  const { conditions, queryParams } = buildConditions(params);
+export const getClickCount = cache(
+  async (params: BaseQueryParams): Promise<number> => {
+    const { conditions, queryParams } = buildConditions(params);
 
-  const query = `
+    const query = `
     SELECT count() AS click_count
     FROM raw_clicks
     WHERE ${conditions.join(" AND ")}
   `;
 
-  return executeSingleValueQuery(query, queryParams, "click_count");
-};
+    return executeSingleValueQuery(query, queryParams, "click_count");
+  }
+);
 
-export const getAverageScrollDepth = async (
-  params: BaseQueryParams
-): Promise<number> => {
-  const { conditions, queryParams } = buildConditions(params);
+export const getAverageScrollDepth = cache(
+  async (params: BaseQueryParams): Promise<number> => {
+    const { conditions, queryParams } = buildConditions(params);
 
-  const query = `
+    const query = `
     SELECT round(avg(scroll_depth), 2) AS avg_scroll_depth
     FROM raw_scroll_depth
     WHERE ${conditions.join(" AND ")}
   `;
 
-  return executeSingleValueQuery(query, queryParams, "avg_scroll_depth");
-};
+    return executeSingleValueQuery(query, queryParams, "avg_scroll_depth");
+  }
+);
 
-export const getAverageTimeOnPage = async (
-  params: BaseQueryParams
-): Promise<number> => {
-  const { conditions, queryParams } = buildConditions(params);
+export const getAverageTimeOnPage = cache(
+  async (params: BaseQueryParams): Promise<number> => {
+    const { conditions, queryParams } = buildConditions(params);
 
-  const query = `
+    const query = `
     SELECT round(avg(duration), 0) AS avg_time_on_page
     FROM raw_times_on_page
     WHERE ${conditions.join(" AND ")}
   `;
 
-  return executeSingleValueQuery(query, queryParams, "avg_time_on_page");
-};
+    return executeSingleValueQuery(query, queryParams, "avg_time_on_page");
+  }
+);

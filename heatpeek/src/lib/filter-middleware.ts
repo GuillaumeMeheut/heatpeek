@@ -58,7 +58,7 @@ const filterRules: FilterRule[] = [
   },
   {
     parameter: "browser",
-    defaultValue: FilterBrowserEnum.Chrome,
+    defaultValue: undefined,
     allowedValues: [
       FilterBrowserEnum.Chrome,
       FilterBrowserEnum.Safari,

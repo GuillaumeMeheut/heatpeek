@@ -12,27 +12,19 @@ export function FiltersBrowser() {
   const pathname = usePathname();
   const isDashboard = pathname.includes("/dashboard");
 
-  // Get initial browser from URL params
-  const browserParam = searchParams.get("browser");
-  const initialBrowser =
-    browserParam || (isDashboard ? "all" : FilterBrowserEnum.Chrome);
-
   // State for selected browser
-  const [selectedBrowser, setSelectedBrowser] = useState<FilterBrowser>(
-    initialBrowser as FilterBrowser
-  );
+  const [selectedBrowser, setSelectedBrowser] =
+    useState<FilterBrowser>(undefined);
 
   // Update state when URL params change
   useEffect(() => {
     const browserParam = searchParams.get("browser");
-    const browser =
-      browserParam || (isDashboard ? "all" : FilterBrowserEnum.Chrome);
+    const browser = browserParam || "all";
     setSelectedBrowser(browser as FilterBrowser);
   }, [searchParams, isDashboard]);
 
   const handleBrowserChange = (value: string) => {
-    const newBrowser =
-      value || (isDashboard ? "all" : FilterBrowserEnum.Chrome);
+    const newBrowser = value || "all";
     setSelectedBrowser(newBrowser as FilterBrowser);
 
     // Update URL
@@ -52,7 +44,7 @@ export function FiltersBrowser() {
       value={selectedBrowser}
       onValueChange={handleBrowserChange}
     >
-      {isDashboard && <ToggleGroupItem value={"all"}>All</ToggleGroupItem>}
+      <ToggleGroupItem value={"all"}>All</ToggleGroupItem>
       <ToggleGroupItem value={FilterBrowserEnum.Chrome}>
         <Chrome className="h-4 w-4" />
       </ToggleGroupItem>
