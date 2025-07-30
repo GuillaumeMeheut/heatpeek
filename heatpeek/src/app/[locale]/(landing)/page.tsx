@@ -3,6 +3,8 @@ import { ArrowRight, Shield, Zap, BarChart2 } from "lucide-react";
 import Image from "next/image";
 import { getI18n } from "@locales/server";
 
+export const revalidate = false;
+
 export default async function Home() {
   const t = await getI18n();
 
