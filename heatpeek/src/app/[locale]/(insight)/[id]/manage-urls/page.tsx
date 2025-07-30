@@ -8,11 +8,11 @@ import AddUrl from "./AddUrl";
 export default async function ManagePages({
   params,
 }: {
-  params: Promise<{ id: string }>;
+  params: { id: string };
 }) {
   const supabase = await createClient();
 
-  const { id } = await params;
+  const { id } = params;
   const t = await getI18n();
 
   const urls = await getUrlsAndConfig(supabase, id);

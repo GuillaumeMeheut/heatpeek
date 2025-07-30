@@ -19,27 +19,29 @@ import {
 } from "@/lib/clickhouse/queries";
 import { DeviceEnum, HeatmapType, ParsedDomDataType } from "./types";
 import { getClickedElements } from "./utils";
-import { FilterDateEnum } from "@/components/Filters/types";
+import { FilterBrowserEnum, FilterDateEnum } from "@/components/Filters/types";
 
 export default async function HeatmapPage({
   params,
   searchParams,
 }: {
-  params: Promise<{ id: string }>;
+  params: { id: string };
   searchParams: {
     url: string;
     device?: DeviceEnum;
     type?: HeatmapType;
     date?: FilterDateEnum;
+    browser?: FilterBrowserEnum;
   };
 }) {
   const supabase = await createClient();
   const { user } = await getUser(supabase);
   if (!user) redirect("/signin");
-  const { id: projectId } = await params;
+  const { id: projectId } = params;
   const url = searchParams.url;
   const device = searchParams.device;
   const date = searchParams.date;
+  const browser = searchParams.browser;
 
   let type = searchParams.type;
 
@@ -90,7 +92,7 @@ export default async function HeatmapPage({
       path: url,
       snapshotId: snapshot.id,
       device,
-      browser: "chrome",
+      browser,
       date,
     }),
     getRageClicks({
@@ -98,7 +100,7 @@ export default async function HeatmapPage({
       path: url,
       snapshotId: snapshot.id,
       device,
-      browser: "chrome",
+      browser,
       date,
     }),
     getScrollDepth({
@@ -106,7 +108,7 @@ export default async function HeatmapPage({
       path: url,
       snapshotId: snapshot.id,
       device,
-      browser: "chrome",
+      browser,
       date,
     }),
   ]);

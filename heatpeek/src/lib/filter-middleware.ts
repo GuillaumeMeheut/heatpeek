@@ -1,5 +1,5 @@
 import { DeviceEnum } from "@/app/[locale]/(insight)/[id]/(data)/heatmap/types";
-import { FilterDateEnum } from "@/components/Filters/types";
+import { FilterDateEnum, FilterBrowserEnum } from "@/components/Filters/types";
 import { type NextRequest, NextResponse } from "next/server";
 
 interface FilterRule {
@@ -54,6 +54,23 @@ const filterRules: FilterRule[] = [
     ], // Valid date values
     routes: {
       include: ["/(data)", "/heatmap", "/dashboard"], // Include dashboard routes
+    },
+  },
+  {
+    parameter: "browser",
+    defaultValue: FilterBrowserEnum.Chrome,
+    allowedValues: [
+      FilterBrowserEnum.Chrome,
+      FilterBrowserEnum.Safari,
+      FilterBrowserEnum.Firefox,
+      FilterBrowserEnum.Edge,
+      FilterBrowserEnum.Other,
+    ], // Valid browser values
+    routes: {
+      include: ["/(data)", "/heatmap", "/dashboard"], // Include dashboard routes
+    },
+    routeSpecificDefaults: {
+      "/dashboard": undefined, // Dashboard defaults to undefined (no filter)
     },
   },
 ];

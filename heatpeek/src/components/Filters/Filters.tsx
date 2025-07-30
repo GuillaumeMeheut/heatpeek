@@ -6,6 +6,7 @@ import { getUrls } from "@/lib/supabase/queries";
 import { FiltersUrl } from "./FiltersUrl";
 import { FiltersDate } from "./FiltersDate";
 import { FiltersDevice } from "./FiltersDevice";
+import { FiltersBrowser } from "./FiltersBrowser";
 
 export async function Filters({ projectId }: { projectId: string }) {
   const supabase = createClient();
@@ -18,6 +19,7 @@ export async function Filters({ projectId }: { projectId: string }) {
       <FiltersUrl urls={urls} projectId={projectId} />
       <FiltersDate />
       <FiltersDevice />
+      <FiltersBrowser />
       <div className="ml-auto">
         <Button className="bg-primary hover:bg-primary/90">
           <Download className="w-4 h-4 mr-2" />
