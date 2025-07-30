@@ -323,7 +323,7 @@ export default {
   },
   filters: {
     searchPages: "Search pages...",
-    allPages: "All Pages",
+    allPages: "All tracked pages",
     new: "New",
     manage: "Manage",
     last24hours: "Last 24 hours",
