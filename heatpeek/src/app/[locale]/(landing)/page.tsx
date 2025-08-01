@@ -47,7 +47,7 @@ export default async function Home({
             <div className="relative z-10 mx-auto w-full max-w-3xl">
               <div className="rounded-lg overflow-hidden shadow-2xl">
                 <Image
-                  src="/dashboard-1.jpg"
+                  src="/heatmap-2.png"
                   alt="Dashboard Overview"
                   width={1200}
                   height={800}
@@ -60,7 +60,7 @@ export default async function Home({
             <div className="absolute z-20 top-1/4 right-0 w-full max-w-2xl transform translate-x-1/4">
               <div className="rounded-lg overflow-hidden shadow-2xl">
                 <Image
-                  src="/dashboard-1.jpg"
+                  src="/dashboard.png"
                   alt="Click Analytics"
                   width={1000}
                   height={600}
@@ -73,7 +73,7 @@ export default async function Home({
             <div className="absolute z-30 top-1/2 left-0 w-full max-w-2xl transform -translate-x-1/4">
               <div className="rounded-lg overflow-hidden shadow-2xl">
                 <Image
-                  src="/dashboard-1.jpg"
+                  src="/heatmap-1.png"
                   alt="Scroll Analytics"
                   width={1000}
                   height={600}
