@@ -6,6 +6,7 @@ import {
   SnapshotsRow,
   UserProfileRow,
 } from "../types/database";
+import { snapshotKey } from "../KV/key";
 
 export type ProjectConfigResult = {
   id: string;
@@ -125,6 +126,77 @@ export class SupabaseService {
 
     return data.id;
   }
+
+  async getSnapshotIdsBulk(
+    items: { trackingId: string; path: string; device: string }[]
+  ): Promise<Map<string, string | null>> {
+    if (!items.length) return new Map();
+
+    // Deduplicate based on KV-safe keys
+    const uniqueKeys = new Map<
+      string,
+      { trackingId: string; path: string; device: string }
+    >();
+    for (const i of items) {
+      const key = snapshotKey(i.trackingId, i.path, i.device);
+      if (!uniqueKeys.has(key)) {
+        uniqueKeys.set(key, i);
+      }
+    }
+
+    const uniqueItems = Array.from(uniqueKeys.values());
+
+    // Bulk query from Supabase
+    const { data, error } = await this.supabase
+      .from("snapshots")
+      .select(
+        `
+        id,
+        device,
+        urls!inner(
+          tracking_id,
+          path
+        )
+      `
+      )
+      .eq("is_outdated", false)
+      .in(
+        "device",
+        uniqueItems.map((i) => i.device)
+      )
+      .in(
+        "urls.tracking_id",
+        uniqueItems.map((i) => i.trackingId)
+      )
+      .in(
+        "urls.path",
+        uniqueItems.map((i) => i.path)
+      );
+
+    if (error) {
+      console.error("Supabase error getSnapshotIdsBulk:", error);
+      // Return null for all keys if query fails
+      return new Map(Array.from(uniqueKeys.keys()).map((k) => [k, null]));
+    }
+
+    // Create a map with KV-safe keys
+    const resultMap = new Map<string, string | null>();
+    for (const row of data || []) {
+      // @ts-ignore
+      const key = snapshotKey(row.urls.tracking_id, row.urls.path, row.device);
+      resultMap.set(key, row.id);
+    }
+
+    // Fill in missing keys as null
+    for (const key of uniqueKeys.keys()) {
+      if (!resultMap.has(key)) {
+        resultMap.set(key, null);
+      }
+    }
+
+    return resultMap;
+  }
+
   async getSnapshotInfos(
     trackingId: string,
     path: string,

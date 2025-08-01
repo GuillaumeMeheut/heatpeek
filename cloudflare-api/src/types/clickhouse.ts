@@ -5,79 +5,61 @@ export enum ClickHouseError {
   INVALID_DATA = "INVALID_DATA",
 }
 
-export type ClickHouseEvent = {
+// Base type for common fields across all ClickHouse events
+export type BaseClickHouseEvent = {
   snapshot_id: string;
   tracking_id: string;
   path: string;
   device: string;
-  selector: string;
-  erx: number;
-  ery: number;
   browser: string;
   os: string;
   timestamp: string;
 };
 
-export type RageClickEvent = {
-  snapshot_id: string;
-  tracking_id: string;
-  path: string;
-  device: string;
+export type ClickEvent = BaseClickHouseEvent & {
   selector: string;
   erx: number;
   ery: number;
-  browser: string;
-  os: string;
-  timestamp: string;
 };
 
-export type ScrollDepthEvent = {
-  snapshot_id: string;
-  tracking_id: string;
-  path: string;
-  device: string;
-  browser: string;
-  os: string;
-  timestamp: string;
+export type RageClickEvent = BaseClickHouseEvent & {
+  selector: string;
+  erx: number;
+  ery: number;
+};
+
+export type ScrollDepthEvent = BaseClickHouseEvent & {
   scroll_depth: number;
 };
 
-export type EngagementEvent = {
-  snapshot_id: string;
-  tracking_id: string;
-  path: string;
-  device: string;
-  browser: string;
-  os: string;
-  timestamp: string;
+export type EngagementEvent = BaseClickHouseEvent & {
   duration: number;
 };
 
-export type PageViewEvent = {
-  snapshot_id: string;
-  tracking_id: string;
-  path: string;
-  device: string;
-  browser: string;
-  os: string;
-  timestamp: string;
+export type PageViewEvent = BaseClickHouseEvent & {
   referrer: string;
   is_bounce: boolean;
 };
 
-export type EventType =
-  | "click"
-  | "rage_click"
-  | "scroll_depth"
-  | "engagement"
-  | "page_view";
+// Event type constants for better performance
+export const EVENT_TYPES = {
+  CLICK: "click",
+  RAGE_CLICK: "rage_click",
+  SCROLL_DEPTH: "scroll_depth",
+  ENGAGEMENT: "engagement",
+  PAGE_VIEW: "page_view",
+} as const;
 
+export type EventType = (typeof EVENT_TYPES)[keyof typeof EVENT_TYPES];
+
+// Base type for incoming event data
 export type BaseEvent = {
   type: EventType;
   timestamp: string;
 };
 
-export type ClickEvent = BaseEvent & {
+// Incoming event data types
+export type ClickEventData = BaseEvent & {
   type: "click";
   selector: string;
   erx: number;
@@ -107,9 +89,69 @@ export type PageViewEventData = BaseEvent & {
   referrer: string;
 };
 
+// Union type for all incoming events
 export type MultiEvent =
-  | ClickEvent
+  | ClickEventData
   | RageClickEventData
   | ScrollDepthEventData
   | EngagementEventData
   | PageViewEventData;
+
+// Optimized types for batch processing
+export type EventMetadata = {
+  trackingId: string;
+  path: string;
+  browser: string;
+  device: string;
+  os: string;
+  timestamp: string;
+};
+
+export type BatchedEvent<T> = {
+  event: T;
+  metadata: EventMetadata;
+};
+
+// Type guards for better performance
+export const isClickEvent = (event: MultiEvent): event is ClickEventData =>
+  event.type === EVENT_TYPES.CLICK;
+
+export const isRageClickEvent = (
+  event: MultiEvent
+): event is RageClickEventData => event.type === EVENT_TYPES.RAGE_CLICK;
+
+export const isScrollDepthEvent = (
+  event: MultiEvent
+): event is ScrollDepthEventData => event.type === EVENT_TYPES.SCROLL_DEPTH;
+
+export const isEngagementEvent = (
+  event: MultiEvent
+): event is EngagementEventData => event.type === EVENT_TYPES.ENGAGEMENT;
+
+export const isPageViewEvent = (
+  event: MultiEvent
+): event is PageViewEventData => event.type === EVENT_TYPES.PAGE_VIEW;
+
+// Optimized event grouping for batch processing
+export type EventGroups = {
+  clicks: ClickEventData[];
+  rageClicks: RageClickEventData[];
+  scrollDepth: ScrollDepthEventData[];
+  engagement: EngagementEventData[];
+  pageViews: PageViewEventData[];
+};
+
+// Type for the queue message with optimized structure
+export type QueueEventMessage = {
+  type: "event";
+  data: EventMetadata & {
+    events: MultiEvent[];
+  };
+};
+
+// Extended types for events with metadata (used in batch processing)
+export type ExtendedPageViewEvent = PageViewEventData & EventMetadata;
+export type ExtendedClickEvent = ClickEventData & EventMetadata;
+export type ExtendedRageClickEvent = RageClickEventData & EventMetadata;
+export type ExtendedScrollDepthEvent = ScrollDepthEventData & EventMetadata;
+export type ExtendedEngagementEvent = EngagementEventData & EventMetadata;

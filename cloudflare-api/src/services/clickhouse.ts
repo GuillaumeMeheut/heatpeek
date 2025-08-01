@@ -1,6 +1,6 @@
 import { createClient } from "@clickhouse/client-web";
 import type {
-  ClickHouseEvent,
+  ClickEvent,
   PageViewEvent,
   RageClickEvent,
   ScrollDepthEvent,
@@ -25,12 +25,6 @@ export class ClickHouseService {
       compression: {
         response: true,
         request: false,
-      },
-      clickhouse_settings: {
-        async_insert: 1,
-        wait_for_async_insert: 1,
-        async_insert_max_data_size: "1000000", // 1MB
-        async_insert_busy_timeout_ms: 1000,
       },
     });
   }
@@ -67,7 +61,7 @@ export class ClickHouseService {
   }
 
   async insertClicks(
-    clicks: ClickHouseEvent[],
+    clicks: ClickEvent[],
     maxRetries: number = 3,
     initialDelayMs: number = 200
   ): Promise<boolean | ClickHouseError> {
@@ -150,7 +144,7 @@ export class ClickHouseService {
     );
   }
 
-  async insertPageView(
+  async insertPageViews(
     pageViews: PageViewEvent[]
   ): Promise<boolean | ClickHouseError> {
     try {
@@ -159,7 +153,7 @@ export class ClickHouseService {
       }
       await this.client.insert({
         table: "raw_pageviews",
-        values: [pageViews],
+        values: pageViews,
         format: "JSONEachRow",
       });
       return true;
@@ -194,6 +188,75 @@ export class ClickHouseService {
     } catch (error) {
       console.error("ClickHouse error getTotalPageviews:", error);
       throw new Error(error as string);
+    }
+  }
+
+  async insertAllEvents(
+    clicks: ClickEvent[],
+    rageClicks: RageClickEvent[],
+    scrollDepth: ScrollDepthEvent[],
+    engagement: EngagementEvent[],
+    pageViews: PageViewEvent[]
+  ): Promise<boolean | ClickHouseError> {
+    try {
+      const operations = [];
+
+      if (clicks.length > 0) {
+        operations.push(
+          this.client.insert({
+            table: "raw_clicks",
+            values: clicks,
+            format: "JSONEachRow",
+          })
+        );
+      }
+
+      if (rageClicks.length > 0) {
+        operations.push(
+          this.client.insert({
+            table: "raw_rage_clicks",
+            values: rageClicks,
+            format: "JSONEachRow",
+          })
+        );
+      }
+
+      if (scrollDepth.length > 0) {
+        operations.push(
+          this.client.insert({
+            table: "raw_scroll_depth",
+            values: scrollDepth,
+            format: "JSONEachRow",
+          })
+        );
+      }
+
+      if (engagement.length > 0) {
+        operations.push(
+          this.client.insert({
+            table: "raw_times_on_page",
+            values: engagement,
+            format: "JSONEachRow",
+          })
+        );
+      }
+
+      if (pageViews.length > 0) {
+        operations.push(
+          this.client.insert({
+            table: "raw_pageviews",
+            values: pageViews,
+            format: "JSONEachRow",
+          })
+        );
+      }
+
+      // Execute all operations in parallel
+      await Promise.all(operations);
+      return true;
+    } catch (error) {
+      console.error("ClickHouse error insertAllEvents:", error);
+      return ClickHouseError.QUERY_ERROR;
     }
   }
 

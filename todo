@@ -25,6 +25,7 @@
 - [ ] Find a way to optimize large dataset of clicks bc of egress consumption(cachin for a day?)
 - [ ] Rename project to websites
 - [ ] rename fiels to use snake case
+- [ ] insert snapshot id in KV at snapshot creation/update/deletion
 
 ---
 

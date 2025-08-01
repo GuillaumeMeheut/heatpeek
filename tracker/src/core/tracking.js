@@ -15,14 +15,14 @@ import { sendPageview } from "./tracking/pageviews";
 export function initializeTracking(config) {
   if (!shouldTrack(config)) return;
 
+  startBufferFlush(config);
+
   sendPageview(config);
 
   setupSnapshotLogic(config);
   setupClickTracking();
   setupScrollTracking();
   setupTimeOnPageTracking();
-
-  startBufferFlush(config);
 }
 
 function shouldTrack(config) {
@@ -59,9 +59,9 @@ export function flushBuffer() {
   const json = JSON.stringify(payload);
 
   if (navigator.sendBeacon) {
-    navigator.sendBeacon(`${currentConfig.endpointAPI}/api/event/events`, json);
+    navigator.sendBeacon(`${currentConfig.endpointAPI}/api/event`, json);
   } else {
-    fetch(`${currentConfig.endpointAPI}/api/event/events`, {
+    fetch(`${currentConfig.endpointAPI}/api/event`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: json,
