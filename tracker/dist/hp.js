@@ -487,37 +487,23 @@
     engagementSent = false;
   }
   function sendPageview(config2) {
-    const payload = {
-      trackingId: config2.trackingId,
-      path: config2.path,
-      device: config2.device,
-      browser: config2.browser,
-      os: config2.os,
+    const buffer = getEventBuffer();
+    buffer.push({
+      type: "page_view",
       referrer: config2.referrer,
-      timestamp: (/* @__PURE__ */ new Date()).toISOString(),
-      is_bounce: false
-    };
-    if (navigator.sendBeacon) {
-      navigator.sendBeacon(
-        `${config2.endpointAPI}/api/event/pageview`,
-        JSON.stringify(payload)
-      );
-    } else {
-      fetch(`${config2.endpointAPI}/api/event/pageview`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload)
-      });
-    }
+      is_bounce: false,
+      timestamp: (/* @__PURE__ */ new Date()).toISOString()
+    });
+    flushBuffer();
   }
   function initializeTracking(config2) {
     if (!shouldTrack(config2)) return;
+    startBufferFlush(config2);
     sendPageview(config2);
     setupSnapshotLogic(config2);
     setupClickTracking();
     setupScrollTracking();
     setupTimeOnPageTracking();
-    startBufferFlush(config2);
   }
   function shouldTrack(config2) {
     const pageConfig = config2.data;
@@ -547,9 +533,9 @@
     };
     const json = JSON.stringify(payload);
     if (navigator.sendBeacon) {
-      navigator.sendBeacon(`${currentConfig.endpointAPI}/api/event/events`, json);
+      navigator.sendBeacon(`${currentConfig.endpointAPI}/api/event`, json);
     } else {
-      fetch(`${currentConfig.endpointAPI}/api/event/events`, {
+      fetch(`${currentConfig.endpointAPI}/api/event`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: json

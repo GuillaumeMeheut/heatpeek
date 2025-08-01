@@ -1,5 +1,6 @@
 import type { KVNamespace } from "@cloudflare/workers-types";
 import type { BrowserWorker } from "@cloudflare/puppeteer";
+import type { Queue } from "@cloudflare/workers-types";
 
 interface Env {
   SUPABASE_URL: string;
@@ -12,6 +13,7 @@ interface Env {
   CLICKHOUSE_USERNAME: string;
   CLICKHOUSE_PASSWORD: string;
   MYBROWSER: BrowserWorker;
+  "heatpeek-events": Queue;
 }
 
 export { Env };

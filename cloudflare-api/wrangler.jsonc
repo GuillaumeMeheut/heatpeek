@@ -16,7 +16,23 @@
   "compatibility_flags": ["nodejs_compat"],
   "triggers": {
     "crons": ["0 2 * * *"]
+  },
+  "queues": {
+    "producers": [
+      {
+        "queue": "heatpeek-events",
+        "binding": "heatpeek-events"
+      }
+    ],
+    "consumers": [
+      {
+        "queue": "heatpeek-events",
+        "max_batch_size": 100,
+        "max_batch_timeout": 30
+      }
+    ]
   }
+
   // "vars": {
   //   "MY_VAR": "my-variable"
   // },
