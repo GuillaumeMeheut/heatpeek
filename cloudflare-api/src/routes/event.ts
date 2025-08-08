@@ -2,27 +2,42 @@ import { Hono } from "hono";
 import { cors } from "hono/cors";
 import type { Env } from "../env";
 import type { QueueEventMessage } from "../types/clickhouse";
+import {
+  getBrowserFromUserAgent,
+  getDeviceFromUserAgent,
+  getOsFromUserAgent,
+  detectBot,
+} from "../utils/userAgent";
 
 const router = new Hono<{ Bindings: Env }>();
 
 router.post("/", cors(), async (c) => {
   try {
-    const { trackingId, path, browser, device, os, timestamp, events } =
-      await c.req.json();
+    const { trackingId, path, events } = await c.req.json();
 
     if (
       !trackingId ||
       !path ||
-      !browser ||
-      !device ||
-      !os ||
-      !timestamp ||
       !events ||
       !Array.isArray(events) ||
       events.length === 0
     ) {
       return c.body(null, 204);
     }
+
+    // Get User-Agent from request headers
+    const userAgent = c.req.header("User-Agent") || "";
+
+    // Detect bot and reject if bot
+    if (detectBot(userAgent)) {
+      return c.body(null, 204);
+    }
+
+    // Detect browser, device, and OS from User-Agent
+    const browser = getBrowserFromUserAgent(userAgent);
+    const device = getDeviceFromUserAgent(userAgent);
+    const os = getOsFromUserAgent(userAgent);
+    const timestamp = new Date().toISOString();
 
     // Create unified queue message
     const queueMessage: QueueEventMessage = {

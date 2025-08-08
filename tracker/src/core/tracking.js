@@ -27,7 +27,6 @@ export function initializeTracking(config) {
 
 function shouldTrack(config) {
   const pageConfig = config.data;
-  if (config.device === "large-desktop") return false;
   if (pageConfig.usage_exceeded) return false;
   return true;
 }
@@ -49,11 +48,7 @@ export function flushBuffer() {
   const payload = {
     trackingId: currentConfig.trackingId,
     path: currentConfig.path,
-    device: currentConfig.device,
-    browser: currentConfig.browser,
-    os: currentConfig.os,
     events: eventBuffer.splice(0),
-    timestamp: new Date().toISOString(),
   };
 
   const json = JSON.stringify(payload);

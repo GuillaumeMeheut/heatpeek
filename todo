@@ -23,7 +23,6 @@
 - [ ] Implement an example dashboard, open to everyone with static data
 - [ ] Use KV for active snapshot dom_data
 - [ ] Find a way to optimize large dataset of clicks bc of egress consumption(cachin for a day?)
-- [ ] Rename project to websites
 - [ ] rename fiels to use snake case
 - [ ] insert snapshot id in KV at snapshot creation/update/deletion
 
@@ -35,7 +34,6 @@
 - [ ] Zod for types validation
 - [ ] Snapshot: Screen page security fetching link and img
 - [ ] Compress snapshot using lz-string
-- [ ] Use the queue from cloudflare worker for events processing
 
 ---
 

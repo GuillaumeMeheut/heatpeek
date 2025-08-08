@@ -14,7 +14,16 @@ function buildTracker() {
       console.error("❌ Build failed:", error);
       return;
     }
-    console.log("✅ Build completed");
+    const filePath = path.join(DIST_DIR, "hp.js");
+    if (fs.existsSync(filePath)) {
+      console.log(
+        "✅ Build completed with a size of",
+        (fs.statSync(filePath).size / 1024).toFixed(2),
+        "KB"
+      );
+    } else {
+      console.log("✅ Build completed but file not found");
+    }
   });
 }
 

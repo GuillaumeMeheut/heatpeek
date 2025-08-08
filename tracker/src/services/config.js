@@ -4,19 +4,13 @@ export const config = {
   endpoint: null,
   trackingId: null,
   path: null,
-  device: null,
-  browser: null,
-  os: null,
   referrer: null,
 
-  init(endpointAPI, endpoint, trackingId, path, device, browser, os, referrer) {
+  init(endpointAPI, endpoint, trackingId, path, referrer) {
     this.endpointAPI = endpointAPI;
     this.endpoint = endpoint;
     this.trackingId = trackingId;
     this.path = path;
-    this.device = device;
-    this.browser = browser;
-    this.os = os;
     this.referrer = referrer;
   },
 

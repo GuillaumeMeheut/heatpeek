@@ -1,5 +1,3 @@
-import { deviceFieldMap } from "../../utils/getDevice";
-
 let navigationHandler;
 let timeoutId;
 
@@ -43,9 +41,9 @@ export function teardownSnapshotLogic() {
 }
 
 function shouldSendSnapshot(config) {
-  if (config.browser !== "chrome") return false;
+  // Check if snapshot_update is true for the current device
   const pageConfig = config.data;
-  return !!pageConfig?.page_config?.[deviceFieldMap[config.device]];
+  return !!pageConfig?.page_config?.snapshot_update;
 }
 
 function sendSnapshot(config) {
@@ -54,9 +52,6 @@ function sendSnapshot(config) {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
       trackingId: config.trackingId,
-      device: config.device,
-      browser: config.browser,
-      os: config.os,
       url: window.location.href,
       snapshot: captureSnapshot(),
     }),

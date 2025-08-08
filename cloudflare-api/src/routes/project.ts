@@ -8,6 +8,7 @@ import {
   configKey,
   snapshotKey,
 } from "../KV/key";
+import { detectBot, getDeviceFromUserAgent } from "../utils/userAgent";
 
 const router = new Hono<{ Bindings: Env }>();
 
@@ -16,6 +17,40 @@ const CACHE_HEADERS = {
   "X-Source": "supabase",
 };
 
+// Filter config to only include the relevant update flag as snapshot_update
+function filterConfigByDevice(config: any, device: string) {
+  if (!config || !config.page_config) {
+    return config;
+  }
+
+  const deviceFieldMap = {
+    desktop: "update_snap_desktop",
+    tablet: "update_snap_tablet",
+    mobile: "update_snap_mobile",
+  } as const;
+
+  const updateField = deviceFieldMap[device as keyof typeof deviceFieldMap];
+  const shouldUpdate = config.page_config[updateField] || false;
+
+  // Create a filtered page_config with only the relevant update flag as snapshot_update
+  const {
+    update_snap_desktop,
+    update_snap_tablet,
+    update_snap_mobile,
+    ...otherConfig
+  } = config.page_config;
+
+  const filteredPageConfig = {
+    ...otherConfig,
+    snapshot_update: shouldUpdate,
+  };
+
+  return {
+    ...config,
+    page_config: filteredPageConfig,
+  };
+}
+
 router.get("/config", cors(), async (c) => {
   const trackingId = c.req.query("id");
   const path = c.req.query("p");
@@ -23,6 +58,15 @@ router.get("/config", cors(), async (c) => {
   if (!trackingId || !path) {
     return c.body(null, 204);
   }
+
+  // Detect device from User-Agent
+  const userAgent = c.req.header("User-Agent") || "";
+
+  if (detectBot(userAgent)) {
+    return c.body(null, 204);
+  }
+
+  const device = getDeviceFromUserAgent(userAgent);
 
   const { SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, CACHE_HEATPEEK } = c.env;
 
@@ -39,10 +83,14 @@ router.get("/config", cors(), async (c) => {
         return c.body(null, 200, CACHE_HEADERS);
       }
 
-      return c.json(cachedConfig, 200, CACHE_HEADERS);
+      const filteredConfig = filterConfigByDevice(cachedConfig, device);
+      return c.json(filteredConfig, 200, CACHE_HEADERS);
     }
 
-    const config = await supabaseService.getProjectConfig(trackingId, path);
+    const config = await supabaseService.getProjectConfigByPath(
+      trackingId,
+      path
+    );
 
     if (config === SupabaseError.FETCH_ERROR) {
       return c.body(null, 204);
@@ -53,9 +101,11 @@ router.get("/config", cors(), async (c) => {
       return c.body(null, 204);
     }
 
+    // Cache the full config (unfiltered)
     await setConfigCache(trackingId, path, config, CACHE_HEATPEEK);
 
-    return c.json(config, 200, CACHE_HEADERS);
+    const filteredConfig = filterConfigByDevice(config, device);
+    return c.json(filteredConfig, 200, CACHE_HEADERS);
   } catch (err) {
     console.error(err);
     return c.body(null, 204);
