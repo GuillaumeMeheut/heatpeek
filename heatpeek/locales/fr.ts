@@ -407,6 +407,16 @@ export default {
   urlList: {
     manageSites: "Gérer les sites",
   },
+  snapshots: {
+    deleteButton: "Supprimer la capture",
+    deleteConfirmTitle: "Supprimer la capture ?",
+    deleteConfirmDescription:
+      "Cette action ne peut pas être annulée. Cela supprimera définitivement cette capture.",
+    toastDeleted: "Capture supprimée",
+    toastDeleteFailed: "Échec de la suppression de la capture",
+    selectPlaceholder: "Sélectionner une capture",
+    noLabel: "Sans nom",
+  },
   versioning: {
     createNewVersionButton: "Créer une nouvelle version",
     confirmTitle: "Créer une nouvelle version de la heatmap ?",

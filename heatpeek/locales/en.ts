@@ -402,6 +402,16 @@ export default {
   urlList: {
     manageSites: "Manage sites",
   },
+  snapshots: {
+    deleteButton: "Delete snapshot",
+    deleteConfirmTitle: "Delete snapshot?",
+    deleteConfirmDescription:
+      "This action cannot be undone. This will permanently delete this snapshot.",
+    toastDeleted: "Snapshot deleted",
+    toastDeleteFailed: "Failed to delete snapshot",
+    selectPlaceholder: "Select snapshot",
+    noLabel: "No label",
+  },
   versioning: {
     createNewVersionButton: "Create New Version",
     confirmTitle: "Create a New Heatmap Version?",

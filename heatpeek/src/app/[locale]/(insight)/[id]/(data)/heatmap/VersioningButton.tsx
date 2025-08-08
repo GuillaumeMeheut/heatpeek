@@ -2,21 +2,23 @@
 
 import { Button } from "@/components/ui/button";
 import { Loader2, RefreshCcw } from "lucide-react";
-import { useTransition } from "react";
+import { useState, useTransition } from "react";
 import { createNewVersion } from "./actions";
 import { Device } from "@/types/database";
 import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { DialogFooter } from "@/components/ui/dialog";
 import { useI18n } from "@locales/client";
+import { Input } from "@/components/ui/input";
+import { Form } from "@/components/ui/form";
+import { toast } from "sonner";
+import { useSearchParams } from "next/navigation";
 
 export default function VersioningButton({
   urlId,
@@ -26,48 +28,73 @@ export default function VersioningButton({
   device: Device;
 }) {
   const [isPending, startTransition] = useTransition();
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
   const t = useI18n();
+  const searchParams = useSearchParams();
 
-  const handleCreateNewVersion = () => {
+  const handleCreateNewVersion = (formData: FormData) => {
     startTransition(async () => {
       try {
-        await createNewVersion(urlId, device, window.location.href);
+        const rawLabel = formData.get("label");
+        const label = (typeof rawLabel === "string" ? rawLabel : "").trim();
+        if (!label) {
+          throw new Error("Please provide a label for the new version");
+        }
+        const newSearchParams = new URLSearchParams(searchParams);
+        newSearchParams.delete("snapshotId");
+        await createNewVersion(urlId, device, window.location.href, label);
+        setIsDialogOpen(false);
       } catch (error) {
-        console.error("Failed to create new version:", error);
+        const message =
+          error instanceof Error
+            ? error.message
+            : "Failed to create new version";
+        toast.error(message);
       }
     });
   };
 
   return (
-    <AlertDialog>
-      <AlertDialogTrigger asChild>
-        <Button className="mb-4">
+    <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+      <DialogTrigger asChild>
+        <Button>
           <RefreshCcw className="h-4 w-4" />
           {t("versioning.createNewVersionButton")}
         </Button>
-      </AlertDialogTrigger>
-      <AlertDialogContent>
-        <AlertDialogHeader>
-          <AlertDialogTitle>{t("versioning.confirmTitle")}</AlertDialogTitle>
-          <AlertDialogDescription>
+      </DialogTrigger>
+      <DialogContent className="sm:max-w-[500px]">
+        <DialogHeader>
+          <DialogTitle>{t("versioning.confirmTitle")}</DialogTitle>
+          <DialogDescription>
             {t("versioning.confirmDescription")}
-          </AlertDialogDescription>
-        </AlertDialogHeader>
-        <AlertDialogFooter>
-          <AlertDialogCancel>{t("global.cancel")}</AlertDialogCancel>
-          <AlertDialogAction
-            variant="default"
-            onClick={handleCreateNewVersion}
-            disabled={isPending}
-          >
-            {isPending ? (
-              <Loader2 className="w-4 h-4 animate-spin" />
-            ) : (
-              t("versioning.createNewVersionAction")
-            )}
-          </AlertDialogAction>
-        </AlertDialogFooter>
-      </AlertDialogContent>
-    </AlertDialog>
+          </DialogDescription>
+        </DialogHeader>
+        <Form action={handleCreateNewVersion} isDisabled={isPending}>
+          <div className="grid gap-4 py-4">
+            <div className="grid gap-2">
+              <Input
+                id="label"
+                name="label"
+                placeholder={t("addPage.simple.snapshotName")}
+                required
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              type="button"
+              onClick={() => setIsDialogOpen(false)}
+            >
+              {t("global.cancel")}
+            </Button>
+            <Button type="submit" disabled={isPending}>
+              {isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+              {t("versioning.createNewVersionAction")}
+            </Button>
+          </DialogFooter>
+        </Form>
+      </DialogContent>
+    </Dialog>
   );
 }

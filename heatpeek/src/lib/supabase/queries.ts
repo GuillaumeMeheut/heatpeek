@@ -263,7 +263,7 @@ export type HeatmapSnapshot = Pick<
   urls: Pick<UrlsRow, "path" | "project_id">;
 };
 
-export const getSnapshot = cache(
+export const getActiveSnapshot = cache(
   async (
     supabase: SupabaseClient,
     projectId: string,
@@ -289,6 +289,38 @@ export const getSnapshot = cache(
       .eq("urls.path", url)
       .eq("device", device)
       .eq("is_outdated", false)
+      .single();
+
+    if (error) {
+      console.log("Error fetching snapshot:", error);
+      return null;
+    }
+
+    return data as unknown as HeatmapSnapshot;
+  }
+);
+
+export const getSnapshotById = cache(
+  async (
+    supabase: SupabaseClient,
+    snapshotId: string
+  ): Promise<HeatmapSnapshot | null> => {
+    const { data, error } = await supabase
+      .from("snapshots")
+      .select(
+        `id,
+       label, 
+       screenshot_url, 
+       width, 
+       height, 
+       url_id,
+       dom_data,
+       urls!inner (
+         path, 
+         project_id
+       )`
+      )
+      .eq("id", snapshotId)
       .single();
 
     if (error) {

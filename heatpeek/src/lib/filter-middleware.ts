@@ -13,6 +13,8 @@ interface FilterRule {
     exclude?: string[];
   };
   routeSpecificDefaults?: Record<string, string | undefined>;
+  // If defined, the parameter will be removed from the URL when the pathname matches any of these routes
+  clearOnRoutes?: string[];
 }
 
 const filterRules: FilterRule[] = [
@@ -73,6 +75,17 @@ const filterRules: FilterRule[] = [
       "/dashboard": undefined, // Dashboard defaults to undefined (no filter)
     },
   },
+  {
+    parameter: "snapshotId",
+    defaultValue: undefined,
+    routes: {
+      include: ["/(data)", "/heatmap", "/dashboard"], // Include dashboard routes
+    },
+    routeSpecificDefaults: {
+      "/dashboard": undefined, // Dashboard defaults to undefined (no filter)
+    },
+    clearOnRoutes: ["/dashboard"], // Always clear snapshotId on dashboard
+  },
 ];
 
 export function handleUrlFilters(request: NextRequest) {
@@ -106,6 +119,17 @@ export function handleUrlFilters(request: NextRequest) {
           break;
         }
       }
+    }
+
+    // Generic handling: clear parameter when on specified routes
+    if (
+      rule.clearOnRoutes &&
+      rule.clearOnRoutes.some((route) => pathname.includes(route)) &&
+      params.has(rule.parameter)
+    ) {
+      params.delete(rule.parameter);
+      modified = true;
+      continue;
     }
 
     // Ensure parameter exists

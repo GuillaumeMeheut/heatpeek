@@ -1,5 +1,6 @@
 import {
-  getSnapshot,
+  getSnapshotById,
+  getActiveSnapshot,
   getTrackingIdAndBaseUrl,
   getUser,
 } from "@/lib/supabase/queries";
@@ -20,6 +21,8 @@ import {
 import { DeviceEnum, HeatmapType, ParsedDomDataType } from "./types";
 import { getClickedElements } from "./utils";
 import { FilterBrowserEnum, FilterDateEnum } from "@/components/Filters/types";
+import SnapshotsSelect from "./SnapshotsSelect";
+import DeleteSnapshotButton from "./DeleteSnapshotButton";
 
 export default async function HeatmapPage({
   params,
@@ -32,6 +35,7 @@ export default async function HeatmapPage({
     type?: HeatmapType;
     date?: FilterDateEnum;
     browser?: FilterBrowserEnum;
+    snapshotId?: string;
   };
 }) {
   const supabase = await createClient();
@@ -65,7 +69,13 @@ export default async function HeatmapPage({
     return <div>Query params are not valid</div>;
   }
 
-  const snapshot = await getSnapshot(supabase, projectId, url, device);
+  let snapshot = null;
+
+  if (searchParams.snapshotId) {
+    snapshot = await getSnapshotById(supabase, searchParams.snapshotId);
+  } else {
+    snapshot = await getActiveSnapshot(supabase, projectId, url, device);
+  }
 
   if (!snapshot) {
     return <div>No snapshot found</div>;
@@ -141,7 +151,24 @@ export default async function HeatmapPage({
   return (
     <div className="flex">
       <div className="flex-1 p-4">
-        <VersioningButton urlId={snapshot.url_id} device={device} />
+        <div className="flex items-center gap-2 mb-4">
+          <VersioningButton urlId={snapshot.url_id} device={device} />
+          <SnapshotsSelect
+            defaultSnapshot={{
+              id: snapshot.id,
+              label: snapshot.label ?? "No label",
+            }}
+            projectId={projectId}
+            url={url}
+            device={device}
+          />
+          <DeleteSnapshotButton
+            projectId={projectId}
+            url={url}
+            device={device}
+            currentSnapshotId={snapshot.id}
+          />
+        </div>
         <Suspense
           fallback={
             <div className="flex justify-center items-center h-screen">
