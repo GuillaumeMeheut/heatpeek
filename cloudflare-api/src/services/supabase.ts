@@ -9,7 +9,6 @@ import {
 import { snapshotKey } from "../KV/key";
 
 export type ProjectConfigResult = {
-  id: string;
   usage_exceeded: boolean;
   page_config: {
     path: string;
@@ -39,7 +38,7 @@ export class SupabaseService {
     this.supabase = createClient(this.supabaseUrl, key);
   }
 
-  async getProjectConfig(
+  async getProjectConfigByPath(
     trackingId: string,
     path: string
   ): Promise<ProjectConfigResult | SupabaseError> {
@@ -48,7 +47,6 @@ export class SupabaseService {
         .from("project_config")
         .select(
           `
-          id,
           usage_exceeded,
           page_config!inner(
             path,
@@ -82,7 +80,6 @@ export class SupabaseService {
       }
 
       return {
-        id: data.id,
         usage_exceeded: data.usage_exceeded,
         page_config: pageConfig,
       };

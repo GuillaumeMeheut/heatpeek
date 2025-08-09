@@ -1,10 +1,6 @@
-import { detectBot } from "./utils/detectBot";
 import { verifyTracking } from "./utils/verifyTracking";
 import { config } from "./services/config";
 import { initializeTracking } from "./core/tracking";
-import { getViewportDeviceCategory } from "./utils/getDevice";
-import { getBrowserName } from "./utils/getBrowserName";
-import { getOsName } from "./utils/getOsName";
 import { setupNavigationTracking } from "./core/tracking/navigation";
 import { cleanupTracking, flushBuffer } from "./core/tracking";
 import { getReferrerDomain } from "./utils/getReferrer";
@@ -35,28 +31,16 @@ import { pushEngagementEvent } from "./core/tracking/timeOnPage";
       endpointAPI = "https://api.heatpeek.com";
     }
 
-    if (!trackingId || detectBot()) return;
+    if (!trackingId) return;
 
     verifyTracking(endpoint, trackingId);
 
-    const device = getViewportDeviceCategory();
-    const browser = getBrowserName();
-    const os = getOsName();
     const referrer = getReferrerDomain();
 
     const runTracking = (path) => {
       cleanupTracking();
 
-      config.init(
-        endpointAPI,
-        endpoint,
-        trackingId,
-        path,
-        device,
-        browser,
-        os,
-        referrer
-      );
+      config.init(endpointAPI, endpoint, trackingId, path, referrer);
       config.fetch().then((configData) => {
         if (!configData) return;
         initializeTracking(config);
@@ -77,7 +61,6 @@ import { pushEngagementEvent } from "./core/tracking/timeOnPage";
       runTracking(newPath);
     });
   } catch (error) {
-    // Silently handle any errors to prevent blocking the main application
     console.warn("Heatpeek tracking error:", error);
   }
 })();

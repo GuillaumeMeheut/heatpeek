@@ -139,23 +139,19 @@ export async function processBatchEvents(
     }
 
     // 3️⃣ Build rows for ClickHouse (skip events without snapshot IDs)
-    const pageviewRows = allPageviews
-      .map((e) => ({
-        snapshot_id: snapshotCacheMap.get(
-          snapshotKey(e.trackingId, e.path, e.device)
-        ),
-        tracking_id: e.trackingId,
-        path: e.path,
-        device: e.device,
-        browser: e.browser,
-        os: e.os,
-        referrer: e.referrer,
-        is_bounce: e.is_bounce,
-        timestamp: e.timestamp,
-      }))
-      .filter((row): row is typeof row & { snapshot_id: string } =>
-        Boolean(row.snapshot_id)
-      );
+    const pageviewRows = allPageviews.map((e) => ({
+      snapshot_id: snapshotCacheMap.get(
+        snapshotKey(e.trackingId, e.path, e.device)
+      ),
+      tracking_id: e.trackingId,
+      path: e.path,
+      device: e.device,
+      browser: e.browser,
+      os: e.os,
+      referrer: e.referrer,
+      is_bounce: e.is_bounce,
+      timestamp: e.timestamp,
+    }));
 
     const clickRows = allClicks
       .map((e) => ({
@@ -212,22 +208,18 @@ export async function processBatchEvents(
         Boolean(row.snapshot_id)
       );
 
-    const engagementRows = allEngagements
-      .map((e) => ({
-        snapshot_id: snapshotCacheMap.get(
-          snapshotKey(e.trackingId, e.path, e.device)
-        ),
-        tracking_id: e.trackingId,
-        path: e.path,
-        device: e.device,
-        browser: e.browser,
-        os: e.os,
-        duration: e.e,
-        timestamp: e.timestamp,
-      }))
-      .filter((row): row is typeof row & { snapshot_id: string } =>
-        Boolean(row.snapshot_id)
-      );
+    const engagementRows = allEngagements.map((e) => ({
+      snapshot_id: snapshotCacheMap.get(
+        snapshotKey(e.trackingId, e.path, e.device)
+      ),
+      tracking_id: e.trackingId,
+      path: e.path,
+      device: e.device,
+      browser: e.browser,
+      os: e.os,
+      duration: e.e,
+      timestamp: e.timestamp,
+    }));
 
     // 4️⃣ Insert by type (isolated failures)
     const results = await Promise.allSettled([

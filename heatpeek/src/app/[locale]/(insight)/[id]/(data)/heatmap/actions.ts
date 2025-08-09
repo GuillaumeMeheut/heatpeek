@@ -14,11 +14,12 @@ type Snapshot = Pick<SnapshotsRow, "label"> & {
 export async function createNewVersion(
   urlId: string,
   device: Device,
-  referer: string
+  referer: string,
+  label: string
 ) {
-  if (!urlId || !device) {
+  if (!urlId || !device || !label?.trim()) {
     throw new Error(
-      "Missing required parameters: urlId and device are required"
+      "Missing required parameters: urlId, device and label are required"
     );
   }
 
@@ -64,7 +65,7 @@ export async function createNewVersion(
   await addSnapshot(supabase, {
     url_id: urlId,
     device,
-    label: currentSnapshot.label,
+    label: label.trim(),
   });
 
   await purgeConfig(
@@ -79,4 +80,24 @@ export async function createNewVersion(
   );
 
   redirect(getSuccessRedirect(referer, "Success!", "New version created."));
+}
+
+export async function deleteSnapshot(snapshotId: string) {
+  if (!snapshotId) {
+    throw new Error("Missing required parameter: snapshotId");
+  }
+
+  const supabase = await createClient();
+
+  const { error } = await supabase
+    .from("snapshots")
+    .delete()
+    .eq("id", snapshotId);
+
+  if (error) {
+    console.error("Snapshot deletion error:", error);
+    throw new Error(`Failed to delete snapshot: ${error.message}`);
+  }
+
+  return { status: "ok" } as const;
 }

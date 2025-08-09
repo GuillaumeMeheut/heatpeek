@@ -7,7 +7,6 @@ export enum ClickHouseError {
 
 // Base type for common fields across all ClickHouse events
 export type BaseClickHouseEvent = {
-  snapshot_id: string;
   tracking_id: string;
   path: string;
   device: string;
@@ -16,27 +15,34 @@ export type BaseClickHouseEvent = {
   timestamp: string;
 };
 
+// Heatmap events require snapshot_id (mandatory)
 export type ClickEvent = BaseClickHouseEvent & {
+  snapshot_id: string;
   selector: string;
   erx: number;
   ery: number;
 };
 
 export type RageClickEvent = BaseClickHouseEvent & {
+  snapshot_id: string;
   selector: string;
   erx: number;
   ery: number;
 };
 
 export type ScrollDepthEvent = BaseClickHouseEvent & {
+  snapshot_id: string;
   scroll_depth: number;
 };
 
+// Non-heatmap events have optional snapshot_id
 export type EngagementEvent = BaseClickHouseEvent & {
+  snapshot_id?: string;
   duration: number;
 };
 
 export type PageViewEvent = BaseClickHouseEvent & {
+  snapshot_id?: string;
   referrer: string;
   is_bounce: boolean;
 };

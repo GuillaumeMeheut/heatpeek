@@ -1,50 +1,5 @@
 (function() {
   "use strict";
-  function detectBot() {
-    const userAgent = navigator.userAgent.toLowerCase();
-    const botPatterns = [
-      "bot",
-      "crawler",
-      "spider",
-      "headless",
-      "selenium",
-      "googlebot",
-      "bingbot",
-      "yandexbot",
-      "duckduckbot",
-      "baiduspider",
-      "lighthouse",
-      "webdriver",
-      "phantomjs",
-      "puppeteer",
-      "playwright",
-      "nmap",
-      "nikto",
-      "acunetix",
-      "nessus",
-      "burp",
-      "zap",
-      "curl",
-      "wget",
-      "python-requests",
-      "java-http-client",
-      "pingdom",
-      "uptimerobot",
-      "newrelic",
-      "datadog",
-      "facebookexternalhit",
-      "twitterbot",
-      "linkedinbot",
-      "apache-httpclient",
-      "python-urllib",
-      "mozilla/5.0 (compatible;)",
-      "mozilla/5.0 (bot;)",
-      "mozilla/5.0 (crawler;)",
-      "mozilla/5.0 (spider;)",
-      "mozilla/5.0 (monitoring;)"
-    ];
-    return botPatterns.some((pattern) => userAgent.includes(pattern));
-  }
   async function verifyTracking(endpoint, trackingId) {
     const urlParams = new URLSearchParams(window.location.search);
     if (urlParams.get("verifyHp") === trackingId) {
@@ -66,18 +21,12 @@
     endpoint: null,
     trackingId: null,
     path: null,
-    device: null,
-    browser: null,
-    os: null,
     referrer: null,
-    init(endpointAPI, endpoint, trackingId, path, device, browser, os, referrer) {
+    init(endpointAPI, endpoint, trackingId, path, referrer) {
       this.endpointAPI = endpointAPI;
       this.endpoint = endpoint;
       this.trackingId = trackingId;
       this.path = path;
-      this.device = device;
-      this.browser = browser;
-      this.os = os;
       this.referrer = referrer;
     },
     async fetch() {
@@ -185,18 +134,6 @@
       handleNavigation = null;
     }
   }
-  function getViewportDeviceCategory() {
-    const width = window.innerWidth;
-    if (width <= 768) return "mobile";
-    if (width <= 1024) return "tablet";
-    if (width <= 2e3) return "desktop";
-    return "large-desktop";
-  }
-  const deviceFieldMap = {
-    desktop: "update_snap_desktop",
-    tablet: "update_snap_tablet",
-    mobile: "update_snap_mobile"
-  };
   let navigationHandler;
   function setupSnapshotLogic(config2) {
     teardownSnapshotLogic();
@@ -221,9 +158,8 @@
     }
   }
   function shouldSendSnapshot(config2) {
-    if (config2.browser !== "chrome") return false;
     const pageConfig = config2.data;
-    return !!pageConfig?.page_config?.[deviceFieldMap[config2.device]];
+    return !!pageConfig?.page_config?.snapshot_update;
   }
   function sendSnapshot(config2) {
     fetch(`${config2.endpointAPI}/api/snapshot`, {
@@ -231,9 +167,6 @@
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         trackingId: config2.trackingId,
-        device: config2.device,
-        browser: config2.browser,
-        os: config2.os,
         url: window.location.href,
         snapshot: captureSnapshot()
       })
@@ -507,7 +440,6 @@
   }
   function shouldTrack(config2) {
     const pageConfig = config2.data;
-    if (config2.device === "large-desktop") return false;
     if (pageConfig.usage_exceeded) return false;
     return true;
   }
@@ -525,11 +457,7 @@
     const payload = {
       trackingId: currentConfig.trackingId,
       path: currentConfig.path,
-      device: currentConfig.device,
-      browser: currentConfig.browser,
-      os: currentConfig.os,
-      events: eventBuffer.splice(0),
-      timestamp: (/* @__PURE__ */ new Date()).toISOString()
+      events: eventBuffer.splice(0)
     };
     const json = JSON.stringify(payload);
     if (navigator.sendBeacon) {
@@ -567,24 +495,6 @@
     }
     window.removeEventListener("beforeunload", handleBeforeUnload);
     document.removeEventListener("visibilitychange", handleVisibilityChange);
-  }
-  function getBrowserName() {
-    const ua = navigator.userAgent;
-    if (/Chrome/.test(ua) && !/Edge|OPR/.test(ua)) return "chrome";
-    if (/Safari/.test(ua) && !/Chrome/.test(ua)) return "safari";
-    if (/Firefox/.test(ua)) return "firefox";
-    if (/Edg/.test(ua)) return "edge";
-    return "other";
-  }
-  function getOsName() {
-    const ua = navigator.userAgent;
-    if (/windows/i.test(ua)) return "windows";
-    if (/macintosh|mac os x/i.test(ua)) return "macos";
-    if (/android/i.test(ua)) return "android";
-    if (/iphone|ipad|ipod/i.test(ua)) return "ios";
-    if (/linux/i.test(ua)) return "linux";
-    if (/cros/i.test(ua)) return "chromeos";
-    return "other";
   }
   function setupNavigationTracking() {
     const originalPushState = history.pushState;
@@ -654,24 +564,12 @@
         endpoint = "https://heatpeek.com";
         endpointAPI = "https://api.heatpeek.com";
       }
-      if (!trackingId || detectBot()) return;
+      if (!trackingId) return;
       verifyTracking(endpoint, trackingId);
-      const device = getViewportDeviceCategory();
-      const browser = getBrowserName();
-      const os = getOsName();
       const referrer = getReferrerDomain();
       const runTracking = (path) => {
         cleanupTracking();
-        config.init(
-          endpointAPI,
-          endpoint,
-          trackingId,
-          path,
-          device,
-          browser,
-          os,
-          referrer
-        );
+        config.init(endpointAPI, endpoint, trackingId, path, referrer);
         config.fetch().then((configData) => {
           if (!configData) return;
           initializeTracking(config);

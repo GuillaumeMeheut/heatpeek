@@ -36,6 +36,7 @@ export function FiltersDevice() {
 
     // Update URL
     const params = new URLSearchParams(searchParams.toString());
+    params.delete("snapshotId");
     if (newDevice && newDevice !== "all") {
       params.set("device", newDevice);
     } else {

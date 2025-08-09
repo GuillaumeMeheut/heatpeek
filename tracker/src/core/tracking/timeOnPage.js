@@ -1,6 +1,5 @@
 import { getEventBuffer } from "../tracking";
 
-// Following Plausible's engagement tracking pattern
 let runningEngagementStart = null;
 let currentEngagementTime = 0;
 let engagementSent = false;

@@ -16,12 +16,15 @@ import {
   logPerformance,
 } from "../utils";
 import { configKey, snapshotKey } from "../KV/key";
+import {
+  getBrowserFromUserAgent,
+  getDeviceFromUserAgent,
+} from "../utils/userAgent";
 
 const router = new Hono<{ Bindings: Env }>();
 
 const SnapshotRequestSchema = z.object({
   trackingId: z.string(),
-  device: z.enum(["desktop", "tablet", "mobile"]),
   url: z.string().url(),
   snapshot: z.object({
     html: z.string(),
@@ -50,8 +53,17 @@ router.post("/", cors(), async (c) => {
       throw new Error("Invalid request body");
     }
 
-    const { trackingId, device, url, snapshot } = result.data;
+    const { trackingId, url, snapshot } = result.data;
     const { html, viewport } = snapshot;
+
+    const userAgent = c.req.header("User-Agent") || "";
+    const device = getDeviceFromUserAgent(userAgent);
+    const browserUserAgent = getBrowserFromUserAgent(userAgent);
+
+    if (!device || !browserUserAgent || browserUserAgent !== "chrome") {
+      console.error("Missing device or browser from user agent");
+      return c.text("ok");
+    }
 
     let urlId: string | null = null;
 
@@ -198,7 +210,7 @@ router.post("/", cors(), async (c) => {
       mobile: "update_snap_mobile",
     } as const;
 
-    const updateField = deviceFieldMap[device];
+    const updateField = deviceFieldMap[device as keyof typeof deviceFieldMap];
 
     await measureStep(metrics, "update_page_config", async () =>
       supabaseService.updatePageConfig(urlId, {
