@@ -9,7 +9,6 @@ import { redirect } from "next/navigation";
 import { Card } from "@/components/ui/card";
 import { Suspense } from "react";
 import { Loader2 } from "lucide-react";
-import VersioningButton from "./VersioningButton";
 import HeatmapWithOptions from "./HeatmapWithOptions";
 import {
   getScrollDepth,
@@ -21,8 +20,7 @@ import {
 import { DeviceEnum, HeatmapType, ParsedDomDataType } from "./types";
 import { getClickedElements } from "./utils";
 import { FilterBrowserEnum, FilterDateEnum } from "@/components/Filters/types";
-import SnapshotsSelect from "./SnapshotsSelect";
-import DeleteSnapshotButton from "./DeleteSnapshotButton";
+import SnapshotsControls from "./SnapshotsControls";
 
 export default async function HeatmapPage({
   params,
@@ -151,24 +149,16 @@ export default async function HeatmapPage({
   return (
     <div className="flex">
       <div className="flex-1 p-4">
-        <div className="flex items-center gap-2 mb-4">
-          <VersioningButton urlId={snapshot.url_id} device={device} />
-          <SnapshotsSelect
-            defaultSnapshot={{
-              id: snapshot.id,
-              label: snapshot.label ?? "No label",
-            }}
-            projectId={projectId}
-            url={url}
-            device={device}
-          />
-          <DeleteSnapshotButton
-            projectId={projectId}
-            url={url}
-            device={device}
-            currentSnapshotId={snapshot.id}
-          />
-        </div>
+        <SnapshotsControls
+          defaultSnapshot={{
+            id: snapshot.id,
+            label: snapshot.label ?? "No label",
+          }}
+          projectId={projectId}
+          url={url}
+          device={device}
+          urlId={snapshot.url_id}
+        />
         <Suspense
           fallback={
             <div className="flex justify-center items-center h-screen">
