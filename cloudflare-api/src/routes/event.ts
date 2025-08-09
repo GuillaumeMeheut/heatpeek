@@ -2,14 +2,11 @@ import { Hono } from "hono";
 import { cors } from "hono/cors";
 import type { Env } from "../env";
 import type { QueueEventMessage } from "../types/clickhouse";
-import {
-  getBrowserFromUserAgent,
-  getDeviceFromUserAgent,
-  getOsFromUserAgent,
-  detectBot,
-} from "../utils/userAgent";
 
 const router = new Hono<{ Bindings: Env }>();
+
+// Allowed browsers whitelist for normalization
+const allowedBrowsers = ["Chrome", "Firefox", "Edge", "Mozilla", "Safari"];
 
 router.post("/", cors(), async (c) => {
   try {
@@ -25,18 +22,28 @@ router.post("/", cors(), async (c) => {
       return c.body(null, 204);
     }
 
-    // Get User-Agent from request headers
-    const userAgent = c.req.header("User-Agent") || "";
+    // Get Cloudflare cf info from the request
+    const cf = c.req.cf || {};
 
-    // Detect bot and reject if bot
-    if (detectBot(userAgent)) {
+    console.log(cf);
+
+    // Check bot score to ignore bots (Cloudflare bot score: 1-99, low means bot)
+    const botScore = cf.botManagement?.score ?? cf.botScore ?? 99;
+    if (botScore < 31) {
+      // Likely a bot, skip
       return c.body(null, 204);
     }
 
-    // Detect browser, device, and OS from User-Agent
-    const browser = getBrowserFromUserAgent(userAgent);
-    const device = getDeviceFromUserAgent(userAgent);
-    const os = getOsFromUserAgent(userAgent);
+    // Normalize browser name from cf.browser
+    const browserRaw = cf.browser || "Other";
+    const browser = allowedBrowsers.includes(browserRaw) ? browserRaw : "Other";
+
+    // Device type (desktop, mobile, tablet)
+    const device = cf.deviceType || "other";
+
+    // OS name
+    const os = cf.os || "Other";
+
     const timestamp = new Date().toISOString();
 
     // Create unified queue message
