@@ -3,9 +3,23 @@ import { cors } from "hono/cors";
 import type { Env } from "../env";
 import type { QueueEventMessage } from "../types/clickhouse";
 
+// Extend Request type with needed CF properties
+interface RequestWithCf extends Request {
+  cf?: {
+    browser?: string;
+    deviceType?: string;
+    os?: string;
+    country?: string;
+    botManagement?: {
+      score?: number;
+      verifiedBot?: boolean;
+    };
+    botScore?: number;
+  };
+}
+
 const router = new Hono<{ Bindings: Env }>();
 
-// Allowed browsers whitelist for normalization
 const allowedBrowsers = ["Chrome", "Firefox", "Edge", "Mozilla", "Safari"];
 
 router.post("/", cors(), async (c) => {
@@ -22,31 +36,31 @@ router.post("/", cors(), async (c) => {
       return c.body(null, 204);
     }
 
-    // Get Cloudflare cf info from the request
-    const cf = c.req.cf || {};
+    // Cast request to include cf properties
+    const req = c.req.raw as RequestWithCf;
 
-    console.log(cf);
+    console.log("req", req);
 
-    // Check bot score to ignore bots (Cloudflare bot score: 1-99, low means bot)
+    // Access cf safely (may be undefined locally)
+    const cf = req.cf ?? {};
+
+    console.log("cf", cf);
+
     const botScore = cf.botManagement?.score ?? cf.botScore ?? 99;
     if (botScore < 31) {
-      // Likely a bot, skip
+      // Treat as bot, ignore
       return c.body(null, 204);
     }
 
-    // Normalize browser name from cf.browser
-    const browserRaw = cf.browser || "Other";
+    const browserRaw = cf.browser ?? "Other";
     const browser = allowedBrowsers.includes(browserRaw) ? browserRaw : "Other";
 
-    // Device type (desktop, mobile, tablet)
-    const device = cf.deviceType || "other";
-
-    // OS name
-    const os = cf.os || "Other";
+    const device = cf.deviceType ?? "other";
+    const os = cf.os ?? "Other";
+    // const country = cf.country ?? "Unknown";
 
     const timestamp = new Date().toISOString();
 
-    // Create unified queue message
     const queueMessage: QueueEventMessage = {
       type: "event",
       data: {
@@ -60,10 +74,8 @@ router.post("/", cors(), async (c) => {
       },
     };
 
-    // Send to queue
     await c.env["heatpeek-events"].send(queueMessage);
 
-    // Count events by type for response
     const pageviewEvents = events.filter(
       (e: any) => e.type === "page_view"
     ).length;
