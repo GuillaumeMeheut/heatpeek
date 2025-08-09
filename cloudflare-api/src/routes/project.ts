@@ -8,7 +8,7 @@ import {
   configKey,
   snapshotKey,
 } from "../KV/key";
-import { detectBot, getDeviceFromUserAgent } from "../utils/userAgent";
+import { detectBot, getUA } from "../utils/userAgent";
 
 const router = new Hono<{ Bindings: Env }>();
 
@@ -54,19 +54,17 @@ function filterConfigByDevice(config: any, device: string) {
 router.get("/config", cors(), async (c) => {
   const trackingId = c.req.query("id");
   const path = c.req.query("p");
+  const device = c.req.query("d");
 
-  if (!trackingId || !path) {
+  if (!trackingId || !path || !device) {
     return c.body(null, 204);
   }
 
-  // Detect device from User-Agent
-  const userAgent = c.req.header("User-Agent") || "";
+  const ua = getUA(c);
 
-  if (detectBot(userAgent)) {
+  if (detectBot(ua)) {
     return c.body(null, 204);
   }
-
-  const device = getDeviceFromUserAgent(userAgent);
 
   const { SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, CACHE_HEATPEEK } = c.env;
 

@@ -16,16 +16,14 @@ import {
   logPerformance,
 } from "../utils";
 import { configKey, snapshotKey } from "../KV/key";
-import {
-  getBrowserFromUserAgent,
-  getDeviceFromUserAgent,
-} from "../utils/userAgent";
+import { getUA, parseUserAgent } from "../utils/userAgent";
 
 const router = new Hono<{ Bindings: Env }>();
 
 const SnapshotRequestSchema = z.object({
   trackingId: z.string(),
   url: z.string().url(),
+  device: z.enum(["desktop", "tablet", "mobile"]),
   snapshot: z.object({
     html: z.string(),
     viewport: z.object({
@@ -53,12 +51,11 @@ router.post("/", cors(), async (c) => {
       throw new Error("Invalid request body");
     }
 
-    const { trackingId, url, snapshot } = result.data;
+    const { trackingId, url, device, snapshot } = result.data;
     const { html, viewport } = snapshot;
 
-    const userAgent = c.req.header("User-Agent") || "";
-    const device = getDeviceFromUserAgent(userAgent);
-    const browserUserAgent = getBrowserFromUserAgent(userAgent);
+    const ua = getUA(c);
+    const { browser: browserUserAgent } = parseUserAgent(ua);
 
     if (!device || !browserUserAgent || browserUserAgent !== "chrome") {
       console.error("Missing device or browser from user agent");

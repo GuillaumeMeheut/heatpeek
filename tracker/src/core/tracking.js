@@ -48,6 +48,7 @@ export function flushBuffer() {
   const payload = {
     trackingId: currentConfig.trackingId,
     path: currentConfig.path,
+    device: currentConfig.device,
     events: eventBuffer.splice(0),
   };
 

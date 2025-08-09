@@ -5,6 +5,8 @@ let handleClick;
 let handleNavigation;
 
 export function setupClickTracking() {
+  if (config.device === "large-desktop") return;
+
   teardownClickTracking();
 
   const buffer = getEventBuffer();

@@ -5,13 +5,15 @@ export const config = {
   trackingId: null,
   path: null,
   referrer: null,
+  device: null,
 
-  init(endpointAPI, endpoint, trackingId, path, referrer) {
+  init(endpointAPI, endpoint, trackingId, path, referrer, device) {
     this.endpointAPI = endpointAPI;
     this.endpoint = endpoint;
     this.trackingId = trackingId;
     this.path = path;
     this.referrer = referrer;
+    this.device = device;
   },
 
   async fetch() {
@@ -19,7 +21,7 @@ export const config = {
       const response = await fetch(
         `${this.endpointAPI}/api/project/config?id=${
           this.trackingId
-        }&p=${encodeURIComponent(this.path)}`
+        }&p=${encodeURIComponent(this.path)}&d=${this.device}`
       );
       if (!response.ok) throw new Error("Failed to fetch config");
 
