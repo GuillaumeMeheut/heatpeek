@@ -2,29 +2,26 @@ import { Hono } from "hono";
 import { cors } from "hono/cors";
 import type { Env } from "../env";
 import type { QueueEventMessage } from "../types/clickhouse";
+import { getUA, parseUserAgent } from "../utils/userAgent";
 
 // Extend Request type with needed CF properties
 interface RequestWithCf extends Request {
   cf?: {
-    browser?: string;
-    deviceType?: string;
-    os?: string;
     country?: string;
+    region?: string;
+    city?: string;
     botManagement?: {
       score?: number;
       verifiedBot?: boolean;
     };
-    botScore?: number;
   };
 }
 
 const router = new Hono<{ Bindings: Env }>();
 
-const allowedBrowsers = ["Chrome", "Firefox", "Edge", "Mozilla", "Safari"];
-
 router.post("/", cors(), async (c) => {
   try {
-    const { trackingId, path, events } = await c.req.json();
+    const { trackingId, path, device, events } = await c.req.json();
 
     if (
       !trackingId ||
@@ -39,25 +36,11 @@ router.post("/", cors(), async (c) => {
     // Cast request to include cf properties
     const req = c.req.raw as RequestWithCf;
 
-    console.log("req", req);
-
     // Access cf safely (may be undefined locally)
     const cf = req.cf ?? {};
 
-    console.log("cf", cf);
-
-    const botScore = cf.botManagement?.score ?? cf.botScore ?? 99;
-    if (botScore < 31) {
-      // Treat as bot, ignore
-      return c.body(null, 204);
-    }
-
-    const browserRaw = cf.browser ?? "Other";
-    const browser = allowedBrowsers.includes(browserRaw) ? browserRaw : "Other";
-
-    const device = cf.deviceType ?? "other";
-    const os = cf.os ?? "Other";
-    // const country = cf.country ?? "Unknown";
+    const ua = getUA(c);
+    const { browser, os } = parseUserAgent(ua);
 
     const timestamp = new Date().toISOString();
 

@@ -6,6 +6,7 @@ import { cleanupTracking, flushBuffer } from "./core/tracking";
 import { getReferrerDomain } from "./utils/getReferrer";
 import { pushScrollDepthEvent } from "./core/tracking/scrollDepth";
 import { pushEngagementEvent } from "./core/tracking/timeOnPage";
+import { getViewportDeviceCategory } from "./utils/getDevice";
 
 (function () {
   try {
@@ -31,16 +32,17 @@ import { pushEngagementEvent } from "./core/tracking/timeOnPage";
       endpointAPI = "https://api.heatpeek.com";
     }
 
-    if (!trackingId) return;
-
     verifyTracking(endpoint, trackingId);
 
+    if (!trackingId || detectBot()) return;
+
     const referrer = getReferrerDomain();
+    const device = getViewportDeviceCategory();
 
     const runTracking = (path) => {
       cleanupTracking();
 
-      config.init(endpointAPI, endpoint, trackingId, path, referrer);
+      config.init(endpointAPI, endpoint, trackingId, path, referrer, device);
       config.fetch().then((configData) => {
         if (!configData) return;
         initializeTracking(config);

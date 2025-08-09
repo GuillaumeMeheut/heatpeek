@@ -15,24 +15,26 @@
       }
     }
   }
-  const config = {
+  const config$1 = {
     data: null,
     endpointAPI: null,
     endpoint: null,
     trackingId: null,
     path: null,
     referrer: null,
-    init(endpointAPI, endpoint, trackingId, path, referrer) {
+    device: null,
+    init(endpointAPI, endpoint, trackingId, path, referrer, device) {
       this.endpointAPI = endpointAPI;
       this.endpoint = endpoint;
       this.trackingId = trackingId;
       this.path = path;
       this.referrer = referrer;
+      this.device = device;
     },
     async fetch() {
       try {
         const response = await fetch(
-          `${this.endpointAPI}/api/project/config?id=${this.trackingId}&p=${encodeURIComponent(this.path)}`
+          `${this.endpointAPI}/api/project/config?id=${this.trackingId}&p=${encodeURIComponent(this.path)}&d=${this.device}`
         );
         if (!response.ok) throw new Error("Failed to fetch config");
         this.data = await response.json();
@@ -77,6 +79,7 @@
   let handleClick;
   let handleNavigation;
   function setupClickTracking() {
+    if (config.device === "large-desktop") return;
     teardownClickTracking();
     const buffer = getEventBuffer();
     let lastClick = 0;
@@ -136,6 +139,7 @@
   }
   let navigationHandler;
   function setupSnapshotLogic(config2) {
+    if (config2.device === "large-desktop") return;
     teardownSnapshotLogic();
     waitForDomIdle(() => {
       if (shouldSendSnapshot(config2)) {
@@ -168,6 +172,7 @@
       body: JSON.stringify({
         trackingId: config2.trackingId,
         url: window.location.href,
+        device: config2.device,
         snapshot: captureSnapshot()
       })
     });
@@ -457,6 +462,7 @@
     const payload = {
       trackingId: currentConfig.trackingId,
       path: currentConfig.path,
+      device: currentConfig.device,
       events: eventBuffer.splice(0)
     };
     const json = JSON.stringify(payload);
@@ -548,6 +554,13 @@
       return null;
     }
   }
+  function getViewportDeviceCategory() {
+    const width = window.innerWidth;
+    if (width <= 768) return "mobile";
+    if (width <= 1024) return "tablet";
+    if (width <= 2e3) return "desktop";
+    return "large-desktop";
+  }
   (function() {
     try {
       const trackingId = document.currentScript.getAttribute("id");
@@ -564,15 +577,16 @@
         endpoint = "https://heatpeek.com";
         endpointAPI = "https://api.heatpeek.com";
       }
-      if (!trackingId) return;
       verifyTracking(endpoint, trackingId);
+      if (!trackingId || detectBot()) return;
       const referrer = getReferrerDomain();
+      const device = getViewportDeviceCategory();
       const runTracking = (path) => {
         cleanupTracking();
-        config.init(endpointAPI, endpoint, trackingId, path, referrer);
-        config.fetch().then((configData) => {
+        config$1.init(endpointAPI, endpoint, trackingId, path, referrer, device);
+        config$1.fetch().then((configData) => {
           if (!configData) return;
-          initializeTracking(config);
+          initializeTracking(config$1);
         });
       };
       runTracking(window.location.pathname);

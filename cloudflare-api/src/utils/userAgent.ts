@@ -1,47 +1,51 @@
-export function getBrowserFromUserAgent(userAgent: string): string {
-  const ua = userAgent.toLowerCase();
+import { Context } from "hono";
 
-  if (/chrome/.test(ua) && !/edge|opr/.test(ua)) return "chrome";
-  if (/safari/.test(ua) && !/chrome/.test(ua)) return "safari";
-  if (/firefox/.test(ua)) return "firefox";
-  if (/edg/.test(ua)) return "edge";
-  if (/opera/.test(ua) || /opr/.test(ua)) return "opera";
-
-  return "other";
+export function getUA(c: Context) {
+  const UA = c.req.header("User-Agent") || "";
+  return UA.toLowerCase();
 }
 
-export function getOsFromUserAgent(userAgent: string): string {
-  const ua = userAgent.toLowerCase();
+export function parseUserAgent(ua: string): {
+  browser: string;
+  os: string;
+} {
+  let browser = "other";
+  let os = "other";
 
-  if (/windows/.test(ua)) return "windows";
-  if (/macintosh|mac os x/.test(ua)) return "macos";
-  if (/android/.test(ua)) return "android";
-  if (/iphone|ipad|ipod/.test(ua)) return "ios";
-  if (/linux/.test(ua)) return "linux";
-  if (/cros/.test(ua)) return "chromeos";
-
-  return "other";
-}
-
-export function getDeviceFromUserAgent(userAgent: string): string {
-  const ua = userAgent.toLowerCase();
-
-  // Mobile devices
-  if (/mobile|android|iphone|ipad|ipod|blackberry|windows phone/.test(ua)) {
-    return "mobile";
+  // Browser detection
+  if (ua.includes("chrome") && !ua.includes("edg") && !ua.includes("opr")) {
+    browser = "chrome";
+  } else if (ua.includes("safari") && !ua.includes("chrome")) {
+    browser = "safari";
+  } else if (ua.includes("firefox")) {
+    browser = "firefox";
+  } else if (ua.includes("edg")) {
+    browser = "edge";
+  } else if (ua.includes("opr")) {
+    browser = "opera";
   }
 
-  // Tablets (iPad, Android tablets)
-  if (/ipad|tablet/.test(ua)) {
-    return "tablet";
+  // OS detection
+  if (ua.includes("macintosh") || ua.includes("mac os x")) {
+    os = "mac";
+  } else if (
+    ua.includes("iphone") ||
+    ua.includes("ipad") ||
+    ua.includes("ipod")
+  ) {
+    os = "ios";
+  } else if (ua.includes("windows")) {
+    os = "windows";
+  } else if (ua.includes("android")) {
+    os = "android";
+  } else if (ua.includes("linux")) {
+    os = "linux";
   }
 
-  // Desktop (default)
-  return "desktop";
+  return { browser, os };
 }
 
-export function detectBot(userAgent: string): boolean {
-  const ua = userAgent.toLowerCase();
+export function detectBot(ua: string): boolean {
   const botPatterns = [
     "bot",
     "crawler",

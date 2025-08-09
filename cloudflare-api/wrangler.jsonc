@@ -31,6 +31,10 @@
         "max_batch_timeout": 30
       }
     ]
+  },
+  "observability": {
+    "enabled": true,
+    "head_sampling_rate": 1
   }
 
   // "vars": {
@@ -52,8 +56,4 @@
   // "ai": {
   //   "binding": "AI"
   // },
-  // "observability": {
-  //   "enabled": true,
-  //   "head_sampling_rate": 1
-  // }
 }

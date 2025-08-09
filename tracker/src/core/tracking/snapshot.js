@@ -2,6 +2,8 @@ let navigationHandler;
 let timeoutId;
 
 export function setupSnapshotLogic(config) {
+  if (config.device === "large-desktop") return;
+
   teardownSnapshotLogic();
 
   // Initial snapshot after load or idle
@@ -41,7 +43,6 @@ export function teardownSnapshotLogic() {
 }
 
 function shouldSendSnapshot(config) {
-  // Check if snapshot_update is true for the current device
   const pageConfig = config.data;
   return !!pageConfig?.page_config?.snapshot_update;
 }
@@ -53,6 +54,7 @@ function sendSnapshot(config) {
     body: JSON.stringify({
       trackingId: config.trackingId,
       url: window.location.href,
+      device: config.device,
       snapshot: captureSnapshot(),
     }),
   });
