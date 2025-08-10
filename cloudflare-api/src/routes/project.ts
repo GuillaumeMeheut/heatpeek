@@ -9,6 +9,7 @@ import {
   snapshotKey,
 } from "../KV/key";
 import { detectBot, getUA } from "../utils/userAgent";
+import { getCfRequest } from "../utils/cfRequest";
 
 const router = new Hono<{ Bindings: Env }>();
 
@@ -62,7 +63,9 @@ router.get("/config", cors(), async (c) => {
 
   const ua = getUA(c);
 
-  if (detectBot(ua)) {
+  const { isBot } = getCfRequest(c);
+
+  if (detectBot(ua) || isBot) {
     return c.body(null, 204);
   }
 
