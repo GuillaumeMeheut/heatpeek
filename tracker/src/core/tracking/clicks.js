@@ -4,7 +4,7 @@ import { getEventBuffer } from "../tracking";
 let handleClick;
 let handleNavigation;
 
-export function setupClickTracking() {
+export function setupClickTracking(config) {
   if (config.device === "large-desktop") return;
 
   teardownClickTracking();

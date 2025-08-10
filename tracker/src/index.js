@@ -7,6 +7,7 @@ import { getReferrerDomain } from "./utils/getReferrer";
 import { pushScrollDepthEvent } from "./core/tracking/scrollDepth";
 import { pushEngagementEvent } from "./core/tracking/timeOnPage";
 import { getViewportDeviceCategory } from "./utils/getDevice";
+import { detectBot } from "./utils/detectBot";
 
 (function () {
   try {
@@ -32,9 +33,9 @@ import { getViewportDeviceCategory } from "./utils/getDevice";
       endpointAPI = "https://api.heatpeek.com";
     }
 
-    verifyTracking(endpoint, trackingId);
-
     if (!trackingId || detectBot()) return;
+
+    verifyTracking(endpoint, trackingId);
 
     const referrer = getReferrerDomain();
     const device = getViewportDeviceCategory();

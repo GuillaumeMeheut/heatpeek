@@ -20,7 +20,7 @@ export function initializeTracking(config) {
   sendPageview(config);
 
   setupSnapshotLogic(config);
-  setupClickTracking();
+  setupClickTracking(config);
   setupScrollTracking();
   setupTimeOnPageTracking();
 }
