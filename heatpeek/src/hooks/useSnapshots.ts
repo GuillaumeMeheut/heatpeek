@@ -17,6 +17,7 @@ type UseSnapshotsResult = {
   isLoading: boolean;
   error: Error | null;
   refetch: () => Promise<void>;
+  setSnapshots: (snapshots: SnapshotOption[]) => void;
 };
 
 export function useSnapshots({
@@ -86,5 +87,6 @@ export function useSnapshots({
     isLoading,
     error,
     refetch: fetchSnapshots,
+    setSnapshots,
   };
 }

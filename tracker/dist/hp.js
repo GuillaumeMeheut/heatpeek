@@ -15,7 +15,7 @@
       }
     }
   }
-  const config$1 = {
+  const config = {
     data: null,
     endpointAPI: null,
     endpoint: null,
@@ -78,8 +78,8 @@
   }
   let handleClick;
   let handleNavigation;
-  function setupClickTracking() {
-    if (config.device === "large-desktop") return;
+  function setupClickTracking(config2) {
+    if (config2.device === "large-desktop") return;
     teardownClickTracking();
     const buffer = getEventBuffer();
     let lastClick = 0;
@@ -439,7 +439,7 @@
     startBufferFlush(config2);
     sendPageview(config2);
     setupSnapshotLogic(config2);
-    setupClickTracking();
+    setupClickTracking(config2);
     setupScrollTracking();
     setupTimeOnPageTracking();
   }
@@ -561,6 +561,51 @@
     if (width <= 2e3) return "desktop";
     return "large-desktop";
   }
+  function detectBot() {
+    const userAgent = navigator.userAgent.toLowerCase();
+    const botPatterns = [
+      "bot",
+      "crawler",
+      "spider",
+      "headless",
+      "selenium",
+      "googlebot",
+      "bingbot",
+      "yandexbot",
+      "duckduckbot",
+      "baiduspider",
+      "lighthouse",
+      "webdriver",
+      "phantomjs",
+      "puppeteer",
+      "playwright",
+      "nmap",
+      "nikto",
+      "acunetix",
+      "nessus",
+      "burp",
+      "zap",
+      "curl",
+      "wget",
+      "python-requests",
+      "java-http-client",
+      "pingdom",
+      "uptimerobot",
+      "newrelic",
+      "datadog",
+      "facebookexternalhit",
+      "twitterbot",
+      "linkedinbot",
+      "apache-httpclient",
+      "python-urllib",
+      "mozilla/5.0 (compatible;)",
+      "mozilla/5.0 (bot;)",
+      "mozilla/5.0 (crawler;)",
+      "mozilla/5.0 (spider;)",
+      "mozilla/5.0 (monitoring;)"
+    ];
+    return botPatterns.some((pattern) => userAgent.includes(pattern));
+  }
   (function() {
     try {
       const trackingId = document.currentScript.getAttribute("id");
@@ -577,16 +622,16 @@
         endpoint = "https://heatpeek.com";
         endpointAPI = "https://api.heatpeek.com";
       }
-      verifyTracking(endpoint, trackingId);
       if (!trackingId || detectBot()) return;
+      verifyTracking(endpoint, trackingId);
       const referrer = getReferrerDomain();
       const device = getViewportDeviceCategory();
       const runTracking = (path) => {
         cleanupTracking();
-        config$1.init(endpointAPI, endpoint, trackingId, path, referrer, device);
-        config$1.fetch().then((configData) => {
+        config.init(endpointAPI, endpoint, trackingId, path, referrer, device);
+        config.fetch().then((configData) => {
           if (!configData) return;
-          initializeTracking(config$1);
+          initializeTracking(config);
         });
       };
       runTracking(window.location.pathname);

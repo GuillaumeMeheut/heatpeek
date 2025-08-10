@@ -110,11 +110,12 @@ export async function inlineImagesAndBackgrounds(
 ): Promise<string> {
   const { document } = parseHTML(html);
 
-  await Promise.all([
-    inlineImages(document, baseUrl),
-    inlineStylesheets(document, baseUrl),
-    inlineFonts(document, baseUrl),
-  ]);
+  // Important ordering: inline stylesheets first so that subsequent font and CSS URL processing can see CSS content in <style>
+  await inlineStylesheets(document, baseUrl);
+  // Then inline fonts referenced inside any <style> content
+  await inlineFonts(document, baseUrl);
+  // Then inline images and CSS background URLs
+  await inlineImages(document, baseUrl);
 
   return "<!DOCTYPE html>\n" + document.documentElement.outerHTML;
 }
@@ -154,15 +155,30 @@ async function inlineImages(
     }
   }
 
+  // Collect CSS background images from <style> elements as well
+  const styleElements = Array.from(document.querySelectorAll("style"));
+  const cssUrlRegex = /url\(["']?([^"')]+)["']?\)/g;
+  for (const styleEl of styleElements) {
+    const cssText = styleEl.textContent || "";
+    let match;
+    while ((match = cssUrlRegex.exec(cssText))) {
+      const url = match[1];
+      if (url && !url.startsWith("data:")) {
+        imageUrls.add(url);
+      }
+    }
+  }
+
   // Fetch and encode unique URLs
   await Promise.all(
     Array.from(imageUrls).map(async (src) => {
       try {
-        const absoluteUrl = new URL(src, baseUrl).href.replace(
-          "http://localhost:3001",
-          "https://guillaume-meheut.vercel.app"
-        );
-        const res = await fetch(absoluteUrl);
+        const absoluteUrl = new URL(src, baseUrl).href;
+        // Restrict to same-origin to avoid SSRF-like fetching
+        const absolute = new URL(absoluteUrl);
+        const base = new URL(baseUrl);
+        if (absolute.origin !== base.origin) return;
+        const res = await fetch(absolute.href);
         const buffer = await res.arrayBuffer();
         const mimeType = res.headers.get("content-type") || "image/png";
         const base64 = Buffer.from(buffer).toString("base64");
@@ -193,6 +209,17 @@ async function inlineImages(
       el.setAttribute("style", style);
     }
   }
+
+  // Replace CSS url(...) in <style> elements
+  for (const styleEl of styleElements) {
+    let cssText = styleEl.textContent || "";
+    cssText = cssText.replace(cssUrlRegex, (match, p1) => {
+      const originalUrl = p1 as string;
+      const data = srcToBase64Map.get(originalUrl);
+      return data ? `url('${data}')` : match;
+    });
+    styleEl.textContent = cssText;
+  }
 }
 
 async function inlineStylesheets(
@@ -206,11 +233,11 @@ async function inlineStylesheets(
     try {
       const href = link.getAttribute("href");
       if (href && !href.startsWith("data:")) {
-        const absoluteUrl = new URL(href, baseUrl).href.replace(
-          "http://localhost:3001",
-          "https://guillaume-meheut.vercel.app"
-        );
-        const res = await fetch(absoluteUrl);
+        const absoluteUrl = new URL(href, baseUrl).href;
+        const absolute = new URL(absoluteUrl);
+        const base = new URL(baseUrl);
+        if (absolute.origin !== base.origin) continue;
+        const res = await fetch(absolute.href);
         const css = await res.text();
 
         // Create a new style element
@@ -248,11 +275,11 @@ async function inlineFonts(document: Document, baseUrl: string): Promise<void> {
     // Fetch and replace each font URL
     for (const fontUrl of fontUrls) {
       try {
-        const absoluteUrl = new URL(fontUrl, baseUrl).href.replace(
-          "http://localhost:3001",
-          "https://guillaume-meheut.vercel.app"
-        );
-        const res = await fetch(absoluteUrl);
+        const absoluteUrl = new URL(fontUrl, baseUrl).href;
+        const absolute = new URL(absoluteUrl);
+        const base = new URL(baseUrl);
+        if (absolute.origin !== base.origin) continue;
+        const res = await fetch(absolute.href);
         if (!res.ok) continue;
         const buffer = await res.arrayBuffer();
         // Guess MIME type from extension

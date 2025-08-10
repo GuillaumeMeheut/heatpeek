@@ -31,7 +31,7 @@ export type RageClickEvent = BaseClickHouseEvent & {
 };
 
 export type ScrollDepthEvent = BaseClickHouseEvent & {
-  snapshot_id: string;
+  snapshot_id?: string;
   scroll_depth: number;
 };
 

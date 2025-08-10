@@ -191,22 +191,18 @@ export async function processBatchEvents(
         Boolean(row.snapshot_id)
       );
 
-    const scrollRows = allScrolls
-      .map((e) => ({
-        snapshot_id: snapshotCacheMap.get(
-          snapshotKey(e.trackingId, e.path, e.device)
-        ),
-        tracking_id: e.trackingId,
-        path: e.path,
-        device: e.device,
-        browser: e.browser,
-        os: e.os,
-        scroll_depth: e.sd,
-        timestamp: e.timestamp,
-      }))
-      .filter((row): row is typeof row & { snapshot_id: string } =>
-        Boolean(row.snapshot_id)
-      );
+    const scrollRows = allScrolls.map((e) => ({
+      snapshot_id: snapshotCacheMap.get(
+        snapshotKey(e.trackingId, e.path, e.device)
+      ),
+      tracking_id: e.trackingId,
+      path: e.path,
+      device: e.device,
+      browser: e.browser,
+      os: e.os,
+      scroll_depth: e.sd,
+      timestamp: e.timestamp,
+    }));
 
     const engagementRows = allEngagements.map((e) => ({
       snapshot_id: snapshotCacheMap.get(

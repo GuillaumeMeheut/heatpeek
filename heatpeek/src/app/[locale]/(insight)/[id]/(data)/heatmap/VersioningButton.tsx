@@ -18,7 +18,7 @@ import { useI18n } from "@locales/client";
 import { Input } from "@/components/ui/input";
 import { Form } from "@/components/ui/form";
 import { toast } from "sonner";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 
 export default function VersioningButton({
   urlId,
@@ -31,6 +31,7 @@ export default function VersioningButton({
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const t = useI18n();
   const searchParams = useSearchParams();
+  const router = useRouter();
 
   const handleCreateNewVersion = (formData: FormData) => {
     startTransition(async () => {
@@ -44,6 +45,7 @@ export default function VersioningButton({
         newSearchParams.delete("snapshotId");
         await createNewVersion(urlId, device, window.location.href, label);
         setIsDialogOpen(false);
+        router.replace(`?${newSearchParams.toString()}`, { scroll: false });
       } catch (error) {
         const message =
           error instanceof Error
