@@ -79,7 +79,7 @@ export const scheduled = async (
         trackingIdsToLock.push(...exceededTrackingIds);
       }
     }
-    await supabaseService.markProjectConfigsAsUsageExceeded(trackingIdsToLock);
+    await supabaseService.markProjectAsUsageExceeded(trackingIdsToLock);
 
     console.log(
       `${trackingIdsToLock.length} trackingIds have been set as usage_exceeded to true`

@@ -1,4 +1,4 @@
-export function detectBot() {
+export function isBot() {
   const userAgent = navigator.userAgent.toLowerCase();
   const botPatterns = [
     "bot",

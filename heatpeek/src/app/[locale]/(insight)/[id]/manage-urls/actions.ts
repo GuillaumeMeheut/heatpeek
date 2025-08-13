@@ -53,7 +53,7 @@ export async function addNewUrlAndPageConfigAction(
 
     const path = new URL(result.data.url).pathname;
 
-    const { error } = await supabase.rpc("add_url_with_config_and_snapshots", {
+    const { error } = await supabase.rpc("create_url_with_config", {
       _path: path,
       _label: result.data.label || null,
       _project_id: result.data.projectId,
@@ -73,6 +73,8 @@ export async function addNewUrlAndPageConfigAction(
     }
 
     await purgeConfig(trackingId, path);
+
+    await purgeSnapshot(trackingId, path, "all");
 
     revalidatePath(`/[locale]/(insight)/[id]/manage-urls`, "page");
   } catch (error) {

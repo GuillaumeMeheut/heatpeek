@@ -71,7 +71,7 @@ export default function ProjectsList({ projects }: { projects: Project[] }) {
   const handleDeleteProject = (project: Project) => {
     startTransition(async () => {
       try {
-        await deleteProjectAction(project.id);
+        await deleteProjectAction(project.id, project.tracking_id);
         toast.success(t("projects.deleteProject.success"));
       } catch (error) {
         toast.error(

@@ -13,22 +13,16 @@ import {
 import { sendPageview } from "./tracking/pageviews";
 
 export function initializeTracking(config) {
-  if (!shouldTrack(config)) return;
-
   startBufferFlush(config);
 
   sendPageview(config);
 
-  setupSnapshotLogic(config);
-  setupClickTracking(config);
+  if (config.data.page_config) {
+    setupSnapshotLogic(config);
+    setupClickTracking(config);
+  }
   setupScrollTracking();
   setupTimeOnPageTracking();
-}
-
-function shouldTrack(config) {
-  const pageConfig = config.data;
-  if (pageConfig.usage_exceeded) return false;
-  return true;
 }
 
 export function cleanupTracking() {

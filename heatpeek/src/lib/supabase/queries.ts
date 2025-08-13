@@ -9,7 +9,6 @@ import {
   PageConfigUpdate,
   UrlsUpdate,
   ProjectsInsert,
-  ProjectConfigInsert,
   ProjectsUpdate,
   UserProfileRow,
 } from "@/types/database";
@@ -45,22 +44,6 @@ export const addProject = cache(
     }
 
     return data.id;
-  }
-);
-
-export const addProjectConfig = cache(
-  async (
-    supabase: SupabaseClient,
-    projectConfig: ProjectConfigInsert
-  ): Promise<void> => {
-    const { error } = await supabase
-      .from("project_config")
-      .insert(projectConfig);
-
-    if (error) {
-      console.log("Error adding page config:", error);
-      throw new Error("Error adding page config");
-    }
   }
 );
 
@@ -469,29 +452,10 @@ export const getTrackingId = cache(
     return data.tracking_id;
   }
 );
-export const getProjectConfigId = cache(
-  async (
-    supabase: SupabaseClient,
-    projectId: string
-  ): Promise<string | null> => {
-    const { data, error } = await supabase
-      .from("project_config")
-      .select("id")
-      .eq("project_id", projectId)
-      .single();
-
-    if (error) {
-      console.log("Error getting project config ID:", error);
-      return null;
-    }
-
-    return data.id;
-  }
-);
 
 export type Project = Pick<
   ProjectsRow,
-  "id" | "label" | "base_url" | "type" | "created_at"
+  "id" | "label" | "base_url" | "type" | "created_at" | "tracking_id"
 >;
 
 export const getProjects = cache(
@@ -501,7 +465,7 @@ export const getProjects = cache(
   ): Promise<Project[] | null> => {
     const { data, error } = await supabase
       .from("projects")
-      .select("id, label, base_url, type, created_at")
+      .select("id, label, base_url, type, created_at, tracking_id")
       .eq("user_id", userId);
 
     if (error) {

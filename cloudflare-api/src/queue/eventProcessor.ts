@@ -31,6 +31,7 @@ export async function processBatchEvents(
     CACHE_HEATPEEK,
     SUPABASE_URL,
     SUPABASE_SERVICE_ROLE_KEY,
+    NODE_ENV,
   } = env;
 
   const supabaseService = new SupabaseService(
@@ -149,7 +150,8 @@ export async function processBatchEvents(
                 meta.path,
                 meta.device,
                 snapshotId,
-                CACHE_HEATPEEK
+                CACHE_HEATPEEK,
+                NODE_ENV === "development"
               );
             }
           }

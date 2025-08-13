@@ -7,7 +7,7 @@ import { getReferrerDomain } from "./utils/getReferrer";
 import { pushScrollDepthEvent } from "./core/tracking/scrollDepth";
 import { pushEngagementEvent } from "./core/tracking/timeOnPage";
 import { getViewportDeviceCategory } from "./utils/getDevice";
-import { detectBot } from "./utils/detectBot";
+import { isBot } from "./utils/detectBot";
 
 (function () {
   try {
@@ -33,7 +33,7 @@ import { detectBot } from "./utils/detectBot";
       endpointAPI = "https://api.heatpeek.com";
     }
 
-    if (!trackingId || detectBot()) return;
+    if (!trackingId || isBot()) return;
 
     verifyTracking(endpoint, trackingId);
 
@@ -45,7 +45,7 @@ import { detectBot } from "./utils/detectBot";
 
       config.init(endpointAPI, endpoint, trackingId, path, referrer, device);
       config.fetch().then((configData) => {
-        if (!configData) return;
+        if (!configData || !configData.is_active) return;
         initializeTracking(config);
       });
     };

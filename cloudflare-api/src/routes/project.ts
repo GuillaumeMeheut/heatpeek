@@ -10,6 +10,7 @@ import {
 } from "../KV/key";
 import { detectBot, getUA } from "../utils/userAgent";
 import { getCfRequest } from "../utils/cfRequest";
+import { sameBaseDomain } from "../utils";
 
 const router = new Hono<{ Bindings: Env }>();
 
@@ -46,8 +47,11 @@ function filterConfigByDevice(config: any, device: string) {
     snapshot_update: shouldUpdate,
   };
 
+  // Remove base_url from the config
+  const { base_url, ...configWithoutBaseUrl } = config;
+
   return {
-    ...config,
+    ...configWithoutBaseUrl,
     page_config: filteredPageConfig,
   };
 }
@@ -78,10 +82,15 @@ router.get("/config", cors(), async (c) => {
 
   try {
     const cachedConfig = await getConfigCache(trackingId, path, CACHE_HEATPEEK);
+    const origin = c.req.header("origin");
 
     if (cachedConfig) {
       if (cachedConfig === "__NOT_FOUND__") {
-        return c.body(null, 200, CACHE_HEADERS);
+        return c.body(null, 204, CACHE_HEADERS);
+      }
+
+      if (!origin || !sameBaseDomain(cachedConfig.base_url, origin)) {
+        return c.body(null, 204, CACHE_HEADERS);
       }
 
       const filteredConfig = filterConfigByDevice(cachedConfig, device);
@@ -93,23 +102,46 @@ router.get("/config", cors(), async (c) => {
       path
     );
 
+    console.log("config", config);
+
     if (config === SupabaseError.FETCH_ERROR) {
-      return c.body(null, 204);
+      return c.body(null, 204, CACHE_HEADERS);
     }
 
+    const isDevelopment = c.env.NODE_ENV === "development";
+
     if (config === SupabaseError.NOT_FOUND) {
-      await setConfigCache(trackingId, path, null, CACHE_HEATPEEK);
-      return c.body(null, 204);
+      await setConfigCache(
+        trackingId,
+        path,
+        null,
+        CACHE_HEATPEEK,
+        isDevelopment
+      );
+      return c.body(null, 204, CACHE_HEADERS);
     }
 
     // Cache the full config (unfiltered)
-    await setConfigCache(trackingId, path, config, CACHE_HEATPEEK);
+    await setConfigCache(
+      trackingId,
+      path,
+      config,
+      CACHE_HEATPEEK,
+      isDevelopment
+    );
+    if (!origin || !sameBaseDomain(config.base_url, origin)) {
+      return c.body(null, 204, CACHE_HEADERS);
+    }
+
+    if (config.page_config === null) {
+      return c.json({ is_active: config.is_active }, 200, CACHE_HEADERS);
+    }
 
     const filteredConfig = filterConfigByDevice(config, device);
     return c.json(filteredConfig, 200, CACHE_HEADERS);
   } catch (err) {
     console.error(err);
-    return c.body(null, 204);
+    return c.body(null, 204, CACHE_HEADERS);
   }
 });
 
@@ -141,6 +173,59 @@ router.delete(
     }
 
     await c.env.CACHE_HEATPEEK.delete(configKey(trackingId, path));
+
+    return c.json({ success: true });
+  }
+);
+
+interface KVKey {
+  name: string;
+  expiration?: number;
+  metadata?: unknown;
+}
+
+interface KVListResult {
+  keys: KVKey[];
+  list_complete: boolean;
+  cursor?: string;
+}
+
+router.delete(
+  "/config/purgeMany",
+  async (c, next) => {
+    const origin = c.env.ALLOWED_ORIGIN;
+    const corsMiddleware = dynamicCors(origin);
+    await corsMiddleware(c, next);
+  },
+  async (c) => {
+    const secret = c.env.INTERNAL_API_KEY;
+    const provided = c.req.header("x-api-key");
+
+    if (provided !== secret) {
+      return c.body("Unauthorized", 401);
+    }
+
+    const body = await c.req.json();
+    const { id: trackingId } = body;
+
+    if (!trackingId) {
+      return c.body("Missing id", 400);
+    }
+
+    let cursor = null;
+    do {
+      const list: KVListResult = await c.env.CACHE_HEATPEEK.list({
+        prefix: configKey(trackingId),
+        cursor,
+      });
+
+      // delete all in parallel
+      await Promise.all(
+        list.keys.map((k) => c.env.CACHE_HEATPEEK.delete(k.name))
+      );
+
+      cursor = list.list_complete ? null : list.cursor;
+    } while (cursor);
 
     return c.json({ success: true });
   }

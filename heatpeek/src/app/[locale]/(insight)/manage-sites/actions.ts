@@ -4,7 +4,6 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import {
   addProject,
-  addProjectConfig,
   deleteProject,
   getTotalProjects,
   getUser,
@@ -16,6 +15,7 @@ import { redirect } from "next/navigation";
 import { getI18n } from "@locales/server";
 import { nanoid } from "nanoid";
 import { z } from "zod";
+import { purgeConfigMany } from "@/lib/cloudflare/api";
 
 export async function addProjectAction(
   data: z.infer<ReturnType<typeof projectAddSchema>>
@@ -62,25 +62,19 @@ export async function addProjectAction(
     type: data.type,
   });
 
-  try {
-    await addProjectConfig(supabase, { tracking_id, project_id: projectId });
-  } catch (err) {
-    // Rollback the previous insert if this fails
-    await deleteProject(supabase, projectId);
-    console.error(
-      "Failed to add project config. Rolled back project creation.",
-      err
-    );
-    throw new Error("Failed to add project config.");
-  }
-
   revalidatePath(`/${projectId}/manage-urls`, "layout");
   redirect(`/${projectId}/manage-urls`);
 }
 
-export async function deleteProjectAction(projectId: string) {
+export async function deleteProjectAction(
+  projectId: string,
+  trackingId: string
+) {
   const supabase = await createClient();
   await deleteProject(supabase, projectId);
+
+  await purgeConfigMany(trackingId);
+
   revalidatePath("/manage-sites", "layout");
 }
 

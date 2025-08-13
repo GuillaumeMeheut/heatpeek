@@ -38,6 +38,7 @@
         );
         if (!response.ok) throw new Error("Failed to fetch config");
         this.data = await response.json();
+        console.log(this.data);
         return this.data;
       } catch (error) {
         return null;
@@ -435,18 +436,14 @@
     flushBuffer();
   }
   function initializeTracking(config2) {
-    if (!shouldTrack(config2)) return;
     startBufferFlush(config2);
     sendPageview(config2);
-    setupSnapshotLogic(config2);
-    setupClickTracking(config2);
+    if (config2.data.page_config) {
+      setupSnapshotLogic(config2);
+      setupClickTracking(config2);
+    }
     setupScrollTracking();
     setupTimeOnPageTracking();
-  }
-  function shouldTrack(config2) {
-    const pageConfig = config2.data;
-    if (pageConfig.usage_exceeded) return false;
-    return true;
   }
   function cleanupTracking() {
     stopBufferFlush();
@@ -561,7 +558,7 @@
     if (width <= 2e3) return "desktop";
     return "large-desktop";
   }
-  function detectBot() {
+  function isBot() {
     const userAgent = navigator.userAgent.toLowerCase();
     const botPatterns = [
       "bot",
@@ -622,7 +619,7 @@
         endpoint = "https://heatpeek.com";
         endpointAPI = "https://api.heatpeek.com";
       }
-      if (!trackingId || detectBot()) return;
+      if (!trackingId || isBot()) return;
       verifyTracking(endpoint, trackingId);
       const referrer = getReferrerDomain();
       const device = getViewportDeviceCategory();
@@ -630,7 +627,7 @@
         cleanupTracking();
         config.init(endpointAPI, endpoint, trackingId, path, referrer, device);
         config.fetch().then((configData) => {
-          if (!configData) return;
+          if (!configData || !configData.is_active) return;
           initializeTracking(config);
         });
       };
