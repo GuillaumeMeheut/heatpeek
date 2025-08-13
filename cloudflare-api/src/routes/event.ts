@@ -3,19 +3,7 @@ import { cors } from "hono/cors";
 import type { Env } from "../env";
 import type { QueueEventMessage } from "../types/clickhouse";
 import { getUA, parseUserAgent } from "../utils/userAgent";
-
-// Extend Request type with needed CF properties
-interface RequestWithCf extends Request {
-  cf?: {
-    country?: string;
-    region?: string;
-    city?: string;
-    botManagement?: {
-      score?: number;
-      verifiedBot?: boolean;
-    };
-  };
-}
+import { getCfRequest } from "../utils/cfRequest";
 
 const router = new Hono<{ Bindings: Env }>();
 
@@ -33,11 +21,11 @@ router.post("/", cors(), async (c) => {
       return c.body(null, 204);
     }
 
-    // Cast request to include cf properties
-    const req = c.req.raw as RequestWithCf;
+    const { country, region, city, isBot } = getCfRequest(c);
 
-    // Access cf safely (may be undefined locally)
-    const cf = req.cf ?? {};
+    if (isBot) {
+      return c.body(null, 204);
+    }
 
     const ua = getUA(c);
     const { browser, os } = parseUserAgent(ua);
@@ -53,6 +41,9 @@ router.post("/", cors(), async (c) => {
         device,
         os,
         timestamp,
+        country,
+        region,
+        city,
         events,
       },
     };

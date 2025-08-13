@@ -26,6 +26,7 @@ export const config = {
       if (!response.ok) throw new Error("Failed to fetch config");
 
       this.data = await response.json();
+      console.log(this.data);
       return this.data;
     } catch (error) {
       return null;

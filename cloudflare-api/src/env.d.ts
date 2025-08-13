@@ -3,6 +3,7 @@ import type { BrowserWorker } from "@cloudflare/puppeteer";
 import type { Queue } from "@cloudflare/workers-types";
 
 interface Env {
+  NODE_ENV: string;
   SUPABASE_URL: string;
   SUPABASE_ANON_KEY: string;
   SUPABASE_SERVICE_ROLE_KEY: string;

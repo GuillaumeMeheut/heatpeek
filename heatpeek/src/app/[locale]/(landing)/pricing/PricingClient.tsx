@@ -334,7 +334,6 @@ export default function PricingClient({
         t("pricing.plans.starter.features.7"),
         t("pricing.plans.starter.features.8"),
         t("pricing.plans.starter.features.9"),
-        t("pricing.plans.starter.features.10"),
       ],
       popular: false,
       icon: BarChart3,

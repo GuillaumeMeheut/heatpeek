@@ -170,11 +170,11 @@ export class ClickHouseService {
   ): Promise<number> {
     try {
       const query = `
-        SELECT SUM(views) as total_views
-        FROM aggregated_pageviews
+        SELECT count() as total_views
+        FROM raw_pageviews
         WHERE tracking_id IN (${trackingIdList})
-        AND date >= '${toClickhouseDateTime(billingStart)}'
-        AND date < '${toClickhouseDateTime(billingEnd)}'
+        AND timestamp >= '${toClickhouseDateTime(billingStart)}'
+        AND timestamp < '${toClickhouseDateTime(billingEnd)}'
       `;
 
       const result = await this.client.query({

@@ -31,6 +31,7 @@ export function setupClickTracking(config) {
     const height = Math.round(rect.height);
 
     const selector = getUniqueSelector(el);
+
     const erx = parseFloat(((e.pageX - left) / width).toFixed(4));
     const ery = parseFloat(((e.pageY - top) / height).toFixed(4));
 

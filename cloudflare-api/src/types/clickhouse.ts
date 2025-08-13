@@ -111,6 +111,9 @@ export type EventMetadata = {
   device: string;
   os: string;
   timestamp: string;
+  country: string | null;
+  region: string | null;
+  city: string | null;
 };
 
 export type BatchedEvent<T> = {

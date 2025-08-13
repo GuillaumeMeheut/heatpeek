@@ -24,8 +24,7 @@ const createClickhouseClient = () => {
 };
 
 const buildConditions = (
-  params: BaseQueryParams,
-  dateField: "timestamp" | "date" = "timestamp"
+  params: BaseQueryParams
 ): { conditions: string[]; queryParams: Record<string, string | number> } => {
   const conditions: string[] = [`tracking_id = {trackingId:String}`];
   const queryParams: Record<string, string | number> = {
@@ -49,16 +48,16 @@ const buildConditions = (
   if (params.date) {
     switch (params.date) {
       case FilterDateEnum.Last24Hours:
-        conditions.push(`${dateField} >= now() - INTERVAL 24 HOUR`);
+        conditions.push(`timestamp >= now() - INTERVAL 24 HOUR`);
         break;
       case FilterDateEnum.Last7Days:
-        conditions.push(`${dateField} >= now() - INTERVAL 7 DAY`);
+        conditions.push(`timestamp >= now() - INTERVAL 7 DAY`);
         break;
       case FilterDateEnum.Last30Days:
-        conditions.push(`${dateField} >= now() - INTERVAL 30 DAY`);
+        conditions.push(`timestamp >= now() - INTERVAL 30 DAY`);
         break;
       case FilterDateEnum.Last90Days:
-        conditions.push(`${dateField} >= now() - INTERVAL 90 DAY`);
+        conditions.push(`timestamp >= now() - INTERVAL 90 DAY`);
         break;
     }
   }
@@ -169,11 +168,11 @@ export const getScrollDepth = cache(
 // Helper function for pageviews logic
 export const getPageViews = cache(
   async (params: BaseQueryParams): Promise<number> => {
-    const { conditions, queryParams } = buildConditions(params, "date");
+    const { conditions, queryParams } = buildConditions(params);
 
     const query = `
-    SELECT sum(views) AS total_views
-    FROM aggregated_pageviews
+    SELECT count() AS total_views
+    FROM raw_pageviews
     WHERE ${conditions.join(" AND ")}
   `;
 
@@ -185,11 +184,11 @@ export const getPageViewsByBrowser = cache(
   async (
     params: BaseQueryParams
   ): Promise<{ browser: string; count: number }[]> => {
-    const { conditions, queryParams } = buildConditions(params, "date");
+    const { conditions, queryParams } = buildConditions(params);
 
     const query = `
-    SELECT browser, sum(views) AS browser_count
-    FROM aggregated_pageviews
+    SELECT browser, count() AS browser_count
+    FROM raw_pageviews
     WHERE ${conditions.join(" AND ")}
     GROUP BY browser
     ORDER BY browser_count DESC
@@ -208,7 +207,7 @@ export const getPageViewsByBrowser = cache(
 );
 
 export const getPageViewsTimeseries = cache(async (params: BaseQueryParams) => {
-  const { conditions, queryParams } = buildConditions(params, "date");
+  const { conditions, queryParams } = buildConditions(params);
 
   // Determine grouping based on date range
   const groupExpr = getGroupExpr(params.date);
@@ -216,8 +215,8 @@ export const getPageViewsTimeseries = cache(async (params: BaseQueryParams) => {
   const query = `
     SELECT 
       ${groupExpr},
-      sum(views) AS total_views
-    FROM aggregated_pageviews
+      count() AS total_views
+    FROM raw_pageviews
     WHERE ${conditions.join(" AND ")}
     GROUP BY period
     ORDER BY period ASC
@@ -236,14 +235,14 @@ export const getPageViewsTimeseries = cache(async (params: BaseQueryParams) => {
 const getGroupExpr = (date?: FilterDateEnum) => {
   switch (date) {
     case FilterDateEnum.Last24Hours:
-      return "toStartOfHour(date) AS period";
+      return "toStartOfHour(timestamp) AS period";
     case FilterDateEnum.Last7Days:
     case FilterDateEnum.Last30Days:
-      return "toDate(date) AS period";
+      return "toDate(timestamp) AS period";
     case FilterDateEnum.Last90Days:
-      return "toStartOfMonth(date) AS period";
+      return "toStartOfMonth(timestamp) AS period";
     default:
-      return "toDate(date) AS period";
+      return "toDate(timestamp) AS period";
   }
 };
 

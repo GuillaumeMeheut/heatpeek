@@ -35,11 +35,11 @@
   "observability": {
     "enabled": true,
     "head_sampling_rate": 1
+  },
+  "vars": {
+    "NODE_ENV": "production"
   }
 
-  // "vars": {
-  //   "MY_VAR": "my-variable"
-  // },
   // "r2_buckets": [
   //   {
   //     "binding": "MY_BUCKET",

@@ -31,6 +31,7 @@ export async function processBatchEvents(
     CACHE_HEATPEEK,
     SUPABASE_URL,
     SUPABASE_SERVICE_ROLE_KEY,
+    NODE_ENV,
   } = env;
 
   const supabaseService = new SupabaseService(
@@ -58,7 +59,17 @@ export async function processBatchEvents(
     >();
 
     for (const { data } of messages) {
-      const { trackingId, path, browser, device, os, events } = data;
+      const {
+        trackingId,
+        path,
+        browser,
+        device,
+        os,
+        events,
+        country,
+        region,
+        city,
+      } = data;
       if (!trackingId || !path || !device || !events?.length) continue;
 
       const key = snapshotKey(trackingId, path, device);
@@ -66,7 +77,16 @@ export async function processBatchEvents(
       snapshotMeta.set(key, { trackingId, path, device });
 
       for (const event of events) {
-        const baseMeta = { trackingId, path, browser, device, os };
+        const baseMeta = {
+          trackingId,
+          path,
+          browser,
+          device,
+          os,
+          country,
+          region,
+          city,
+        };
         switch (event.type) {
           case "page_view":
             allPageviews.push({ ...event, ...baseMeta });
@@ -130,7 +150,8 @@ export async function processBatchEvents(
                 meta.path,
                 meta.device,
                 snapshotId,
-                CACHE_HEATPEEK
+                CACHE_HEATPEEK,
+                NODE_ENV === "development"
               );
             }
           }
@@ -151,6 +172,9 @@ export async function processBatchEvents(
       referrer: e.referrer,
       is_bounce: e.is_bounce,
       timestamp: e.timestamp,
+      country: e.country,
+      region: e.region,
+      city: e.city,
     }));
 
     const clickRows = allClicks
@@ -186,6 +210,9 @@ export async function processBatchEvents(
         erx: e.erx,
         ery: e.ery,
         timestamp: e.timestamp,
+        country: e.country,
+        region: e.region,
+        city: e.city,
       }))
       .filter((row): row is typeof row & { snapshot_id: string } =>
         Boolean(row.snapshot_id)
@@ -202,6 +229,9 @@ export async function processBatchEvents(
       os: e.os,
       scroll_depth: e.sd,
       timestamp: e.timestamp,
+      country: e.country,
+      region: e.region,
+      city: e.city,
     }));
 
     const engagementRows = allEngagements.map((e) => ({
@@ -215,6 +245,9 @@ export async function processBatchEvents(
       os: e.os,
       duration: e.e,
       timestamp: e.timestamp,
+      country: e.country,
+      region: e.region,
+      city: e.city,
     }));
 
     // 4️⃣ Insert by type (isolated failures)

@@ -9,7 +9,8 @@ import {
 import { snapshotKey } from "../KV/key";
 
 export type ProjectConfigResult = {
-  usage_exceeded: boolean;
+  base_url: string;
+  is_active: boolean;
   page_config: {
     path: string;
     ignored_el: string[] | null;
@@ -44,11 +45,13 @@ export class SupabaseService {
   ): Promise<ProjectConfigResult | SupabaseError> {
     try {
       const { data, error } = await this.supabase
-        .from("project_config")
+        .from("projects")
         .select(
           `
+          base_url,
+          is_active,
           usage_exceeded,
-          page_config!inner(
+          page_config (
             path,
             ignored_el,
             privacy_el,
@@ -59,7 +62,7 @@ export class SupabaseService {
         `
         )
         .eq("tracking_id", trackingId)
-        .eq("page_config.path", path)
+        // no filter on page_config.path here, do it after fetch
         .single();
 
       if (error) {
@@ -74,13 +77,13 @@ export class SupabaseService {
         return SupabaseError.NOT_FOUND;
       }
 
-      const pageConfig = data.page_config?.[0];
-      if (!pageConfig) {
-        return SupabaseError.NOT_FOUND;
-      }
+      // data.page_config is an array (maybe empty)
+      const pageConfig =
+        (data.page_config || []).find((pc) => pc.path === path) ?? null;
 
       return {
-        usage_exceeded: data.usage_exceeded,
+        base_url: data.base_url,
+        is_active: data.is_active && !data.usage_exceeded,
         page_config: pageConfig,
       };
     } catch (error) {
@@ -343,29 +346,21 @@ export class SupabaseService {
     }
   }
 
-  async markProjectConfigsAsUsageExceeded(
-    trackingIds: string[]
-  ): Promise<void> {
+  async markProjectAsUsageExceeded(trackingIds: string[]): Promise<void> {
     try {
       if (trackingIds.length === 0) return;
 
       const { error } = await this.supabase
-        .from("project_config")
-        .update({ usage_exceeded: true })
+        .from("projects")
+        .update({ usage_exceeded: true, is_active: false })
         .in("tracking_id", trackingIds);
 
       if (error) {
-        console.error(
-          "Supabase error markProjectConfigsAsUsageExceeded:",
-          error
-        );
+        console.error("Supabase error markProjectAsUsageExceeded:", error);
         throw new Error(error.message);
       }
     } catch (error) {
-      console.error(
-        "Unexpected error markProjectConfigsAsUsageExceeded:",
-        error
-      );
+      console.error("Unexpected error markProjectAsUsageExceeded:", error);
       throw new Error(error as string);
     }
   }

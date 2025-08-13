@@ -1,14 +1,14 @@
 import type { Env } from "../env";
 import { ProjectConfigResult } from "../services/supabase";
 
+export const configKey = (trackingId: string, path?: string) =>
+  `config:t-${trackingId}${path ? `-p-${path}` : ""}`;
+
 export const snapshotKey = (trackingId: string, path: string, device: string) =>
   `snapshot:t-${trackingId}-p-${path}-d-${device}`;
 
-export const configKey = (trackingId: string, path: string) =>
-  `config:t-${trackingId}-p-${path}`;
-
-const EXPIRATION_KV_SNAPSHOT_TTL = 300; //5min
-const EXPIRATION_KV_CONFIG_TTL = 300; //5min
+const EXPIRATION_KV_SNAPSHOT_TTL = 21600; // 6hours
+const EXPIRATION_KV_CONFIG_TTL = 21600; // 6hours
 
 export const getConfigCache = async (
   trackingId: string,
@@ -24,12 +24,14 @@ export const setConfigCache = async (
   trackingId: string,
   path: string,
   config: ProjectConfigResult | null,
-  CACHE_HEATPEEK: Env["CACHE_HEATPEEK"]
+  CACHE_HEATPEEK: Env["CACHE_HEATPEEK"],
+  isDevelopment: boolean = false
 ): Promise<void> => {
   const KVKey = configKey(trackingId, path);
-  const value = config === null ? '"__NOT_FOUND__"' : JSON.stringify(config);
-  await CACHE_HEATPEEK.put(KVKey, value, {
-    expirationTtl: EXPIRATION_KV_CONFIG_TTL,
+  const value = config === null ? '"__NOT_FOUND__"' : config;
+  const expirationTtl = isDevelopment ? 60 : EXPIRATION_KV_CONFIG_TTL;
+  await CACHE_HEATPEEK.put(KVKey, JSON.stringify(value), {
+    expirationTtl,
   });
 };
 
@@ -49,10 +51,12 @@ export const setSnapshotCache = async (
   path: string,
   device: string,
   snapshotId: string,
-  CACHE_HEATPEEK: Env["CACHE_HEATPEEK"]
+  CACHE_HEATPEEK: Env["CACHE_HEATPEEK"],
+  isDevelopment: boolean = false
 ): Promise<void> => {
   const KVKey = snapshotKey(trackingId, path, device);
+  const expirationTtl = isDevelopment ? 60 : EXPIRATION_KV_SNAPSHOT_TTL;
   await CACHE_HEATPEEK.put(KVKey, snapshotId, {
-    expirationTtl: EXPIRATION_KV_SNAPSHOT_TTL,
+    expirationTtl,
   });
 };
