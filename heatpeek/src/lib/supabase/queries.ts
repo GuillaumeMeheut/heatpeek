@@ -586,13 +586,12 @@ export const getUserPlanLimits = async (
     throw new Error("Failed to fetch user plan limits");
   }
 
-  // If subscription_status is not 'active' or 'trialing', user is limited
   if (
     !data ||
     (data.subscription_status !== "active" &&
       data.subscription_status !== "trialing")
   ) {
-    return null;
+    throw new Error("User is not subscribed");
   }
 
   // Supabase sometimes returns an array for joined tables, so handle that
