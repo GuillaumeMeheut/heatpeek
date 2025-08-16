@@ -403,6 +403,14 @@ export default {
     addButton: "Ajouter l'URL",
     success: "URL ajoutée avec succès",
     error: "Échec de l'ajout de l'URL",
+    sensitiveElementsLabel: "Éléments sensibles",
+    sensitiveElementsPlaceholder: "#photo-profil,#nom",
+    sensitiveElementsDescription:
+      "Ajoutez des sélecteurs CSS pour masquer et censurer ces éléments. (doit être séparé par des virgules)",
+    excludeElementsLabel: "Éléments à exclure",
+    excludeElementsPlaceholder: "#banniere-cookies,#modal",
+    excludeElementsDescription:
+      "Ajoutez des sélecteurs CSS pour exclure ces éléments. (doit être séparé par des virgules)",
   },
   urlList: {
     manageSites: "Gérer les sites",

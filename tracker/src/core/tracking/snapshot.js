@@ -15,17 +15,15 @@ export function setupSnapshotLogic(config) {
 
   // On SPA navigation
   navigationHandler = () => {
-    // Clear any existing timeout
     if (timeoutId) {
       clearTimeout(timeoutId);
     }
 
-    // Use the same improved waitForDomIdle logic for SPA navigation
     waitForDomIdle(() => {
       if (shouldSendSnapshot(config)) {
         sendSnapshot(config);
       }
-    }, 2500); // Slightly shorter timeout for SPA navigation
+    }, 2500);
   };
   document.addEventListener("heatpeek:navigation", navigationHandler);
 }
@@ -55,19 +53,124 @@ function sendSnapshot(config) {
       trackingId: config.trackingId,
       url: window.location.href,
       device: config.device,
-      snapshot: captureSnapshot(),
+      snapshot: captureSnapshot(config),
     }),
   });
 }
 
-function captureSnapshot() {
+/**
+ * Capture sanitized DOM snapshot
+ */
+function captureSnapshot(config) {
+  const html = sanitizeDOM(document.documentElement, {
+    exclude_el: config.data?.page_config?.exclude_el || [],
+    privacy_el: config.data?.page_config?.privacy_el || [],
+  });
+
   return {
-    html: document.documentElement.outerHTML,
+    html,
     viewport: {
       width: window.innerWidth,
       height: window.innerHeight,
     },
   };
+}
+
+/**
+ * Sanitize DOM for privacy
+ */
+function sanitizeDOM(root, opts = {}) {
+  const clone = root.cloneNode(true);
+
+  const defaultExcluded = [
+    '[id*="cookie"]',
+    '[class*="cookie"]',
+    '[id*="consent"]',
+    '[class*="consent"]',
+    '[id*="gdpr"]',
+    '[class*="gdpr"]',
+  ];
+
+  const excludeSelectors = [
+    ...defaultExcluded,
+    ...(opts.exclude_el ?? []),
+    "[data-hp-exclude]",
+  ];
+
+  // helper to avoid crashes on invalid selectors
+  function safeMatches(el, selector) {
+    try {
+      return el.matches(selector);
+    } catch {
+      console.warn("Invalid selector ignored:", selector);
+      return false;
+    }
+  }
+
+  // instead of running querySelectorAll for each selector,
+  // walk once and remove matching nodes
+  const walkerExclude = document.createTreeWalker(
+    clone,
+    NodeFilter.SHOW_ELEMENT
+  );
+  let node = walkerExclude.currentNode;
+
+  while (node) {
+    const current = node;
+    node = walkerExclude.nextNode(); // advance before removal
+    if (excludeSelectors.some((sel) => safeMatches(current, sel))) {
+      current.remove();
+    }
+  }
+
+  // Clear input/textarea values
+  clone.querySelectorAll("input, textarea").forEach((el) => {
+    el.value = "";
+    el.setAttribute("value", "");
+  });
+
+  // Walk text nodes and sanitize sensitive patterns
+  const walker = document.createTreeWalker(clone, NodeFilter.SHOW_TEXT, {
+    acceptNode: (node) => {
+      if (!node.parentElement) return NodeFilter.FILTER_REJECT;
+      const tag = node.parentElement.tagName;
+      if (["SCRIPT", "STYLE", "NOSCRIPT", "HEAD"].includes(tag))
+        return NodeFilter.FILTER_REJECT;
+      return NodeFilter.FILTER_ACCEPT;
+    },
+  });
+
+  const patterns = [
+    [/\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b/gi, "[email]"], // Email
+    [/\+?\d[\d\-\s()]{6,}\d/g, "[phone]"], // Phone
+    [/\b(?:\d[ -]*?){13,16}\b/g, "[cc-number]"], // Credit card
+    [/\b(?:\d{1,3}\.){3}\d{1,3}\b/g, "[ip]"], // IPv4
+  ];
+
+  let textNode;
+  while ((textNode = walker.nextNode())) {
+    if (!textNode.textContent) continue;
+    patterns.forEach(([regex, replacement]) => {
+      textNode.textContent = textNode.textContent.replace(regex, replacement);
+    });
+  }
+
+  // Handle privacy masking
+  let privacySelectors = "[data-hp-privacy]";
+  if (opts.privacy_el && opts.privacy_el.length > 0) {
+    privacySelectors = opts.privacy_el.join(",") + ", [data-hp-privacy]";
+  }
+
+  clone.querySelectorAll(privacySelectors).forEach((el) => {
+    if (el instanceof HTMLInputElement || el instanceof HTMLTextAreaElement) {
+      el.value = "";
+      el.setAttribute("value", "");
+    } else {
+      el.innerText = "[masked]";
+    }
+  });
+
+  return clone.outerHTML;
 }
 
 function waitForDomIdle(callback, timeout = 8000) {
@@ -78,10 +181,8 @@ function waitForDomIdle(callback, timeout = 8000) {
     if (called) return;
     called = true;
 
-    // Wait for all promises to resolve, then execute callback
     Promise.all(loadPromises)
       .then(() => {
-        // Additional delay to ensure any remaining animations complete
         setTimeout(() => {
           if ("requestIdleCallback" in window) {
             requestIdleCallback(callback, { timeout: 2000 });
@@ -91,29 +192,24 @@ function waitForDomIdle(callback, timeout = 8000) {
         }, 1000);
       })
       .catch(() => {
-        // If any promises fail, still execute callback after timeout
         setTimeout(callback, 2000);
       });
   };
 
-  const waitForImages = () => {
-    return new Promise((resolve) => {
+  const waitForImages = () =>
+    new Promise((resolve) => {
       const images = Array.from(document.querySelectorAll("img"));
       if (images.length === 0) {
         resolve();
         return;
       }
-
       let loadedCount = 0;
-      const totalImages = images.length;
-
       const checkComplete = () => {
         loadedCount++;
-        if (loadedCount >= totalImages) {
+        if (loadedCount >= images.length) {
           resolve();
         }
       };
-
       images.forEach((img) => {
         if (img.complete) {
           checkComplete();
@@ -122,34 +218,24 @@ function waitForDomIdle(callback, timeout = 8000) {
           img.addEventListener("error", checkComplete, { once: true });
         }
       });
-
-      // Fallback timeout for images
       setTimeout(resolve, 3000);
     });
-  };
 
-  const waitForFonts = () => {
-    return new Promise((resolve) => {
+  const waitForFonts = () =>
+    new Promise((resolve) => {
       if ("fonts" in document) {
         document.fonts.ready.then(resolve);
       } else {
-        // Fallback for browsers without Font Loading API
         setTimeout(resolve, 1000);
       }
     });
-  };
 
-  const waitForAnimations = () => {
-    return new Promise((resolve) => {
-      // Wait for CSS animations and transitions to complete
+  const waitForAnimations = () =>
+    new Promise((resolve) => {
       const animatedElements = document.querySelectorAll("*");
-      let animationCount = 0;
-      let transitionCount = 0;
-
       const checkStyles = () => {
         let hasAnimations = false;
         let hasTransitions = false;
-
         animatedElements.forEach((el) => {
           const style = window.getComputedStyle(el);
           if (style.animationName && style.animationName !== "none") {
@@ -159,26 +245,18 @@ function waitForDomIdle(callback, timeout = 8000) {
             hasTransitions = true;
           }
         });
-
         if (!hasAnimations && !hasTransitions) {
           resolve();
         } else {
-          // Check again after a short delay
           setTimeout(checkStyles, 100);
         }
       };
-
-      // Start checking after a brief delay to allow initial animations to start
       setTimeout(checkStyles, 200);
-
-      // Fallback timeout
       setTimeout(resolve, 2000);
     });
-  };
 
-  const waitForNetworkIdle = () => {
-    return new Promise((resolve) => {
-      // Simple network idle detection
+  const waitForNetworkIdle = () =>
+    new Promise((resolve) => {
       let lastActivity = Date.now();
       const checkIdle = () => {
         if (Date.now() - lastActivity > 1000) {
@@ -187,17 +265,11 @@ function waitForDomIdle(callback, timeout = 8000) {
           setTimeout(checkIdle, 200);
         }
       };
-
-      // Start checking after a delay
       setTimeout(checkIdle, 1000);
-
-      // Fallback timeout
       setTimeout(resolve, 3000);
     });
-  };
 
   if (document.readyState === "complete") {
-    // Page is already loaded, collect promises and wait
     loadPromises = [
       waitForImages(),
       waitForFonts(),
@@ -206,9 +278,7 @@ function waitForDomIdle(callback, timeout = 8000) {
     ];
     runOnce();
   } else {
-    // Page is still loading
     const loadHandler = () => {
-      // Wait a bit more after load event to ensure everything is processed
       setTimeout(() => {
         loadPromises = [
           waitForImages(),
@@ -219,10 +289,7 @@ function waitForDomIdle(callback, timeout = 8000) {
         runOnce();
       }, 1000);
     };
-
     window.addEventListener("load", loadHandler, { once: true });
-
-    // Fallback timeout
     setTimeout(() => {
       if (!called) {
         loadPromises = [

@@ -7,7 +7,7 @@ export type Json =
   | Json[]
 
 export type Database = {
-  // Allows to automatically instanciate createClient with right options
+  // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
     PostgrestVersion: "12.2.3 (519615d)"
@@ -17,11 +17,11 @@ export type Database = {
       page_config: {
         Row: {
           created_at: string
+          exclude_el: string[] | null
           id: string
-          ignored_el: string[] | null
           path: string
           privacy_el: string[] | null
-          project_config_id: string
+          project_id: string
           update_snap_desktop: boolean
           update_snap_mobile: boolean
           update_snap_tablet: boolean
@@ -29,11 +29,11 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          exclude_el?: string[] | null
           id?: string
-          ignored_el?: string[] | null
           path: string
           privacy_el?: string[] | null
-          project_config_id: string
+          project_id: string
           update_snap_desktop?: boolean
           update_snap_mobile?: boolean
           update_snap_tablet?: boolean
@@ -41,11 +41,11 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          exclude_el?: string[] | null
           id?: string
-          ignored_el?: string[] | null
           path?: string
           privacy_el?: string[] | null
-          project_config_id?: string
+          project_id?: string
           update_snap_desktop?: boolean
           update_snap_mobile?: boolean
           update_snap_tablet?: boolean
@@ -53,10 +53,10 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "page_config_project_config_id_fkey"
-            columns: ["project_config_id"]
+            foreignKeyName: "page_config_project_id_fkey"
+            columns: ["project_id"]
             isOneToOne: false
-            referencedRelation: "project_config"
+            referencedRelation: "projects"
             referencedColumns: ["id"]
           },
           {
@@ -95,71 +95,38 @@ export type Database = {
         }
         Relationships: []
       }
-      project_config: {
-        Row: {
-          created_at: string
-          id: string
-          project_id: string
-          tracking_id: string
-          usage_exceeded: boolean
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          project_id: string
-          tracking_id: string
-          usage_exceeded?: boolean
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          project_id?: string
-          tracking_id?: string
-          usage_exceeded?: boolean
-        }
-        Relationships: [
-          {
-            foreignKeyName: "config_tracking_id_fkey"
-            columns: ["tracking_id"]
-            isOneToOne: true
-            referencedRelation: "projects"
-            referencedColumns: ["tracking_id"]
-          },
-          {
-            foreignKeyName: "project_config_project_id_fkey"
-            columns: ["project_id"]
-            isOneToOne: true
-            referencedRelation: "projects"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       projects: {
         Row: {
           base_url: string
           created_at: string
           id: string
+          is_active: boolean
           label: string | null
           tracking_id: string
           type: string | null
+          usage_exceeded: boolean
           user_id: string
         }
         Insert: {
           base_url: string
           created_at?: string
           id?: string
+          is_active?: boolean
           label?: string | null
           tracking_id: string
           type?: string | null
+          usage_exceeded?: boolean
           user_id?: string
         }
         Update: {
           base_url?: string
           created_at?: string
           id?: string
+          is_active?: boolean
           label?: string | null
           tracking_id?: string
           type?: string | null
+          usage_exceeded?: boolean
           user_id?: string
         }
         Relationships: []
@@ -326,9 +293,24 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      add_url_with_config_and_snapshots: {
-        Args: { _path: string; _label: string; _project_id: string }
+      create_url_with_config: {
+        Args: {
+          _exclude_elements?: string[]
+          _label: string
+          _path: string
+          _project_id: string
+          _sensitive_element?: string[]
+        }
         Returns: string
+      }
+      update_url_and_config: {
+        Args: {
+          _exclude_elements: string[]
+          _label: string
+          _sensitive_element: string[]
+          _url_id: string
+        }
+        Returns: undefined
       }
       upsert_aggregated_clicks: {
         Args: { clicks: Json }

@@ -25,6 +25,8 @@
 - [ ] Find a way to optimize large dataset of clicks bc of egress consumption(cachin for a day?)
 - [ ] rename fiels to use snake case
 - [ ] insert snapshot id in KV at snapshot creation/update/deletion
+- [ ] Better handle error in nextjs throw error cause unshowed error in production
+- [ ] Show when user isnt subscribed maybe cant access dashboard??
 
 ---
 

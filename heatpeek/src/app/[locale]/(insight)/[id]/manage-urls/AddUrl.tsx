@@ -40,6 +40,8 @@ export default function AddUrlDialog({
           url: formData.get("url"),
           label: formData.get("label"),
           projectId: formData.get("projectId"),
+          sensitiveElement: formData.get("sensitiveElements"),
+          excludeElements: formData.get("excludeElements"),
         };
         const result = urlAddSchema(t).safeParse(rawData);
 
@@ -47,7 +49,7 @@ export default function AddUrlDialog({
           throw new Error(result.error.errors[0].message);
         }
 
-        await addNewUrlAndPageConfigAction(result.data, trackingId);
+        await addNewUrlAndPageConfigAction(formData, trackingId);
         setIsAddDialogOpen(false);
         toast.success(t("addUrl.success"));
       } catch (error) {
@@ -87,6 +89,32 @@ export default function AddUrlDialog({
                 name="label"
                 placeholder={t("addUrl.labelPlaceholder")}
               />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="sensitiveElement">
+                {t("addUrl.sensitiveElementsLabel")}
+              </Label>
+              <Input
+                id="sensitiveElements"
+                name="sensitiveElements"
+                placeholder={t("addUrl.sensitiveElementsPlaceholder")}
+              />
+              <p className="text-xs text-muted-foreground">
+                {t("addUrl.sensitiveElementsDescription")}
+              </p>
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="excludeElements">
+                {t("addUrl.excludeElementsLabel")}
+              </Label>
+              <Input
+                id="excludeElements"
+                name="excludeElements"
+                placeholder={t("addUrl.excludeElementsPlaceholder")}
+              />
+              <p className="text-xs text-muted-foreground">
+                {t("addUrl.excludeElementsDescription")}
+              </p>
             </div>
           </div>
           <DialogFooter>

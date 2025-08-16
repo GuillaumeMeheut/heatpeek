@@ -22,7 +22,6 @@ async function updateUserLimits(
     return;
   }
 
-  // Get price → product to access metadata
   const item = subscription.items.data[0];
   const priceId = item.price.id;
 
@@ -48,6 +47,15 @@ async function updateUserLimits(
 
   if (updateError) {
     console.error("Failed to update user plan limits:", updateError);
+  }
+
+  const { error: updateError2 } = await supabase
+    .from("projects")
+    .update({ is_active: true, usage_exceeded: false })
+    .eq("user_id", user.id);
+
+  if (updateError2) {
+    console.error("Failed to update user projects:", updateError2);
   }
 }
 

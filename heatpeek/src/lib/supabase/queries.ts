@@ -7,7 +7,6 @@ import {
   UrlsInsert,
   PageConfigInsert,
   PageConfigUpdate,
-  UrlsUpdate,
   ProjectsInsert,
   ProjectsUpdate,
   UserProfileRow,
@@ -124,7 +123,7 @@ export type UrlAndConfig = Pick<
   UrlsRow,
   "id" | "path" | "label" | "tracking_id"
 > & {
-  page_config: Pick<PageConfigRow, "id">;
+  page_config: Pick<PageConfigRow, "id" | "privacy_el" | "exclude_el">;
 };
 
 export const getUrlsAndConfig = cache(
@@ -141,7 +140,9 @@ export const getUrlsAndConfig = cache(
         label,
         tracking_id,
         page_config (
-          id
+          id,
+          privacy_el,
+          exclude_el
         )
       `
       )
@@ -502,21 +503,6 @@ export const deleteUrl = cache(
   }
 );
 
-export const updateUrl = cache(
-  async (
-    supabase: SupabaseClient,
-    urlId: string,
-    url: UrlsUpdate
-  ): Promise<void> => {
-    const { error } = await supabase.from("urls").update(url).eq("id", urlId);
-
-    if (error) {
-      console.error("Error updating url:", error);
-      throw new Error("Failed to update url");
-    }
-  }
-);
-
 export const updatePageConfig = cache(
   async (
     supabase: SupabaseClient,
@@ -586,13 +572,12 @@ export const getUserPlanLimits = async (
     throw new Error("Failed to fetch user plan limits");
   }
 
-  // If subscription_status is not 'active' or 'trialing', user is limited
   if (
     !data ||
     (data.subscription_status !== "active" &&
       data.subscription_status !== "trialing")
   ) {
-    return null;
+    throw new Error("User is not subscribed");
   }
 
   // Supabase sometimes returns an array for joined tables, so handle that
