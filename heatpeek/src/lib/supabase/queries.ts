@@ -7,7 +7,6 @@ import {
   UrlsInsert,
   PageConfigInsert,
   PageConfigUpdate,
-  UrlsUpdate,
   ProjectsInsert,
   ProjectsUpdate,
   UserProfileRow,
@@ -124,7 +123,7 @@ export type UrlAndConfig = Pick<
   UrlsRow,
   "id" | "path" | "label" | "tracking_id"
 > & {
-  page_config: Pick<PageConfigRow, "id">;
+  page_config: Pick<PageConfigRow, "id" | "privacy_el" | "exclude_el">;
 };
 
 export const getUrlsAndConfig = cache(
@@ -141,7 +140,9 @@ export const getUrlsAndConfig = cache(
         label,
         tracking_id,
         page_config (
-          id
+          id,
+          privacy_el,
+          exclude_el
         )
       `
       )
@@ -498,21 +499,6 @@ export const deleteUrl = cache(
     if (error) {
       console.error("Error deleting url:", error);
       throw new Error("Failed to delete url.");
-    }
-  }
-);
-
-export const updateUrl = cache(
-  async (
-    supabase: SupabaseClient,
-    urlId: string,
-    url: UrlsUpdate
-  ): Promise<void> => {
-    const { error } = await supabase.from("urls").update(url).eq("id", urlId);
-
-    if (error) {
-      console.error("Error updating url:", error);
-      throw new Error("Failed to update url");
     }
   }
 );

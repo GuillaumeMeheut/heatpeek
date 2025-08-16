@@ -7,22 +7,28 @@ import {
   getUser,
   getUserPlanLimits,
   getTotalTrackedPages,
-  updateUrl,
 } from "@/lib/supabase/queries";
 import { getI18n } from "@locales/server";
 import { urlAddSchema, urlUpdateSchema } from "./types";
-import { z } from "zod";
 import { purgeConfig, purgeSnapshot } from "@/lib/cloudflare/api";
 
 export async function addNewUrlAndPageConfigAction(
-  data: z.infer<ReturnType<typeof urlAddSchema>>,
+  data: FormData,
   trackingId: string
 ) {
   try {
     const t = await getI18n();
     const supabase = await createClient();
 
-    const result = urlAddSchema(t).safeParse(data);
+    const rawData = {
+      url: data.get("url"),
+      label: data.get("label"),
+      projectId: data.get("projectId"),
+      sensitiveElement: data.get("sensitiveElements"),
+      excludeElements: data.get("excludeElements"),
+    };
+
+    const result = urlAddSchema(t).safeParse(rawData);
 
     if (!result.success) {
       throw new Error(result.error.errors[0].message);
@@ -57,6 +63,8 @@ export async function addNewUrlAndPageConfigAction(
       _path: path,
       _label: result.data.label || null,
       _project_id: result.data.projectId,
+      _sensitive_element: result.data.sensitiveElement || null,
+      _exclude_elements: result.data.excludeElements || null,
     });
 
     if (error) {
@@ -99,21 +107,32 @@ export async function deleteUrlAction(
   revalidatePath(`/[locale]/(insight)/[id]/manage-urls`, "page");
 }
 
-export async function updateUrlAction(
-  urlId: string,
-  data: z.infer<ReturnType<typeof urlUpdateSchema>>
-) {
+export async function updateUrlAction(urlId: string, data: FormData) {
   const t = await getI18n();
   const supabase = await createClient();
 
-  const result = urlUpdateSchema(t).safeParse(data);
+  const rawData = {
+    label: data.get("label"),
+    sensitiveElement: data.get("sensitiveElement"),
+    excludeElements: data.get("excludeElements"),
+  };
+
+  const result = urlUpdateSchema(t).safeParse(rawData);
   if (!result.success) {
     throw new Error(result.error.errors[0].message);
   }
 
-  await updateUrl(supabase, urlId, {
-    label: result.data.label || null,
+  const { error } = await supabase.rpc("update_url_and_config", {
+    _url_id: urlId,
+    _label: result.data.label,
+    _sensitive_element: result.data.sensitiveElement || null,
+    _exclude_elements: result.data.excludeElements || null,
   });
+
+  if (error) {
+    console.error("Error updating url and config:", error);
+    throw new Error("Failed to update url and config");
+  }
 
   revalidatePath(`/[locale]/(insight)/[id]/manage-urls`, "page");
 }

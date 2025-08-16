@@ -13,6 +13,30 @@ export const urlAddSchema = (t: TranslationFunction) =>
       .max(20, t("urlManagement.validation.labelTooLong"))
       .optional(),
     projectId: z.string(),
+    sensitiveElement: z
+      .string()
+      .max(200, "Max 200 characters")
+      .optional()
+      .transform((val) =>
+        val
+          ? val
+              .split(",")
+              .map((element) => element.trim())
+              .filter(Boolean)
+          : []
+      ),
+    excludeElements: z
+      .string()
+      .max(200, "Max 200 characters")
+      .optional()
+      .transform((val) =>
+        val
+          ? val
+              .split(",")
+              .map((element) => element.trim())
+              .filter(Boolean)
+          : []
+      ),
   });
 
 export const urlUpdateSchema = (t: TranslationFunction) =>

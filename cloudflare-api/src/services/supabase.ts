@@ -2,7 +2,6 @@ import { createClient } from "@supabase/supabase-js";
 import {
   PageConfigRow,
   PlansRow,
-  ProjectConfigRow,
   SnapshotsRow,
   UserProfileRow,
 } from "../types/database";
@@ -13,7 +12,7 @@ export type ProjectConfigResult = {
   is_active: boolean;
   page_config: {
     path: string;
-    ignored_el: string[] | null;
+    exclude_el: string[] | null;
     privacy_el: string[] | null;
     update_snap_desktop: boolean;
     update_snap_tablet: boolean;
@@ -53,7 +52,7 @@ export class SupabaseService {
           usage_exceeded,
           page_config (
             path,
-            ignored_el,
+            exclude_el,
             privacy_el,
             update_snap_desktop,
             update_snap_tablet,

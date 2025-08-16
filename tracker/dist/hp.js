@@ -174,18 +174,101 @@
         trackingId: config2.trackingId,
         url: window.location.href,
         device: config2.device,
-        snapshot: captureSnapshot()
+        snapshot: captureSnapshot(config2)
       })
     });
   }
-  function captureSnapshot() {
+  function captureSnapshot(config2) {
+    const html = sanitizeDOM(document.documentElement, {
+      exclude_el: config2.data?.page_config?.exclude_el || [],
+      privacy_el: config2.data?.page_config?.privacy_el || []
+    });
     return {
-      html: document.documentElement.outerHTML,
+      html,
       viewport: {
         width: window.innerWidth,
         height: window.innerHeight
       }
     };
+  }
+  function sanitizeDOM(root, opts = {}) {
+    const clone = root.cloneNode(true);
+    const defaultExcluded = [
+      '[id*="cookie"]',
+      '[class*="cookie"]',
+      '[id*="consent"]',
+      '[class*="consent"]',
+      '[id*="gdpr"]',
+      '[class*="gdpr"]'
+    ];
+    const excludeSelectors = [
+      ...defaultExcluded,
+      ...opts.exclude_el ?? [],
+      "[data-hp-exclude]"
+    ];
+    function safeMatches(el, selector) {
+      try {
+        return el.matches(selector);
+      } catch {
+        console.warn("Invalid selector ignored:", selector);
+        return false;
+      }
+    }
+    const walkerExclude = document.createTreeWalker(
+      clone,
+      NodeFilter.SHOW_ELEMENT
+    );
+    let node = walkerExclude.currentNode;
+    while (node) {
+      const current = node;
+      node = walkerExclude.nextNode();
+      if (excludeSelectors.some((sel) => safeMatches(current, sel))) {
+        current.remove();
+      }
+    }
+    clone.querySelectorAll("input, textarea").forEach((el) => {
+      el.value = "";
+      el.setAttribute("value", "");
+    });
+    const walker = document.createTreeWalker(clone, NodeFilter.SHOW_TEXT, {
+      acceptNode: (node2) => {
+        if (!node2.parentElement) return NodeFilter.FILTER_REJECT;
+        const tag = node2.parentElement.tagName;
+        if (["SCRIPT", "STYLE", "NOSCRIPT", "HEAD"].includes(tag))
+          return NodeFilter.FILTER_REJECT;
+        return NodeFilter.FILTER_ACCEPT;
+      }
+    });
+    const patterns = [
+      [/\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b/gi, "[email]"],
+      // Email
+      [/\+?\d[\d\-\s()]{6,}\d/g, "[phone]"],
+      // Phone
+      [/\b(?:\d[ -]*?){13,16}\b/g, "[cc-number]"],
+      // Credit card
+      [/\b(?:\d{1,3}\.){3}\d{1,3}\b/g, "[ip]"]
+      // IPv4
+    ];
+    let textNode;
+    while (textNode = walker.nextNode()) {
+      if (!textNode.textContent) continue;
+      patterns.forEach(([regex, replacement]) => {
+        textNode.textContent = textNode.textContent.replace(regex, replacement);
+      });
+    }
+    let privacySelectors = "[data-hp-privacy]";
+    if (opts.privacy_el && opts.privacy_el.length > 0) {
+      privacySelectors = opts.privacy_el.join(",") + ", [data-hp-privacy]";
+    }
+    clone.querySelectorAll(privacySelectors).forEach((el) => {
+      if (el instanceof HTMLInputElement || el instanceof HTMLTextAreaElement) {
+        el.value = "";
+        el.setAttribute("value", "");
+      } else {
+        el.innerText = "[masked]";
+      }
+    });
+    return clone.outerHTML;
   }
   function waitForDomIdle(callback, timeout = 8e3) {
     let called = false;
@@ -205,80 +288,71 @@
         setTimeout(callback, 2e3);
       });
     };
-    const waitForImages = () => {
-      return new Promise((resolve) => {
-        const images = Array.from(document.querySelectorAll("img"));
-        if (images.length === 0) {
+    const waitForImages = () => new Promise((resolve) => {
+      const images = Array.from(document.querySelectorAll("img"));
+      if (images.length === 0) {
+        resolve();
+        return;
+      }
+      let loadedCount = 0;
+      const checkComplete = () => {
+        loadedCount++;
+        if (loadedCount >= images.length) {
           resolve();
-          return;
         }
-        let loadedCount = 0;
-        const totalImages = images.length;
-        const checkComplete = () => {
-          loadedCount++;
-          if (loadedCount >= totalImages) {
-            resolve();
+      };
+      images.forEach((img) => {
+        if (img.complete) {
+          checkComplete();
+        } else {
+          img.addEventListener("load", checkComplete, { once: true });
+          img.addEventListener("error", checkComplete, { once: true });
+        }
+      });
+      setTimeout(resolve, 3e3);
+    });
+    const waitForFonts = () => new Promise((resolve) => {
+      if ("fonts" in document) {
+        document.fonts.ready.then(resolve);
+      } else {
+        setTimeout(resolve, 1e3);
+      }
+    });
+    const waitForAnimations = () => new Promise((resolve) => {
+      const animatedElements = document.querySelectorAll("*");
+      const checkStyles = () => {
+        let hasAnimations = false;
+        let hasTransitions = false;
+        animatedElements.forEach((el) => {
+          const style = window.getComputedStyle(el);
+          if (style.animationName && style.animationName !== "none") {
+            hasAnimations = true;
           }
-        };
-        images.forEach((img) => {
-          if (img.complete) {
-            checkComplete();
-          } else {
-            img.addEventListener("load", checkComplete, { once: true });
-            img.addEventListener("error", checkComplete, { once: true });
+          if (style.transitionProperty && style.transitionProperty !== "none") {
+            hasTransitions = true;
           }
         });
-        setTimeout(resolve, 3e3);
-      });
-    };
-    const waitForFonts = () => {
-      return new Promise((resolve) => {
-        if ("fonts" in document) {
-          document.fonts.ready.then(resolve);
+        if (!hasAnimations && !hasTransitions) {
+          resolve();
         } else {
-          setTimeout(resolve, 1e3);
+          setTimeout(checkStyles, 100);
         }
-      });
-    };
-    const waitForAnimations = () => {
-      return new Promise((resolve) => {
-        const animatedElements = document.querySelectorAll("*");
-        const checkStyles = () => {
-          let hasAnimations = false;
-          let hasTransitions = false;
-          animatedElements.forEach((el) => {
-            const style = window.getComputedStyle(el);
-            if (style.animationName && style.animationName !== "none") {
-              hasAnimations = true;
-            }
-            if (style.transitionProperty && style.transitionProperty !== "none") {
-              hasTransitions = true;
-            }
-          });
-          if (!hasAnimations && !hasTransitions) {
-            resolve();
-          } else {
-            setTimeout(checkStyles, 100);
-          }
-        };
-        setTimeout(checkStyles, 200);
-        setTimeout(resolve, 2e3);
-      });
-    };
-    const waitForNetworkIdle = () => {
-      return new Promise((resolve) => {
-        let lastActivity = Date.now();
-        const checkIdle = () => {
-          if (Date.now() - lastActivity > 1e3) {
-            resolve();
-          } else {
-            setTimeout(checkIdle, 200);
-          }
-        };
-        setTimeout(checkIdle, 1e3);
-        setTimeout(resolve, 3e3);
-      });
-    };
+      };
+      setTimeout(checkStyles, 200);
+      setTimeout(resolve, 2e3);
+    });
+    const waitForNetworkIdle = () => new Promise((resolve) => {
+      let lastActivity = Date.now();
+      const checkIdle = () => {
+        if (Date.now() - lastActivity > 1e3) {
+          resolve();
+        } else {
+          setTimeout(checkIdle, 200);
+        }
+      };
+      setTimeout(checkIdle, 1e3);
+      setTimeout(resolve, 3e3);
+    });
     if (document.readyState === "complete") {
       loadPromises = [
         waitForImages(),

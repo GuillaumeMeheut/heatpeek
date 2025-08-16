@@ -200,6 +200,8 @@ const EditDialog = ({
       try {
         const rawData = {
           label: formData.get("label"),
+          sensitiveElement: formData.get("sensitiveElement"),
+          excludeElements: formData.get("excludeElements"),
         };
 
         const result = urlUpdateSchema(t).safeParse(rawData);
@@ -207,15 +209,19 @@ const EditDialog = ({
           throw new Error(result.error.errors[0].message);
         }
 
-        // Check if there are any changes
-        const hasChanges = result.data.label !== editingUrl.label;
+        const hasChanges =
+          result.data.label !== editingUrl.label ||
+          JSON.stringify(result.data.sensitiveElement) !==
+            JSON.stringify(editingUrl.page_config.privacy_el) ||
+          JSON.stringify(result.data.excludeElements) !==
+            JSON.stringify(editingUrl.page_config.exclude_el);
 
         if (!hasChanges) {
           setIsEditDialogOpen(false);
           return;
         }
 
-        await updateUrlAction(editingUrl.id, result.data);
+        await updateUrlAction(editingUrl.id, formData);
         setIsEditDialogOpen(false);
         toast.success(t("urlsTable.editDialog.success"));
       } catch (error) {
@@ -241,12 +247,34 @@ const EditDialog = ({
           <div className="grid gap-4 py-4">
             <div className="grid gap-2">
               <Label htmlFor="label">
-                {t("urlsTable.editDialog.nameLabel")} *
+                {t("urlsTable.editDialog.nameLabel")}
               </Label>
               <Input
                 id="label"
                 defaultValue={editingUrl.label ?? ""}
                 name="label"
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="sensitiveElement">Sensitive elements</Label>
+              <Input
+                id="sensitiveElement"
+                name="sensitiveElement"
+                defaultValue={
+                  editingUrl.page_config.privacy_el?.join(", ") ?? ""
+                }
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="excludeElements">
+                {t("addUrl.excludeElementsLabel")}
+              </Label>
+              <Input
+                id="excludeElements"
+                name="excludeElements"
+                defaultValue={
+                  editingUrl.page_config.exclude_el?.join(", ") ?? ""
+                }
               />
             </div>
           </div>

@@ -398,6 +398,14 @@ export default {
     addButton: "Add URL",
     success: "URL added successfully",
     error: "Failed to add URL",
+    sensitiveElementsLabel: "Sensitive elements",
+    sensitiveElementsPlaceholder: "#profile-picture,#name",
+    sensitiveElementsDescription:
+      "Add css selectors to hide and censure those elements. (must be separated by commas)",
+    excludeElementsLabel: "Exclude elements",
+    excludeElementsPlaceholder: "#cookie-banner,#modal",
+    excludeElementsDescription:
+      "Add css selectors to exclude those elements. (must be separated by commas)",
   },
   urlList: {
     manageSites: "Manage sites",
