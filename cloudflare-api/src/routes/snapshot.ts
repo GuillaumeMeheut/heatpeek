@@ -8,7 +8,6 @@ import {
   captureDom,
   createLayoutHash,
   inlineContents,
-  absolutifyContents,
 } from "../utils/screenshot";
 import {
   createPerformanceTracker,
@@ -18,7 +17,6 @@ import {
 } from "../utils";
 import { configKey, snapshotKey } from "../KV/key";
 import { getUA, parseUserAgent } from "../utils/userAgent";
-import { Cloudflare } from "cloudflare";
 
 const router = new Hono<{ Bindings: Env }>();
 
@@ -104,47 +102,101 @@ router.post("/", cors(), async (c) => {
       return c.text("ok");
     }
 
-    // Remove scripts
-    let sanitizedHtml = html.replace(
+    browser = await measureStep(metrics, "launch_browser", async () =>
+      puppeteer.launch(c.env.MYBROWSER)
+    );
+
+    const sanitizedHtml = html.replace(
       /<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi,
       ""
     );
 
-    const fixedHtml = await absolutifyContents(sanitizedHtml, originUrl);
+    // const inlinedHtml = await measureStep(
+    //   metrics,
+    //   "inline_images_and_backgrounds",
+    //   async () => inlineContents(sanitizedHtml, originUrl)
+    // );
 
-    const client = new Cloudflare({
-      apiToken: c.env.CF_API_TOKEN,
-    });
-
-    const cloudflareSnapshot = await client.browserRendering.snapshot.create({
-      account_id: c.env.CF_ACCOUNT_ID,
-      html: fixedHtml,
-      // url: "https://heatpeek.com/01f1160d-61fd-48b6-855b-6981ceb9cfb1/dashboard",
-      // gotoOptions: {
-      //   waitUntil: "networkidle0",
-      // },
-      setJavaScriptEnabled: false,
-      viewport: {
-        width: viewport.width,
-        height: viewport.height,
-      },
-      screenshotOptions: {
-        fullPage: true,
-      },
-    });
-
-    // Convert Base64 screenshot to binary
-    const screenshotBuffer = Buffer.from(
-      cloudflareSnapshot.screenshot,
-      "base64"
+    const page = await measureStep(metrics, "new_page", async () =>
+      browser!.newPage()
     );
 
-    // Return as an image
-    const response = new Response(screenshotBuffer, {
+    await page.setJavaScriptEnabled(false);
+
+    await measureStep(metrics, "set_viewport", async () =>
+      page.setViewport({ width: viewport.width, height: viewport.height })
+    );
+
+    const htmlWithBase = `
+    <head>
+      <base href="${originUrl}">
+    </head>
+    ${sanitizedHtml}
+  `;
+
+    await page.setContent(htmlWithBase, { waitUntil: "load" });
+
+    await measureStep(metrics, "wait_fonts", async () =>
+      page.evaluate(async () => {
+        await document.fonts.ready;
+      })
+    );
+
+    // await measureStep(metrics, "wait_images", async () =>
+    //   page.evaluate(async () => {
+    //     const images = Array.from(document.images);
+    //     await Promise.all(
+    //       images.map((img) =>
+    //         img.decode().catch(() => {
+    //           // skip broken images
+    //         })
+    //       )
+    //     );
+    //   })
+    // );
+
+    const pageDimensions = await measureStep(
+      metrics,
+      "get_page_dimensions",
+      async () =>
+        page.evaluate(() => {
+          return {
+            width: document.documentElement.scrollWidth,
+            height: document.documentElement.scrollHeight,
+          };
+        })
+    );
+
+    const visibleDomElements = await measureStep(
+      metrics,
+      "capture_dom",
+      async () => captureDom(page)
+    );
+    const layoutHash = await measureStep(
+      metrics,
+      "create_layout_hash",
+      async () => createLayoutHash(visibleDomElements)
+    );
+
+    const screenshotBuffer = await measureStep(
+      metrics,
+      "take_screenshot",
+      async () => page.screenshot({ fullPage: true })
+    );
+
+    // Convert screenshot buffer to Uint8Array
+    const uint8Array =
+      typeof screenshotBuffer === "string"
+        ? new TextEncoder().encode(screenshotBuffer)
+        : new Uint8Array(screenshotBuffer);
+
+    // Save screenshot locally by returning it as a downloadable file
+    // This will trigger a download in your browser
+    const response = new Response(Buffer.from(uint8Array), {
       headers: {
         "Content-Type": "image/png",
-        "Content-Length": screenshotBuffer.length.toString(),
-        "Content-Disposition": "inline; filename=screenshot.png", // optional
+        "Content-Disposition": 'attachment; filename="screenshot.png"',
+        "Content-Length": uint8Array.length.toString(),
       },
     });
 
