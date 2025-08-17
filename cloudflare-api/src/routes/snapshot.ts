@@ -102,14 +102,6 @@ router.post("/", cors(), async (c) => {
       console.error("Snapshot is already up to date");
       return c.text("ok");
     }
-    // Helper to convert relative URLs to absolute
-    function resolveUrl(url: string, baseUrl: string) {
-      try {
-        return new URL(url, baseUrl).href;
-      } catch {
-        return url; // return as-is if invalid
-      }
-    }
 
     // Remove scripts
     let sanitizedHtml = html.replace(
@@ -117,36 +109,38 @@ router.post("/", cors(), async (c) => {
       ""
     );
 
-    // Replace <img src> relative URLs
-    sanitizedHtml = sanitizedHtml.replace(
-      /<img\s+[^>]*src=["']([^"']+)["'][^>]*>/gi,
-      (match, src) => {
-        if (src.startsWith("http") || src.startsWith("data:")) return match;
-        const abs = resolveUrl(src, baseUrl);
-        return match.replace(src, abs);
-      }
-    );
+    function absolutifyUrls(html: string, baseUrl: string): string {
+      // 1. Rewrite HTML attributes (src, href)
+      html = html.replace(
+        /(src|href)=["'](\/[^"']*)["']/g,
+        (_, attr, path) => `${attr}="${new URL(path, baseUrl).href}"`
+      );
 
-    // Replace <link rel="stylesheet" href> with absolute URLs
-    sanitizedHtml = sanitizedHtml.replace(
-      /<link\s+[^>]*rel=["']stylesheet["'][^>]*href=["']([^"']+)["'][^>]*>/gi,
-      (match, href) => {
-        if (href.startsWith("http") || href.startsWith("data:")) return match;
-        const abs = resolveUrl(href, baseUrl);
-        console.log(match.replace(href, abs));
-        return match.replace(href, abs);
-      }
-    );
+      // 2. Rewrite inline style attributes (background-image, etc.)
+      html = html.replace(/style=["']([^"']*)["']/g, (match, styleContent) => {
+        const fixed = styleContent.replace(
+          /url\((['"]?)(\/[^'")]+)\1\)/g,
+          (_, q, path) => `url("${new URL(path, baseUrl).href}")`
+        );
+        return `style="${fixed}"`;
+      });
 
-    // Replace CSS url(...) in style tags or style attributes
-    sanitizedHtml = sanitizedHtml.replace(
-      /url\(["']?([^"')]+)["']?\)/gi,
-      (match, url) => {
-        if (url.startsWith("http") || url.startsWith("data:")) return match;
-        const abs = resolveUrl(url, baseUrl);
-        return `url('${abs}')`;
-      }
-    );
+      // 3. Rewrite CSS inside <style> tags
+      html = html.replace(
+        /<style[^>]*>([\s\S]*?)<\/style>/gi,
+        (match, cssContent) => {
+          const fixedCss = cssContent.replace(
+            /url\((['"]?)(\/[^'")]+)\1\)/g,
+            (_, q, path) => `url("${new URL(path, baseUrl).href}")`
+          );
+          return `<style>${fixedCss}</style>`;
+        }
+      );
+
+      return html;
+    }
+
+    const fixedHtml = absolutifyUrls(sanitizedHtml, "https://heatpeek.com");
 
     const client = new Cloudflare({
       apiToken: c.env.CF_API_TOKEN,
@@ -154,7 +148,11 @@ router.post("/", cors(), async (c) => {
 
     const cloudflareSnapshot = await client.browserRendering.snapshot.create({
       account_id: c.env.CF_ACCOUNT_ID,
-      html: sanitizedHtml,
+      html: fixedHtml,
+      // url: "https://heatpeek.com/01f1160d-61fd-48b6-855b-6981ceb9cfb1/dashboard",
+      // gotoOptions: {
+      //   waitUntil: "networkidle0",
+      // },
       setJavaScriptEnabled: false,
       viewport: {
         width: viewport.width,
