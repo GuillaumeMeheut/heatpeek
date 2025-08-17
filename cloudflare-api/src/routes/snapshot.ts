@@ -8,6 +8,7 @@ import {
   captureDom,
   createLayoutHash,
   inlineContents,
+  absolutifyContents,
 } from "../utils/screenshot";
 import {
   createPerformanceTracker,
@@ -109,38 +110,7 @@ router.post("/", cors(), async (c) => {
       ""
     );
 
-    function absolutifyUrls(html: string, baseUrl: string): string {
-      // 1. Rewrite HTML attributes (src, href)
-      html = html.replace(
-        /(src|href)=["'](\/[^"']*)["']/g,
-        (_, attr, path) => `${attr}="${new URL(path, baseUrl).href}"`
-      );
-
-      // 2. Rewrite inline style attributes (background-image, etc.)
-      html = html.replace(/style=["']([^"']*)["']/g, (match, styleContent) => {
-        const fixed = styleContent.replace(
-          /url\((['"]?)(\/[^'")]+)\1\)/g,
-          (_, q, path) => `url("${new URL(path, baseUrl).href}")`
-        );
-        return `style="${fixed}"`;
-      });
-
-      // 3. Rewrite CSS inside <style> tags
-      html = html.replace(
-        /<style[^>]*>([\s\S]*?)<\/style>/gi,
-        (match, cssContent) => {
-          const fixedCss = cssContent.replace(
-            /url\((['"]?)(\/[^'")]+)\1\)/g,
-            (_, q, path) => `url("${new URL(path, baseUrl).href}")`
-          );
-          return `<style>${fixedCss}</style>`;
-        }
-      );
-
-      return html;
-    }
-
-    const fixedHtml = absolutifyUrls(sanitizedHtml, "https://heatpeek.com");
+    const fixedHtml = await absolutifyContents(sanitizedHtml, originUrl);
 
     const client = new Cloudflare({
       apiToken: c.env.CF_API_TOKEN,
