@@ -15,6 +15,8 @@ interface Env {
   CLICKHOUSE_PASSWORD: string;
   MYBROWSER: BrowserWorker;
   "heatpeek-events": Queue;
+  CF_ACCOUNT_ID: string;
+  CF_API_TOKEN: string;
 }
 
 export { Env };

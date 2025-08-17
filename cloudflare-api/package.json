@@ -9,6 +9,7 @@
   "dependencies": {
     "@clickhouse/client-web": "^1.11.2",
     "@supabase/supabase-js": "^2.50.0",
+    "cloudflare": "^4.5.0",
     "hono": "^4.7.11",
     "linkedom": "^0.18.11",
     "zod": "^3.25.67"

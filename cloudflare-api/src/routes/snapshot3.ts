@@ -17,7 +17,6 @@ import {
 } from "../utils";
 import { configKey, snapshotKey } from "../KV/key";
 import { getUA, parseUserAgent } from "../utils/userAgent";
-import { Cloudflare } from "cloudflare";
 
 const router = new Hono<{ Bindings: Env }>();
 
@@ -103,70 +102,94 @@ router.post("/", cors(), async (c) => {
       return c.text("ok");
     }
 
-    // Helper to convert relative URLs to absolute
-    function resolveUrl(url: string, baseUrl: string) {
-      try {
-        return new URL(url, baseUrl).href;
-      } catch {
-        return url; // return as-is if invalid
-      }
-    }
+    browser = await measureStep(metrics, "launch_browser", async () =>
+      puppeteer.launch(c.env.MYBROWSER)
+    );
 
-    // After sanitizing HTML
     const sanitizedHtml = html.replace(
       /<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi,
       ""
     );
 
-    // Replace <img src> relative URLs
-    const htmlWithAbsoluteImages = sanitizedHtml.replace(
-      /<img\s+[^>]*src=["']([^"']+)["'][^>]*>/gi,
-      (match, src) => {
-        if (src.startsWith("http") || src.startsWith("data:")) return match;
-        const abs = resolveUrl(src, baseUrl);
-        return match.replace(src, abs);
-      }
+    // const inlinedHtml = await measureStep(
+    //   metrics,
+    //   "inline_images_and_backgrounds",
+    //   async () => inlineContents(sanitizedHtml, originUrl)
+    // );
+
+    const page = await measureStep(metrics, "new_page", async () =>
+      browser!.newPage()
     );
 
-    // Replace CSS url(...) inside style tags or style attributes
-    const htmlWithAbsoluteCssUrls = htmlWithAbsoluteImages.replace(
-      /url\(["']?([^"')]+)["']?\)/gi,
-      (match, url) => {
-        if (url.startsWith("http") || url.startsWith("data:")) return match;
-        const abs = resolveUrl(url, baseUrl);
-        return `url('${abs}')`;
-      }
+    await page.setJavaScriptEnabled(false);
+
+    await measureStep(metrics, "set_viewport", async () =>
+      page.setViewport({ width: viewport.width, height: viewport.height })
     );
 
-    const client = new Cloudflare({
-      apiToken: c.env.CF_API_TOKEN,
-    });
+    await page.setContent(sanitizedHtml, { waitUntil: "load" });
 
-    const cloudflareSnapshot = await client.browserRendering.snapshot.create({
-      account_id: c.env.CF_ACCOUNT_ID,
-      html: htmlWithAbsoluteCssUrls,
-      setJavaScriptEnabled: false,
-      viewport: {
-        width: viewport.width,
-        height: viewport.height,
-      },
-      screenshotOptions: {
-        fullPage: true,
-      },
-    });
-
-    // Convert Base64 screenshot to binary
-    const screenshotBuffer = Buffer.from(
-      cloudflareSnapshot.screenshot,
-      "base64"
+    await measureStep(metrics, "wait_fonts", async () =>
+      page.evaluate(async () => {
+        await document.fonts.ready;
+      })
     );
 
-    // Return as an image
-    const response = new Response(screenshotBuffer, {
+    // await measureStep(metrics, "wait_images", async () =>
+    //   page.evaluate(async () => {
+    //     const images = Array.from(document.images);
+    //     await Promise.all(
+    //       images.map((img) =>
+    //         img.decode().catch(() => {
+    //           // skip broken images
+    //         })
+    //       )
+    //     );
+    //   })
+    // );
+
+    const pageDimensions = await measureStep(
+      metrics,
+      "get_page_dimensions",
+      async () =>
+        page.evaluate(() => {
+          return {
+            width: document.documentElement.scrollWidth,
+            height: document.documentElement.scrollHeight,
+          };
+        })
+    );
+
+    const visibleDomElements = await measureStep(
+      metrics,
+      "capture_dom",
+      async () => captureDom(page)
+    );
+    const layoutHash = await measureStep(
+      metrics,
+      "create_layout_hash",
+      async () => createLayoutHash(visibleDomElements)
+    );
+
+    const screenshotBuffer = await measureStep(
+      metrics,
+      "take_screenshot",
+      async () => page.screenshot({ fullPage: true })
+    );
+
+    // Convert screenshot buffer to Uint8Array
+    const uint8Array =
+      typeof screenshotBuffer === "string"
+        ? new TextEncoder().encode(screenshotBuffer)
+        : new Uint8Array(screenshotBuffer);
+
+    // Save screenshot locally by returning it as a downloadable file
+    // This will trigger a download in your browser
+    const response = new Response(Buffer.from(uint8Array), {
       headers: {
         "Content-Type": "image/png",
-        "Content-Length": screenshotBuffer.length.toString(),
-        "Content-Disposition": "inline; filename=screenshot.png", // optional
+        "Content-Disposition": 'attachment; filename="screenshot.png"',
+        "Content-Length": uint8Array.length.toString(),
       },
     });
 
