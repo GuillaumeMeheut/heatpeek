@@ -104,7 +104,7 @@ export async function createLayoutHash(
   return hashHex;
 }
 
-export async function inlineImagesAndBackgrounds(
+export async function inlineContents(
   html: string,
   baseUrl: string
 ): Promise<string> {

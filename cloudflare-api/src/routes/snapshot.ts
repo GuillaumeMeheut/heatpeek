@@ -3,12 +3,8 @@ import { cors } from "hono/cors";
 import puppeteer, { Browser } from "@cloudflare/puppeteer";
 import type { Env } from "../env";
 import { z } from "zod";
-import { SupabaseService, SupabaseError } from "../services/supabase";
-import {
-  captureDom,
-  createLayoutHash,
-  inlineImagesAndBackgrounds,
-} from "../utils/screenshot";
+import { SupabaseService } from "../services/supabase";
+import { captureDom, createLayoutHash } from "../utils/screenshot";
 import {
   createPerformanceTracker,
   measureStep,
@@ -111,18 +107,20 @@ router.post("/", cors(), async (c) => {
       ""
     );
 
-    const inlinedHtml = await measureStep(
-      metrics,
-      "inline_images_and_backgrounds",
-      async () => inlineImagesAndBackgrounds(sanitizedHtml, originUrl)
-    );
+    // const inlinedHtml = await measureStep(
+    //   metrics,
+    //   "inline_images_and_backgrounds",
+    //   async () => inlineContents(sanitizedHtml, originUrl)
+    // );
 
     const page = await measureStep(metrics, "new_page", async () =>
       browser!.newPage()
     );
 
+    await page.setJavaScriptEnabled(false);
+
     await measureStep(metrics, "set_content", async () =>
-      page.setContent(inlinedHtml, { waitUntil: "load" })
+      page.setContent(sanitizedHtml, { waitUntil: "load" })
     );
 
     await measureStep(metrics, "set_viewport", async () =>
@@ -135,18 +133,18 @@ router.post("/", cors(), async (c) => {
       })
     );
 
-    await measureStep(metrics, "wait_images", async () =>
-      page.evaluate(async () => {
-        const images = Array.from(document.images);
-        await Promise.all(
-          images.map((img) =>
-            img.decode().catch(() => {
-              // skip broken images
-            })
-          )
-        );
-      })
-    );
+    // await measureStep(metrics, "wait_images", async () =>
+    //   page.evaluate(async () => {
+    //     const images = Array.from(document.images);
+    //     await Promise.all(
+    //       images.map((img) =>
+    //         img.decode().catch(() => {
+    //           // skip broken images
+    //         })
+    //       )
+    //     );
+    //   })
+    // );
 
     const pageDimensions = await measureStep(
       metrics,
