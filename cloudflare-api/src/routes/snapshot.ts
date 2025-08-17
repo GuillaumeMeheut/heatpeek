@@ -102,7 +102,6 @@ router.post("/", cors(), async (c) => {
       console.error("Snapshot is already up to date");
       return c.text("ok");
     }
-
     // Helper to convert relative URLs to absolute
     function resolveUrl(url: string, baseUrl: string) {
       try {
@@ -112,14 +111,14 @@ router.post("/", cors(), async (c) => {
       }
     }
 
-    // After sanitizing HTML
-    const sanitizedHtml = html.replace(
+    // Remove scripts
+    let sanitizedHtml = html.replace(
       /<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi,
       ""
     );
 
     // Replace <img src> relative URLs
-    const htmlWithAbsoluteImages = sanitizedHtml.replace(
+    sanitizedHtml = sanitizedHtml.replace(
       /<img\s+[^>]*src=["']([^"']+)["'][^>]*>/gi,
       (match, src) => {
         if (src.startsWith("http") || src.startsWith("data:")) return match;
@@ -128,8 +127,19 @@ router.post("/", cors(), async (c) => {
       }
     );
 
-    // Replace CSS url(...) inside style tags or style attributes
-    const htmlWithAbsoluteCssUrls = htmlWithAbsoluteImages.replace(
+    // Replace <link rel="stylesheet" href> with absolute URLs
+    sanitizedHtml = sanitizedHtml.replace(
+      /<link\s+[^>]*rel=["']stylesheet["'][^>]*href=["']([^"']+)["'][^>]*>/gi,
+      (match, href) => {
+        if (href.startsWith("http") || href.startsWith("data:")) return match;
+        const abs = resolveUrl(href, baseUrl);
+        console.log(match.replace(href, abs));
+        return match.replace(href, abs);
+      }
+    );
+
+    // Replace CSS url(...) in style tags or style attributes
+    sanitizedHtml = sanitizedHtml.replace(
       /url\(["']?([^"')]+)["']?\)/gi,
       (match, url) => {
         if (url.startsWith("http") || url.startsWith("data:")) return match;
@@ -144,7 +154,7 @@ router.post("/", cors(), async (c) => {
 
     const cloudflareSnapshot = await client.browserRendering.snapshot.create({
       account_id: c.env.CF_ACCOUNT_ID,
-      html: htmlWithAbsoluteCssUrls,
+      html: sanitizedHtml,
       setJavaScriptEnabled: false,
       viewport: {
         width: viewport.width,
