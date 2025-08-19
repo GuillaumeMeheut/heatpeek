@@ -148,13 +148,6 @@ router.post("/", cors(), async (c) => {
       async () => inlineContents(sanitizedHtml, originUrl)
     );
 
-    const htmlWithBase = `
-    <head>
-      <base href="${originUrl}">
-    </head>
-    ${inlinedHtml}
-  `;
-
     const page = await measureStep(metrics, "new_page", async () =>
       browser!.newPage()
     );
@@ -176,8 +169,9 @@ router.post("/", cors(), async (c) => {
       page.setViewport({ width: viewport.width, height: viewport.height })
     );
 
-    await page.setContent(htmlWithBase, { waitUntil: "load" });
-
+    await measureStep(metrics, "set_content", async () =>
+      page.setContent(inlinedHtml, { waitUntil: "load" })
+    );
     await measureStep(metrics, "wait_fonts", async () =>
       page.evaluate(async () => {
         await document.fonts.ready;
