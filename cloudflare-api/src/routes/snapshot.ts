@@ -142,18 +142,18 @@ router.post("/", cors(), async (c) => {
       ""
     );
 
+    const inlinedHtml = await measureStep(
+      metrics,
+      "inline_images_and_backgrounds",
+      async () => inlineContents(sanitizedHtml, originUrl)
+    );
+
     const htmlWithBase = `
     <head>
       <base href="${originUrl}">
     </head>
-    ${sanitizedHtml}
+    ${inlinedHtml}
   `;
-
-    // const inlinedHtml = await measureStep(
-    //   metrics,
-    //   "inline_images_and_backgrounds",
-    //   async () => inlineContents(sanitizedHtml, originUrl)
-    // );
 
     const page = await measureStep(metrics, "new_page", async () =>
       browser!.newPage()
