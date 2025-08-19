@@ -40,6 +40,29 @@ router.post("/", cors(), async (c) => {
   let browser: Browser | null = null;
   const metrics = createPerformanceTracker();
 
+  // Store original console methods to restore later
+  const originalConsole = {
+    log: console.log,
+    info: console.info,
+    warn: console.warn,
+    debug: console.debug,
+  };
+
+  // Temporarily suppress console output during browser operations
+  const suppressConsole = () => {
+    console.log = () => {};
+    console.info = () => {};
+    console.warn = () => {};
+    console.debug = () => {};
+  };
+
+  const restoreConsole = () => {
+    console.log = originalConsole.log;
+    console.info = originalConsole.info;
+    console.warn = originalConsole.warn;
+    console.debug = originalConsole.debug;
+  };
+
   try {
     const body = await measureStep(metrics, "parse_body", async () =>
       c.req.json()
@@ -97,10 +120,18 @@ router.post("/", cors(), async (c) => {
 
     urlId = snapshotInfos.url_id;
 
+    if (!urlId) {
+      console.error("URL ID not found");
+      return c.text("ok");
+    }
+
     if (!snapshotInfos.should_update) {
       console.error("Snapshot is already up to date");
       return c.text("ok");
     }
+
+    // Suppress console logs during browser operations
+    suppressConsole();
 
     browser = await measureStep(metrics, "launch_browser", async () =>
       puppeteer.launch(c.env.MYBROWSER)
@@ -111,15 +142,33 @@ router.post("/", cors(), async (c) => {
       ""
     );
 
-    const inlinedHtml = await measureStep(
-      metrics,
-      "inline_images_and_backgrounds",
-      async () => inlineContents(sanitizedHtml, originUrl)
-    );
+    const htmlWithBase = `
+    <head>
+      <base href="${originUrl}">
+    </head>
+    ${sanitizedHtml}
+  `;
+
+    // const inlinedHtml = await measureStep(
+    //   metrics,
+    //   "inline_images_and_backgrounds",
+    //   async () => inlineContents(sanitizedHtml, originUrl)
+    // );
 
     const page = await measureStep(metrics, "new_page", async () =>
       browser!.newPage()
     );
+
+    // Suppress browser console logs and rendering noise
+    page.on("console", () => {}); // Ignore all console messages
+    page.on("pageerror", () => {}); // Ignore page errors
+    page.on("requestfailed", () => {}); // Ignore failed requests
+    page.on("response", () => {}); // Ignore response logs
+    page.on("request", () => {}); // Ignore request logs
+
+    // Suppress CDP protocol logs at browser level
+    browser.on("targetcreated", () => {}); // Ignore target creation logs
+    browser.on("targetdestroyed", () => {}); // Ignore target destruction logs
 
     await page.setJavaScriptEnabled(false);
 
@@ -127,7 +176,7 @@ router.post("/", cors(), async (c) => {
       page.setViewport({ width: viewport.width, height: viewport.height })
     );
 
-    await page.setContent(inlinedHtml, { waitUntil: "load" });
+    await page.setContent(htmlWithBase, { waitUntil: "load" });
 
     await measureStep(metrics, "wait_fonts", async () =>
       page.evaluate(async () => {
@@ -183,15 +232,26 @@ router.post("/", cors(), async (c) => {
         ? new TextEncoder().encode(screenshotBuffer)
         : new Uint8Array(screenshotBuffer);
 
+    // const response = new Response(screenshotBuffer, {
+    //   headers: {
+    //     "Content-Type": "image/png",
+    //     "Content-Length": screenshotBuffer.length.toString(),
+    //     "Content-Disposition": "inline; filename=screenshot.png", // optional
+    //   },
+    // });
+
+    // //early return for testing
+    // return response;
+
     const publicImageUrl = await measureStep(
       metrics,
       "upload_screenshot",
       async () =>
-        supabaseService.uploadScreenshot(urlId, layoutHash, uint8Array)
+        supabaseService.uploadScreenshot(urlId!, layoutHash, uint8Array)
     );
 
     await measureStep(metrics, "update_snapshot", async () =>
-      supabaseService.updateSnapshot(urlId, device, {
+      supabaseService.updateSnapshot(urlId!, device, {
         dom_data: JSON.stringify(visibleDomElements),
         layout_hash: layoutHash,
         screenshot_url: publicImageUrl,
@@ -210,7 +270,7 @@ router.post("/", cors(), async (c) => {
     const updateField = deviceFieldMap[device as keyof typeof deviceFieldMap];
 
     await measureStep(metrics, "update_page_config", async () =>
-      supabaseService.updatePageConfig(urlId, {
+      supabaseService.updatePageConfig(urlId!, {
         [updateField]: false,
       })
     );
@@ -220,16 +280,24 @@ router.post("/", cors(), async (c) => {
       await c.env.CACHE_HEATPEEK.delete(snapshotKey(trackingId, path, device));
     });
 
+    // Restore console for final logging
+    restoreConsole();
+
     finalizeMetrics(metrics);
     logPerformance(metrics, "Snapshot API");
 
     return c.json({ success: true }, 200);
   } catch (error) {
+    // Temporarily restore console for error logging
+    restoreConsole();
     finalizeMetrics(metrics);
     logPerformance(metrics, "Snapshot API ERROR");
     console.error("Screenshot error:", error, metrics);
     return c.json({ error: "Failed to capture screenshot" }, 500);
   } finally {
+    // Always restore console logging
+    restoreConsole();
+
     if (browser) {
       await browser.close();
     }
