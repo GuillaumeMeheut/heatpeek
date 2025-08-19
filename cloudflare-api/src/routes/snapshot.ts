@@ -142,18 +142,18 @@ router.post("/", cors(), async (c) => {
       ""
     );
 
+    const inlinedHtml = await measureStep(
+      metrics,
+      "inline_images_and_backgrounds",
+      async () => inlineContents(sanitizedHtml, originUrl)
+    );
+
     const htmlWithBase = `
     <head>
       <base href="${originUrl}">
     </head>
-    ${sanitizedHtml}
+    ${inlinedHtml}
   `;
-
-    // const inlinedHtml = await measureStep(
-    //   metrics,
-    //   "inline_images_and_backgrounds",
-    //   async () => inlineContents(sanitizedHtml, originUrl)
-    // );
 
     const page = await measureStep(metrics, "new_page", async () =>
       browser!.newPage()
@@ -232,16 +232,16 @@ router.post("/", cors(), async (c) => {
         ? new TextEncoder().encode(screenshotBuffer)
         : new Uint8Array(screenshotBuffer);
 
-    // const response = new Response(screenshotBuffer, {
-    //   headers: {
-    //     "Content-Type": "image/png",
-    //     "Content-Length": screenshotBuffer.length.toString(),
-    //     "Content-Disposition": "inline; filename=screenshot.png", // optional
-    //   },
-    // });
+    const response = new Response(screenshotBuffer, {
+      headers: {
+        "Content-Type": "image/png",
+        "Content-Length": screenshotBuffer.length.toString(),
+        "Content-Disposition": "inline; filename=screenshot.png", // optional
+      },
+    });
 
-    // //early return for testing
-    // return response;
+    //early return for testing
+    return response;
 
     const publicImageUrl = await measureStep(
       metrics,
