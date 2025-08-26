@@ -2,7 +2,6 @@ import { getTrackingIdAndBaseUrl, getUser } from "@/lib/supabase/queries";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { Metrics } from "./Metrics";
-import { TopPage } from "./TopPage";
 import { DeviceEnum } from "../heatmap/types";
 import {
   getAverageScrollDepth,
@@ -13,7 +12,7 @@ import {
 } from "@/lib/clickhouse/queries";
 import { ChartPieLabelCustom } from "@/components/ui/chart-pie-label-custom";
 import { ChartLineDefault } from "@/components/ui/chart-line";
-import { ChartBarLabelCustom } from "@/components/ui/char-bar-label-custom";
+import { ChartBarCustom } from "@/components/ui/chart-bar-custom";
 import { FilterBrowserEnum, FilterDateEnum } from "@/components/Filters/types";
 
 export default async function PageDashboard({
@@ -98,8 +97,6 @@ export default async function PageDashboard({
     0
   );
 
-  //barcharts engagement: pageviews clicks scroll depth rage clicks
-
   return (
     <div className="grid gap-4 md:grid-cols-4 lg:grid-cols-8 mb-6 ">
       <Metrics
@@ -110,8 +107,22 @@ export default async function PageDashboard({
       />
       <ChartLineDefault dateRange={date} data={data} />
       <ChartPieLabelCustom data={pageViewsByBrowser} />
-      <ChartBarLabelCustom />
-      <TopPage />
+      <ChartBarCustom
+        categories={[
+          { label: "Countries", columnName: "country" },
+          { label: "Regions", columnName: "region" },
+          { label: "Cities", columnName: "city" },
+        ]}
+        data={[]}
+      />
+      <ChartBarCustom
+        categories={[
+          { label: "Top page", columnName: "page" },
+          { label: "Entry page", columnName: "entry_page" },
+          { label: "Exit page", columnName: "exit_page" },
+        ]}
+        data={[]}
+      />
     </div>
   );
 }
